@@ -1,7 +1,10 @@
 .venv/
-data/
 __pycache__/
 .idea/
 *.pyc
 
+data/*
+!data/processed/
+data/processed/*
 !data/processed/team_season.csv
+
