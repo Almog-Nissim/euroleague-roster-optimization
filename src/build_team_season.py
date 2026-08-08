@@ -19,7 +19,7 @@ import os
 import time
 import pandas as pd
 
-from Paths import RAW_DIR, PROCESSED_DIR
+from paths import RAW_DIR, PROCESSED_DIR
 from euroleague_api.standings import Standings
 
 pd.set_option("display.width", 200)
