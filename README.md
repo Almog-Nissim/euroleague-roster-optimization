@@ -227,3 +227,17 @@ not by the code failing:
 - Team code `PAR` is Partizan Belgrade, not Paris (`PRS`). The intuitive
   expansion of a three-letter code is a guess, not an identifier; this one was
   caught only by checking player names against the codes.
+
+### Validation
+
+The core metric was checked against two independent sources before use.
+
+PIR values returned by the API were recomputed by hand from the
+box-score formula for five player-seasons; all five matched exactly.
+Season-level aggregates were then cross-checked against game-level
+boxscores for one season: 123,200 minutes and 295 players, with
+identical PIR totals from both endpoints.
+
+Neither check was expected to fail. Both were run because a metric
+that is wrong in the same way everywhere produces a clean-looking
+regression and no error.
