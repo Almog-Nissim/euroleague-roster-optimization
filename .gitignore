@@ -1,5 +1,6 @@
 .venv/
-__pSycache__/
+venv/
+__pycache__/
 .idea/
 *.pyc
 
@@ -7,4 +8,5 @@ data/*
 !data/processed/
 data/processed/*
 !data/processed/team_season.csv
-
+!data/processed/backtest_results.csv
+!data/processed/coverage_audit.csv
