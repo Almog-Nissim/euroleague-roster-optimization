@@ -1,0 +1,110 @@
+﻿season,club,usage,player_name_he,player_name_el,player_code,list_a,list_b,salary_low,salary_high,salary_mid,is_range,rel_spread,employer_cost,employer_multiple,currency,basis,league,confidence,is_israeli,fx_adjusted,contract_years,source,notes
+2023,TEL,calibrate,לורנצו בראון,"BROWN, LORENZO",9622,1500000.0,1600000.0,1500000,1600000,1550000.0,1,0.0645,2000000.0,1.29,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,וויד בולדווין,"BALDWIN IV, WADE",9863,1500000.0,1500000.0,1500000,1500000,1500000.0,0,0.0,1875000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,בונזי קולסון,"COLSON, BONZIE",9783,700000.0,900000.0,700000,900000,800000.0,1,0.25,1125000.0,1.406,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,ג'וש ניבו,"NEBO, JOSH",11199,800000.0,800000.0,800000,800000,800000.0,0,0.0,1000000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,חסיאל ריברו,"RIVERO, JASIEL",11214,600000.0,600000.0,600000,600000,600000.0,0,0.0,750000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,ג'יימס ווב,"WEBB III, JAMES",11971,400000.0,500000.0,400000,500000,450000.0,1,0.2222,625000.0,1.389,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,תמיר בלאט,"BLATT, TAMIR",11193,400000.0,400000.0,400000,400000,400000.0,0,0.0,800000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,ג'ון דיברתלומאו,"DIBARTOLOMEO, JOHN",7990,275000.0,400000.0,275000,400000,337500.0,1,0.3704,800000.0,2.37,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,naturalised IL
+2023,TEL,calibrate,רומן סורקין,"SORKIN, ROMAN",11219,500000.0,375000.0,375000,500000,437500.0,1,0.2857,750000.0,1.714,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,ג'ייק כהן,"COHEN, JAKE",5145,250000.0,300000.0,250000,300000,275000.0,1,0.1818,600000.0,2.182,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,naturalised IL
+2023,TEL,calibrate,רפי מנקו,"MENCO, RAFI",4233,275000.0,300000.0,275000,300000,287500.0,1,0.087,600000.0,2.087,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2023,TEL,calibrate,אנטוניוס קליבלנד,"CLEVELAND, ANTONIUS",12744,350000.0,250000.0,250000,350000,300000.0,1,0.3333,312500.0,1.042,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,רומן סורקין,"SORKIN, ROMAN",11219,,850000.0,850000,850000,850000.0,0,0.0,1700000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,וונייה גבריאל,"GABRIEL, WENYEN",13383,,750000.0,750000,750000,750000.0,0,0.0,937500.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,רוקאס יוקובאיטיס,"JOKUBAITIS, ROKAS",7519,,700000.0,700000,700000,700000.0,0,0.0,875000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,ג'ון דיברתלומאו,"DIBARTOLOMEO, JOHN",7990,,650000.0,650000,650000,650000.0,0,0.0,1300000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,naturalised IL
+2024,TEL,calibrate,תמיר בלאט,"BLATT, TAMIR",11193,,650000.0,650000,650000,650000.0,0,0.0,1300000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,חסיאל ריברו,"RIVERO, JASIEL",11214,,600000.0,600000,600000,600000.0,0,0.0,750000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,ליוואי רנדולף,"RANDOLPH, LEVI",13382,,500000.0,500000,500000,500000.0,0,0.0,625000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,ג'יילן הורד,"HOARD, JAYLEN",6835,,400000.0,400000,400000,400000.0,0,0.0,500000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,סייבן לי,"LEE, SABEN",13389,,400000.0,400000,400000,400000.0,0,0.0,500000.0,1.25,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,רפי מנקו,"MENCO, RAFI",4233,,300000.0,300000,300000,300000.0,0,0.0,600000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,TEL,calibrate,ג'ייק כהן,"COHEN, JAKE",5145,,280000.0,280000,280000,280000.0,0,0.0,560000.0,2.0,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,naturalised IL
+2024,TEL,calibrate,וויל ריימן,"RAYMAN, WILLIAM",13381,,225000.0,225000,225000,225000.0,0,0.0,281250.0,1.25,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,IL passport
+2025,TEL,calibrate,לוני ווקר,"WALKER IV, LONNIE",13403,2200000.0,2200000.0,2200000,2200000,2200000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,ג'יילן הורד,"HOARD, JAYLEN",6835,1100000.0,1000000.0,1000000,1100000,1050000.0,1,0.0952,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,ט.ג'יי ליף,"LEAF, TJ",14012,900000.0,1000000.0,900000,1000000,950000.0,1,0.1053,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,רומן סורקין,"SORKIN, ROMAN",11219,900000.0,900000.0,900000,900000,900000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,אושיי בריסט,"BRISSETT, O'SHAE J",14127,850000.0,950000.0,850000,950000,900000.0,1,0.1111,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,ג'ף דאוטין,"DOWTIN JR, JEFFREY",14123,850000.0,800000.0,800000,850000,825000.0,1,0.0606,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,תמיר בלאט,"BLATT, TAMIR",11193,700000.0,700000.0,700000,700000,700000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,ג'ון דיברתלומאו,"DIBARTOLOMEO, JOHN",7990,650000.0,650000.0,650000,650000,650000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,naturalised IL
+2025,TEL,calibrate,מרסיו סנטוס,"SANTOS, MARCIO",13289,600000.0,600000.0,600000,600000,600000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,ג'ימי קלארק,"CLARK III, JIMMY",13699,400000.0,400000.0,400000,400000,400000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,גור לביא,"LAVI, GUR",14120,400000.0,600000.0,400000,600000,500000.0,1,0.4,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,widest disagreement
+2025,TEL,calibrate,אורוש טריפונוביץ,"TRIFUNOVIC, UROS",7673,250000.0,250000.0,250000,250000,250000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,TEL,calibrate,וויל ריימן,"RAYMAN, WILLIAM",13381,225000.0,225000.0,225000,225000,225000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,IL passport
+2025,TEL,calibrate,קליפורד אומורוי,"OMORUYI, CLIFFORD",14121,150000.0,,150000,150000,150000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,absent from list_b
+2025,TEL,calibrate,איפה לונדברג,"LUNDBERG, IFFE",10781,500000.0,500000.0,500000,500000,500000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,"mid-season signing, part-season"
+2025,HTA,test,ואסיליה מיצ'יץ',"MICIC, VASILIJE",2580,6000000.0,6000000.0,6000000,6000000,6000000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,אלייז'ה בראיינט,"BRYANT, ELIJAH",9846,2800000.0,2800000.0,2800000,2800000,2800000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,דן אוטורו,"OTURU, DAN",12788,2200000.0,2200000.0,2200000,2200000,2200000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,ג'ונתן מוטלי,"MOTLEY, JOHNATHAN",11157,1500000.0,1500000.0,1500000,1500000,1500000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,אנטוניו בלייקני,"BLAKENEY, ANTONIO",13402,1400000.0,1400000.0,1400000,1400000,1400000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,ים מדר,"MADAR, YAM",11052,1200000.0,1200000.0,1200000,1200000,1200000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,ברונו קאבוקלו,"CABOCLO, BRUNO",12096,1200000.0,1200000.0,1200000,1200000,1200000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,traded HTA;DUB
+2025,HTA,test,כריס ג'ונס,"JONES, CHRIS",10568,1100000.0,1100000.0,1100000,1100000,1100000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,קולין מלקולם,"MALCOLM, COLLIN",12609,1100000.0,1100000.0,1100000,1100000,1100000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,תומר גינת,"GINAT, TOMER",10550,500000.0,1000000.0,500000,1000000,750000.0,1,0.6667,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,2x disagreement
+2025,HTA,test,טאי אודיאסה,"ODIASE, TAI",11823,750000.0,850000.0,750000,850000,800000.0,1,0.125,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,איש ווינרייט,"WAINRIGHT, ISH",13284,750000.0,750000.0,750000,750000,750000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,טיילר אניס,"ENNIS, TYLER",8858,700000.0,500000.0,500000,700000,600000.0,1,0.3333,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,בר טימור,"TIMOR, BAR",4846,400000.0,400000.0,400000,400000,400000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,גיא פלטין,"PALATIN, GUY",13283,,350000.0,350000,350000,350000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,absent from list_a
+2025,HTA,test,איתי שגב,"SEGEV, ITAY",4161,,300000.0,300000,300000,300000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,HTA,test,יפתח זיו,,,,300000.0,300000,300000,300000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,"in squad, not registered for EL"
+2025,HTA,test,בוריסלב מלדנוב,,,,150000.0,150000,150000,150000.0,0,0.0,,,USD,net,EL,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,"in squad, not registered for EL"
+2025,HTA,test,עוז בלייור,,,,130000.0,130000,130000,130000.0,0,0.0,,,USD,net,EL,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,"in squad, not registered for EL"
+2024,HTA,structure_only,פטריק ברלי,,,,1800000.0,1800000,1800000,1800000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,ג'ונתן מוטלי,"MOTLEY, JOHNATHAN",11157,,1100000.0,1100000,1100000,1100000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,ברונו קאבוקלו,"CABOCLO, BRUNO",12096,,1250000.0,1250000,1250000,1250000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,בן בנטיל,,,,750000.0,750000,750000,750000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,איש ווינרייט,"WAINRIGHT, ISH",13284,,700000.0,700000,700000,700000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,מרקוס פוסטר,,,,600000.0,600000,600000,600000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,תומר גינת,"GINAT, TOMER",10550,,500000.0,500000,500000,500000.0,0,0.0,,,USD,net,EC,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,ג'ו רגלנד,,,,450000.0,450000,450000,450000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,פורוורד אנגולה,,,,450000.0,450000,450000,450000.0,0,0.0,,,USD,net,EC,reported,0,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,sport5
+2024,HTA,structure_only,בר טימור,"TIMOR, BAR",4846,,185000.0,185000,185000,185000.0,0,0.0,,,USD,net,EC,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,גיא פלטין,"PALATIN, GUY",13283,,150000.0,150000,150000,150000.0,0,0.0,,,USD,net,EC,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,עוז בלייזר,,,,130000.0,130000,130000,130000.0,0,0.0,,,USD,net,EC,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2024,HTA,structure_only,מירון רוונה,,,,70000.0,70000,70000,70000.0,0,0.0,,,USD,net,EC,reported,1,0,1,BasketNews;Sport5;WallaSport;IsraelHayom,
+2025,PAN,structure_only,קנדריק נאן,"NUNN, KENDRICK",12774,4500000.0,4900000.0,4500000,4900000,4700000.0,1,0.0851,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",anchor
+2025,PAN,structure_only,נייג'ל הייז-דייוויס,"HAYES-DAVIS, NIGEL",8962,4000000.0,4500000.0,4000000,4500000,4250000.0,1,0.1176,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",anchor
+2025,PAN,structure_only,גרשון יאבוסל,"YABUSELE, GUERSCHON",10357,4000000.0,4000000.0,4000000,4000000,4000000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,מתיאס לסור,"LESSORT, MATHIAS",3842,2700000.0,2800000.0,2700000,2800000,2750000.0,1,0.0364,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",anchor
+2025,PAN,structure_only,קוסטאס סלוקאס,"SLOUKAS, KOSTAS",1926,2000000.0,2800000.0,2000000,2800000,2400000.0,1,0.3333,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,חואנצ'ו הרננגומז,"HERNANGOMEZ, JUANCHO",12712,2200000.0,2500000.0,2200000,2500000,2350000.0,1,0.1277,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,אייזק בונגה,"BONGA, ISAAC",6760,2150000.0,2160000.0,2150000,2160000,2155000.0,1,0.0046,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,לורנצו בראון,"BROWN, LORENZO",9622,1900000.0,1900000.0,1900000,1900000,1900000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,צ'די עוסמן,"OSMAN, CEDI",4088,1600000.0,1700000.0,1600000,1700000,1650000.0,1,0.0606,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,מוסטפה פאל,"FALL, MOUSTAPHA",8811,1600000.0,1600000.0,1600000,1600000,1600000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,דינוס מיטוגלו,"MITOGLOU, KONSTANTINOS",7866,750000.0,1500000.0,750000,1500000,1125000.0,1,0.6667,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",wide range
+2025,PAN,structure_only,ג'ריאן גרנט,"GRANT, JERIAN",11204,1000000.0,1400000.0,1000000,1400000,1200000.0,1,0.3333,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,ברנקו באדיו,"BADIO, BRANCOU",7527,1300000.0,1300000.0,1300000,1300000,1300000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,מריוס גריגוניס,"GRIGONIS, MARIUS",2328,1100000.0,1100000.0,1100000,1100000,1100000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,ניקוס רוגקאבופולוס,,,1100000.0,1100000.0,1100000,1100000,1100000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,עומר יורטסבן,"YURTSEVEN, OMER",5353,1000000.0,1000000.0,1000000,1000000,1000000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,יואניס פאפאפטרו,"PAPAPETROU, IOANNIS",5161,800000.0,800000.0,800000,800000,800000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,ואסיליס טוליופולוס,,,500000.0,500000.0,500000,500000,500000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,פנאיוטיס קאלאיצאקיס,,,350000.0,450000.0,350000,450000,400000.0,1,0.25,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,דימיטריס מוראיטיס,,,200000.0,350000.0,200000,350000,275000.0,1,0.5455,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,לפטריס מנצוקאס,,,300000.0,300000.0,300000,300000,300000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,אלכסנדרוס סאמודורוב,,,200000.0,200000.0,200000,200000,200000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,PAN,structure_only,יואניס קוזלוגלו,,,150000.0,150000.0,150000,150000,150000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,סשה וזנקוב,"VEZENKOV, SASHA",3469,3700000.0,4100000.0,3700000,4100000,3900000.0,1,0.1026,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",anchor
+2025,OLY,structure_only,אוון פורנייה,"FOURNIER, EVAN",13380,2100000.0,2500000.0,2100000,2500000,2300000.0,1,0.1739,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,מוסטפה פאל,"FALL, MOUSTAPHA",8811,1700000.0,1850000.0,1700000,1850000,1775000.0,1,0.0845,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",extended tenure
+2025,OLY,structure_only,ניקולה מילוטינוב,"MILUTINOV, NIKOLA",3941,1600000.0,1650000.0,1600000,1650000,1625000.0,1,0.0308,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,טיילר דורסי,"DORSEY, TYLER",9849,1400000.0,1500000.0,1400000,1500000,1450000.0,1,0.069,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,אלק פיטרס,"PETERS, ALEC",8829,1100000.0,1250000.0,1100000,1250000,1175000.0,1,0.1277,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,לוקה וילדוזה,"VILDOZA, LUCA",7947,1000000.0,1200000.0,1000000,1200000,1100000.0,1,0.1818,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,קוסטאס פאפאניקולאו,"PAPANIKOLAOU, KOSTAS",1255,1100000.0,1200000.0,1100000,1200000,1150000.0,1,0.087,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",extended tenure
+2025,OLY,structure_only,תומאס וולקאפ,"WALKUP, THOMAS",8855,950000.0,1200000.0,950000,1200000,1075000.0,1,0.2326,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",extended tenure
+2025,OLY,structure_only,פיליפ פטרושב,"PETRUSEV, FILIP",11194,1000000.0,1000000.0,1000000,1000000,1000000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,נייג'ל וויליאמס-גוס,"WILLIAMS-GOSS, NIGEL",7982,850000.0,1100000.0,850000,1100000,975000.0,1,0.2564,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,יאנוליס לארנצאקיס,"LARENTZAKIS, GIANNOULIS",10392,650000.0,750000.0,650000,750000,700000.0,1,0.1429,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,שאקיל מקיסיק,"MCKISSIC, SHAQUIELLE",7853,650000.0,650000.0,650000,650000,650000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,מוזס רייט,"WRIGHT, MOSES",12878,500000.0,600000.0,500000,600000,550000.0,1,0.1818,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",
+2025,OLY,structure_only,קינן אוונס,"EVANS, KEENAN",11218,500000.0,500000.0,500000,500000,500000.0,0,0.0,,,EUR,net,EL,estimated,0,0,1,"BasketNews (estimates, via research report)",

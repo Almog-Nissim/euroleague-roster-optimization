@@ -1,12 +1,10 @@
-.venv/
-venv/
-__pycache__/
-.idea/
-*.pyc
+data/raw/*
+!data/raw/.gitkeep
 
-data/*
-!data/processed/
 data/processed/*
 !data/processed/team_season.csv
-!data/processed/backtest_results.csv
+!data/processed/player_season.csv
+!data/processed/player_features.csv
+!data/processed/salary_anchors.csv
 !data/processed/coverage_audit.csv
+!data/processed/backtest_results.csv

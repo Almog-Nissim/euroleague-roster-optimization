@@ -5,16 +5,17 @@ paths.py
 אין יותר נתיבים יחסיים ואין יותר שתי תיקיות data.
 
 מיקום: src/paths.py
+מחזיר אובייקטי Path (pathlib), לא מחרוזות.
 """
 
-import os
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # .../PythonProject/src
-ROOT_DIR = os.path.dirname(BASE_DIR)                    # .../PythonProject
+BASE_DIR = Path(__file__).resolve().parent      # .../PythonProject/src
+ROOT_DIR = BASE_DIR.parent                      # .../PythonProject
 
-DATA_DIR      = os.path.join(ROOT_DIR, "data")
-RAW_DIR       = os.path.join(DATA_DIR, "raw")
-PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+DATA_DIR      = ROOT_DIR / "data"
+RAW_DIR       = DATA_DIR / "raw"
+PROCESSED_DIR = DATA_DIR / "processed"
 
-os.makedirs(RAW_DIR, exist_ok=True)
-os.makedirs(PROCESSED_DIR, exist_ok=True)
+RAW_DIR.mkdir(parents=True, exist_ok=True)
+PROCESSED_DIR.mkdir(parents=True, exist_ok=True)

@@ -16,6 +16,10 @@ build_team_season.py
   7. תקנון z תוך-עונתי. pir_per_round אינו בר-השוואה בין עונות:
      BAS 2025 צברה 92.5 עם win_pct 0.34, OLY 2016 צברה 83.7 עם 0.63.
      16 קבוצות ב-2016 מול 20 ב-2025 מזיזות את כל הפיזור.
+     # ללא סינון בשלב הבנייה — הדאטהסט נבנה מלא (158 שורות).
+# ספי הכיסוי (90%, 95%) מוחלים ב-backtest.py, שמריץ שלושה מפרטים
+# ומדווח את שלושתם. סינון כאן היה מקבע סף יחיד ומונע את מבחן היציבות.
+COVERAGE_MIN = 0.00
 
 מיקום: src/build_team_season.py
 """
@@ -266,7 +270,13 @@ def build():
                      "total_minutes", "expected_minutes", "minutes_coverage",
                      "is_covid_season"]]
     master = master.sort_values(["season", "win_pct"], ascending=[True, False])
-
+    expected_seasons = len(SEASONS) - len(EXCLUDED_SEASONS)
+    built_seasons = master["season"].nunique()
+    if built_seasons != expected_seasons:
+        raise RuntimeError(
+            f"נבנו {built_seasons} עונות במקום {expected_seasons}. "
+            f"נבנו: {sorted(master['season'].unique())}"
+        )
     out = os.path.join(PROCESSED_DIR, "team_season.csv")
     master.to_csv(out, index=False)
 
