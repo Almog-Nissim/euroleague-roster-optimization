@@ -8,3 +8,6 @@ data/processed/*
 !data/processed/salary_anchors.csv
 !data/processed/coverage_audit.csv
 !data/processed/backtest_results.csv
+.idea/
+__pycache__/
+*.pyc
