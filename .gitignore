@@ -1,6 +1,16 @@
+# ============================================================
+# data/raw — לא נדחף. גדול, ונמשך מחדש מה-API.
+# ============================================================
 data/raw/*
 !data/raw/.gitkeep
 
+# ============================================================
+# data/processed — רשימת היתר מפורשת.
+#
+# ⚠️ יום 7: הרשימה הישנה חסמה חמישה קבצים שנוצרו בימים 6-7,
+#    ובהם העמדות והפיצול הרב-מועדוני. push היה מצליח והדאטה
+#    לא היה עובר. **כל קובץ חדש ב-processed חייב להתווסף כאן.**
+# ============================================================
 data/processed/*
 !data/processed/team_season.csv
 !data/processed/player_season.csv
@@ -8,6 +18,21 @@ data/processed/*
 !data/processed/salary_anchors.csv
 !data/processed/coverage_audit.csv
 !data/processed/backtest_results.csv
+# --- נוספו ביום 7 ---
+!data/processed/player_positions.csv
+!data/processed/player_availability.csv
+!data/processed/player_production.csv
+!data/processed/player_club_season.csv
+!data/processed/israeli_el_matches.csv
+!data/processed/israeli_el_matches_REVIEW.csv
+
+# ============================================================
+# סביבה
+# ============================================================
 .idea/
+.venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
+.DS_Store
