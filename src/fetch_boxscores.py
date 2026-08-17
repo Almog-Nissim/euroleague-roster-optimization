@@ -196,4 +196,4 @@ def main(seasons):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or ["2024"])
+    main(sys.argv[1:] or ["2025"])

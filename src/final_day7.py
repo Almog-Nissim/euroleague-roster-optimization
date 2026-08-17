@@ -89,11 +89,13 @@ def bench(club, season, ps, posmap, repl):
     d = sr[sr.pc.isin(set(r.player_code)) & sr.position.notna()].copy()
 
     sp = _split_table()
-    n_split = 0
+    n_split, n_zero = 0, 0
     if len(sp):
-        s = sp[(sp.season == season) & (sp.club == club)].set_index(
-            sp[(sp.season == season) & (sp.club == club)]
-            .player_code.astype(str))
+        season_rows = sp[sp.season == season]
+        seen = set(season_rows.player_code.astype(str))
+        mine = season_rows[season_rows.club == club]
+        s = mine.set_index(mine.player_code.astype(str))
+        drop = []
         for i in d.index:
             pc = d.at[i, "pc"]
             if pc in s.index:
@@ -103,8 +105,20 @@ def bench(club, season, ps, posmap, repl):
                     n_split += 1
                 d.at[i, "ppm_true"] = float(row.ppm)
                 d.at[i, "avail_true"] = float(row.games) / gmax
+            elif pc in seen:
+                # 🔴 השחקן שיחק בעונה הזו — אבל **לא במועדון הזה**.
+                #    קבוקלו הוא המקרה: `player_season` מסמן אותו
+                #    `HTA;DUB`, ובפועל כל 11 משחקיו היו בדובאי.
+                #    הפועל שילמה 1.2M וקיבלה אפס דקות יורוליג.
+                #    הגרסה הקודמת **נפלה לאחור למצרפי** וזיכתה את
+                #    הפועל בדקות של דובאי. תרומה למועדון = אפס.
+                #    השכר נשאר בתקציב — המועדון שילם.
+                drop.append(i)
+                n_zero += 1
+        if drop:
+            d = d.drop(index=drop)
     q, used, _ = score_rows(d, "ppm_true", "avail_true", repl)
-    return q, len(d), len(r), used, n_split
+    return q, len(d), len(r), used, (n_split, n_zero)
 
 
 def main():
@@ -128,12 +142,11 @@ def main():
         r = cr.roster_df(club, test)
         B = float(r.salary.dropna().sum()) + cr.budget_only_total(club, test)
 
-        _, nb, nr, _, nsp = bench(club, test, ps, posmap, 0.127)
+        _, nb, nr, _, (nsp, nz) = bench(club, test, ps, posmap, 0.127)
         h(f"{club} {test}   תקציב {B:,.0f}   סגל מועדון {nr} "
           f"(מהם מנוקדים {nb})")
-        print(f"  פיצול רב-מועדוני הוחל על {nsp} שחקנים"
-              if nsp else "  ⚠️ אין פיצול רב-מועדוני לעונה זו "
-                          "(חסר בוקסקור) — הסטטיסטיקה מצרפית")
+        print(f"  פיצול רב-מועדוני: {nsp} תוקנו · "
+              f"{nz} הוצאו (שיחקו בעונה אך לא במועדון הזה)")
 
         # 🔴 יום 7, אלמוג: **חוק יורוליג** — כל מועדון חייב לרשום
         # לפחות 12 שחקנים. אומת מול הדאטה: 158 קבוצות-עונה,

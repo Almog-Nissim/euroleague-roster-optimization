@@ -72,10 +72,45 @@ def code_from_pid(pid):
 
 def build(season):
     b = pd.read_csv(RAW_DIR / f"boxscore_player_{season}.csv", dtype=str)
-    # 🔴 הבוקסקור כולל פלייאוף ופיינל-פור; `player_season` נבנה
-    # מ-`accumulated_rs_*`, כלומר **עונה סדירה בלבד**. בלי הסינון
-    # הזה הפיצול מוסיף עד 7 משחקים לשחקן ואינו משחזר את המקור.
-    # נתפס באימות ולא אחריו.
+    # 🔴 הבוקסקור כולל פלייאוף, פלייאין ופיינל-פור; `player_season`
+    # נבנה מ-`accumulated_rs_*`, כלומר **עונה סדירה בלבד**. בלי
+    # הסינון הזה הפיצול מוסיף עד 7 משחקים לשחקן ואינו משחזר את
+    # המקור. נתפס באימות ולא אחריו.
+    #
+    # ⚠️ `fetch_boxscores` v2 משתמש בנקודת קצה של משחק בודד, והיא
+    #    **אינה מחזירה Phase**. לכן יש נפילה לקובץ נפרד
+    #    `gamecode_phase_<season>.csv` מ-`fetch_phases.py`.
+    #    ולא — לא ניתן להסיק את השלב לפי טווח gamecode: ב-2025
+    #    ה-PI משובץ באמצע, ואף סף רציף אינו משחזר את player_season.
+    if "Phase" not in b.columns:
+        pf = RAW_DIR / f"gamecode_phase_{season}.csv"
+        if not pf.exists():
+            raise FileNotFoundError(
+                f"אין עמודת Phase ואין {pf.name}. "
+                f"הרץ: python src/fetch_phases.py {season}")
+        ph = pd.read_csv(pf, dtype=str)
+        # 🔴 פעם רביעית בפרויקט: **מזהה אינו מספר**, ושתי נקודות
+        #    הקצה מייצגות אותו אחרת. `get_gamecodes_season` מחזיר
+        #    "E2025_1"; הבוקסקור מחזיר "1". מיזוג ישיר נותן **אפס
+        #    התאמות** ולא זורק — הוא פשוט ממלא NaN.
+        #    לכן: נרמול לשני הצדדים, ואימות מפורש אחריו.
+        def gnorm(v):
+            t = str(v).strip()
+            return t.split("_")[-1] if "_" in t else t
+        ph["_k"] = ph.Gamecode.map(gnorm)
+        b["_k"] = b.Gamecode.map(gnorm)
+        overlap = len(set(b._k) & set(ph._k))
+        print(f"  מיזוג שלבים: {overlap}/{b._k.nunique()} gamecodes הותאמו")
+        if overlap == 0:
+            raise ValueError(
+                f"אפס התאמות בין הבוקסקור לקובץ השלבים.\n"
+                f"  בוקסקור: {b.Gamecode.dropna().unique()[:3].tolist()}\n"
+                f"  שלבים  : {ph.Gamecode.dropna().unique()[:3].tolist()}")
+        b = b.merge(ph[["_k", "Phase"]], on="_k", how="left").drop(
+            columns=["_k"])
+        if b.Phase.isna().any():
+            raise ValueError(
+                f"{int(b.Phase.isna().sum())} שורות בלי Phase אחרי המיזוג")
     phases = sorted(b.Phase.dropna().unique())
     b = b[b.Phase == "RS"].copy()
     print(f"  שלבים בקובץ: {phases} -> נשמר RS בלבד")
