@@ -25,6 +25,9 @@ data/processed/*
 !data/processed/player_club_season.csv
 !data/processed/israeli_el_matches.csv
 !data/processed/israeli_el_matches_REVIEW.csv
+# --- נוספו ביום 8 ---
+!data/processed/salary_external_2025.csv
+!data/processed/club_budgets_gemini.csv
 
 # ============================================================
 # סביבה
