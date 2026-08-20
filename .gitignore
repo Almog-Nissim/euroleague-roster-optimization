@@ -56,3 +56,8 @@ __pycache__/
 
 # --- יום 10: בוקסקורים. המשיכה עלתה שישה סבבים, ה-API לא יציב ---
 !data/raw/boxscore_player_*.csv
+
+# --- יום 11 ---
+!data/processed/dilution_test.csv
+!data/processed/price_structure.csv
+!data/processed/scale_sensitivity.csv

@@ -60,6 +60,7 @@ import roster_optimizer as ro  # noqa: E402
 import optimizer_backtest as ob  # noqa: E402
 from paths import PROCESSED_DIR  # noqa: E402
 from roster_membership_audit import score_rows  # noqa: E402
+import optimise_consistent as oc  # noqa: E402
 from optimise_consistent import optimise_v2  # noqa: E402
 from final_day7 import MIN_LEGAL_ROSTER  # noqa: E402
 from league_backtest import build_pool, club_side, REPL, SEASONS  # noqa: E402
@@ -104,6 +105,9 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE):
     p += pulp.lpSum((usage[i] - cap) * e[i] for i in range(n)) <= 0
 
     p.solve(pulp.PULP_CBC_CMD(msg=0))
+    oc.LAST.clear()
+    oc.LAST.update(status=pulp.LpStatus[p.status],
+                   obj=pulp.value(p.objective), fn="capped")
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
     sel = np.array([x[i].value() > 0.5 for i in range(n)])
@@ -135,7 +139,7 @@ def wusage(rows: pd.DataFrame, mins: np.ndarray) -> float:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--usage", default="data/processed/usage_curve_results.csv")
+    ap.add_argument("--usage", default="data/processed/usage_curve_results_min0.csv")
     args = ap.parse_args()
 
     hdr("הבנצ'מרק עם אילוץ הכדור, לצד הגרסה בלעדיו")
@@ -167,7 +171,9 @@ def main() -> int:
             q_club, _, _ = score_rows(keep, "ppm_true", "avail_true", REPL)
 
             sel_f, min_f = optimise_v2(cand, B, MIN_LEGAL_ROSTER)
+            lp_free = oc.LAST.get("obj", np.nan)
             sel_c, min_c = optimise_capped(cand, B, MIN_LEGAL_ROSTER)
+            lp_cap = oc.LAST.get("obj", np.nan)
             if sel_f is None or sel_c is None:
                 print(f"  {club:<8}   אין פתרון"
                       + ("  (מאולץ)" if sel_c is None else ""))
@@ -182,6 +188,7 @@ def main() -> int:
 
             rows.append(dict(season=test, club=club, budget=B, q_club=q_club,
                              q_free=q_free, q_cap=q_cap,
+                             lp_free=lp_free, lp_cap=lp_cap,
                              n_free=int(sel_f.sum()), n_cap=int(sel_c.sum()),
                              u_free=u_free, u_cap=u_cap,
                              adv_free=q_free / q_club - 1,
@@ -214,6 +221,34 @@ def main() -> int:
     print(f"\n  שיעור ניצחון : {w_free:.1%}  ->  {w_cap:.1%}")
     print(f"  יתרון חציוני : {d.adv_free.median():+.1%}  ->  "
           f"{d.adv_cap.median():+.1%}")
+
+    hdr("🔴 מבחן ה-LP — סגירת האנומליה של OLY")
+    print("  אילוץ מהדק אינו יכול להעלות את ערך המטרה. זה חייב")
+    print("  להתקיים ב-38 מתוך 38. אם לא — יש באג באילוץ.\n")
+    print("  ⚠️ q_free ו-q_cap הם score_rows על ppm_true, ולהם מותר")
+    print("     להתהפך: הם מודדים תוצאה, לא את מה שמוטב.\n")
+    viol = d[d.lp_cap > d.lp_free + 1e-6]
+    print(f"  הפרות: {len(viol)} מתוך {len(d)}")
+    if len(viol):
+        print("  🔴 באג באילוץ:")
+        print(viol[["season", "club", "lp_free", "lp_cap"]].to_string(index=False))
+    else:
+        print("  ✅ אפס הפרות. **האילוץ תקין.**")
+        gap = (d.lp_free - d.lp_cap)
+        print(f"     עלות האילוץ ב-LP: חציון {gap.median():.2f} · "
+              f"טווח {gap.min():.2f}..{gap.max():.2f}")
+
+    flip = d[d.q_cap > d.q_free]
+    print(f"\n  היפוכים ב-ppm_true: {len(flip)} מתוך {len(d)}"
+          f"  ({len(flip) / len(d):.0%})")
+    if len(flip):
+        print("  אלה שגיאת ניבוי, לא באג. הגדול שבהם:")
+        w = flip.assign(delta=flip.q_cap - flip.q_free).nlargest(3, "delta")
+        print(w[["season", "club", "lp_free", "lp_cap",
+                 "q_free", "q_cap", "delta"]].to_string(index=False))
+        print(f"\n  ⇒ OLY אינו חריג יחיד אלא {len(flip)} מקרים מאותה")
+        print("     משפחה. **המנוע ממטב על מנובא ונמדד על אמיתי,**")
+        print("     ושגיאת הניבוי גדולה מעלות האילוץ.")
 
     hdr("מול התחזיות")
     print(f"  אובדן ניקוד — אלמוג ~7 · קלוד 8-12  ->  {loss:.1f}")

@@ -83,6 +83,19 @@ from roster_membership_audit import score_rows
 SEP = "=" * 78
 
 
+# ---------------------------------------------------------------------
+# יום 11 — ערך המטרה של ה-LP
+#
+# מבחן המונוטוניות של יום 10 נמדד על score_rows, שהיא הקצאה חמדנית
+# עם מילוי חלופי ובלי רצפות עמדה — כלומר **לא** פונקציית המטרה של
+# ה-LP. לה אין ערובת מונוטוניות, ולכן "11 ירידות" לא הוכיחו באג.
+#
+# LAST מתעד את הפתרון האחרון בלי לשנות את חתימת ההחזרה, כי יש 22
+# קריאות ב-19 קבצים. optimise_capped כותב לאותו דיקט.
+# ---------------------------------------------------------------------
+LAST: dict = {}
+
+
 def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
     """זהה ל-ro.optimise פרט להגדרת משתנה הדקות.
 
@@ -117,6 +130,9 @@ def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
             ro.POS_MIN_SHARE[ps_] * ro.MINUTES_PER_GAME
 
     p.solve(pulp.PULP_CBC_CMD(msg=0))
+    LAST.clear()
+    LAST.update(status=pulp.LpStatus[p.status],
+                obj=pulp.value(p.objective), fn="v2")
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
     sel = np.array([x[i].value() > 0.5 for i in range(n)])

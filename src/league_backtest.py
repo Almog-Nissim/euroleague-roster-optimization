@@ -90,7 +90,8 @@ def h(t):
     print("\n" + SEP + f"\n{t}\n" + SEP)
 
 
-def build_pool(test, train_max, feat, anch, pos, ps, with_newcomers=True):
+def build_pool(test, train_max, feat, anch, pos, ps, with_newcomers=True,
+               normalise_cost=False):
     """מאגר המועמדים לעונת test, מתומחר בסקלה 1.0 (מחירים יחסיים).
 
     כל המודלים מאומנים על עונות <= train_max. אין הצצה ל-test.
@@ -129,7 +130,34 @@ def build_pool(test, train_max, feat, anch, pos, ps, with_newcomers=True):
     cand["ppm_true"] = cand.pir_per_game / cand.min_per_game
     cand["avail_true"] = cand.frac
     cand["pc"] = cand.player_code.astype(str)
-    return cand.reset_index(drop=True), info
+    cand = cand.reset_index(drop=True)
+
+    # ------------------------------------------------------------------
+    # 🔴 יום 11 — נרמול לפי ממוצע המאגר
+    #
+    # `cm` נאמד מחדש לכל עונת מבחן (≤2023 ל-2024, ≤2024 ל-2025),
+    # ולכן רמת המחירים שונה בין העונות: ממוצע המאגר יצא 0.966
+    # ב-2024 ו-1.239 ב-2025 — פער של 28% שאינו שוק אלא מודל.
+    #
+    # **בבנצ'מרק זה לא מזיק**, כי הסקלה מכפילה את המועדון ואת
+    # המנוע באותו קבוע ומתקזזת. לכן ברירת המחדל היא כבוי — שום
+    # תוצאה קיימת לא זזה.
+    #
+    # **בעקומת התקציב זה כן מזיק**, כי התקציב הוא קלט מוחלט
+    # ומשווים בין עונות. בלי הנרמול "20M" פירושו דבר אחר בכל
+    # עונה, ופער הרוויה של 8M התברר כ-1.7M אחרי תיקון.
+    #
+    # ההמרה מדויקת: הכפלת כל המחירים והתקציב באותו קבוע נותנת
+    # LP זהה. לכן היחידה החדשה היא "כמה שחקנים ממוצעים אפשר
+    # לקנות" — בעלת משמעות פיזית ובת השוואה בין עונות.
+    # ------------------------------------------------------------------
+    info["cost_mean_raw"] = float(cand.cost.mean())
+    if normalise_cost:
+        cand["cost"] = cand.cost / info["cost_mean_raw"]
+        info["cost_scale"] = info["cost_mean_raw"]
+    else:
+        info["cost_scale"] = 1.0
+    return cand, info
 
 
 def club_side(cand, split, club, test, gmax, posmap):

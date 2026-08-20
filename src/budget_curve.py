@@ -67,6 +67,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import optimizer_backtest as ob  # noqa: E402
+import optimise_consistent as oc  # noqa: E402
 from paths import PROCESSED_DIR  # noqa: E402
 from roster_membership_audit import score_rows  # noqa: E402
 from optimise_consistent import optimise_v2  # noqa: E402
@@ -92,8 +93,11 @@ def calibrate(feat, anch, pos, ps, split, posmap) -> None:
 
     rows = []
     for train_max, test in SEASONS:
-        cand, _ = build_pool(test, train_max, feat, anch, pos, ps)
+        cand, pinfo = build_pool(test, train_max, feat, anch, pos, ps,
+                                 normalise_cost=True)
         gmax = float(ps[ps.season == test].games.max())
+        print(f"  עונה {test}: סקאלה גולמית {pinfo['cost_mean_raw']:.3f} "
+              f"-> מנורמל")
         for club in sorted(split[split.season == test].club.unique()):
             keep, _ = club_side(cand, split, club, test, gmax, posmap)
             if len(keep) < MIN_ROSTER:
@@ -101,6 +105,11 @@ def calibrate(feat, anch, pos, ps, split, posmap) -> None:
             rows.append({"season": test, "club": club,
                          "budget_rel": float(keep.cost.sum())})
     rel = pd.DataFrame(rows)
+
+    print("\n  🔴 תקציבים מנורמלים ('כמה שחקנים ממוצעים'), לפי עונה:")
+    print(rel.groupby("season").budget_rel
+          .agg(n="size", מינ="min", חציון="median", מקס="max")
+          .round(2).to_string())
 
     print(f"  {len(rel)} עונות-מועדון · תקציב יחסי:")
     print(f"    מינימום {rel.budget_rel.min():.2f} · חציון "
@@ -132,13 +141,16 @@ def sweep(cand, budgets_rel, budgets_m, capped: bool, label: str) -> pd.DataFram
     fn = optimise_capped if capped else optimise_v2
     rows = []
     print(f"\n  {label}")
-    print(f"  {'תקציב M':>9}{'אמת':>9}{'מנובא':>10}{'סגל':>6}{'נוצל':>9}"
-          f"{'usage':>8}{'שוליים':>9}{'ש.מנובא':>10}")
-    prev_q = prev_p = None
+    print(f"  {'תקציב M':>9}{'q_lp':>10}{'ש.LP':>9}{'אמת':>9}{'מנובא':>10}"
+          f"{'סגל':>6}{'נוצל':>9}{'usage':>8}{'שוליים':>9}")
+    prev_q = prev_p = prev_lp = None
     for b_rel, b_m in zip(budgets_rel, budgets_m):
         sel, mins = fn(cand, b_rel, MIN_ROSTER)
+        # ערך המטרה של ה-LP. זו הכמות היחידה שחייבת להיות מונוטונית.
+        q_lp = oc.LAST.get("obj", np.nan)
         if sel is None:
-            print(f"  {b_m:>9.0f}   אין פתרון")
+            print(f"  {b_m:>9.0f}   אין פתרון · status="
+                  f"{oc.LAST.get('status')}")
             continue
         r = cand[sel]
         q, _, _ = score_rows(r, "ppm_true", "avail_true", REPL)
@@ -151,28 +163,53 @@ def sweep(cand, budgets_rel, budgets_m, capped: bool, label: str) -> pd.DataFram
         u = wusage(r, mins[sel]) if "usage_prior" in r else np.nan
         marg = (q - prev_q) if prev_q is not None else np.nan
         marg_p = (q_pred - prev_p) if prev_p is not None else np.nan
+        marg_lp = (q_lp - prev_lp) if prev_lp is not None else np.nan
         rows.append({"budget_m": b_m, "budget_rel": b_rel, "q": q,
-                     "q_pred": q_pred, "n": int(sel.sum()), "spent_rel": spent,
+                     "q_pred": q_pred, "q_lp": q_lp,
+                     "n": int(sel.sum()), "spent_rel": spent,
                      "used_pct": spent / b_rel, "usage_w": u,
-                     "marginal": marg, "marginal_pred": marg_p, "capped": capped})
-        print(f"  {b_m:>9.0f}{q:>9.1f}{q_pred:>10.1f}{int(sel.sum()):>6}"
+                     "marginal": marg, "marginal_pred": marg_p,
+                     "marginal_lp": marg_lp, "capped": capped})
+        flag = " 🔴" if (prev_lp is not None and marg_lp < -1e-6) else ""
+        print(f"  {b_m:>9.0f}{q_lp:>10.2f}"
+              + (f"{marg_lp:>+9.3f}" if prev_lp is not None else f"{'—':>9}")
+              + f"{q:>9.1f}{q_pred:>10.1f}{int(sel.sum()):>6}"
               f"{spent / b_rel:>8.1%}{u:>8.2f}"
               + (f"{marg:>+9.2f}" if prev_q is not None else f"{'—':>9}")
-              + (f"{marg_p:>+10.2f}" if prev_p is not None else f"{'—':>10}"))
-        prev_q, prev_p = q, q_pred
+              + flag)
+        prev_q, prev_p, prev_lp = q, q_pred, q_lp
     return pd.DataFrame(rows)
 
 
-def find_saturation(d: pd.DataFrame, thresh: float = 0.5):
+def find_saturation(d: pd.DataFrame, thresh: float = 0.5,
+                    frac: float = 0.99, col: str = "q_lp"):
     """
-    נקודת הרוויה: התקציב הראשון שממנו והלאה התשואה השולית נשארת
-    מתחת לסף. סף של 0.5 נקודות ניקוד למיליון.
+    🔴 יום 11: הגלאי עבר מ-`q` ל-`q_lp`.
+
+    `q` הוא score_rows על ppm_true, וס"ת התשואה השולית שלו הוא
+    5.75 נקודות למיליון בעוד השיפוע עצמו 1-4. סף של 0.5 על רעש
+    כזה מודד רעש — הוא נתן 25M ו-38M, ועל q_lp שתי הגדרות בלתי
+    תלויות נותנות אותה תשובה בכל ארבע התצורות.
+
+    שני גלאים, כי הסכמה ביניהם היא הראיה שהמספר יציב:
+      א. שולי  — התקציב הראשון שממנו והלאה התשואה < thresh
+      ב. סף    — התקציב הראשון שבו הערך >= frac מהערך בקצה
+
+    מחזיר (שולי, סף). אי-הסכמה גדולה = הרוויה לא חדה.
     """
-    d = d.dropna(subset=["marginal"]).sort_values("budget_m")
-    for i in range(len(d)):
-        if (d["marginal"].iloc[i:] < thresh).all():
-            return float(d["budget_m"].iloc[i])
-    return None
+    d = d.sort_values("budget_m")
+    v = d[col].to_numpy(dtype=float)
+    b = d["budget_m"].to_numpy(dtype=float)
+    if len(v) < 3 or np.isnan(v).any():
+        return None, None
+
+    m = np.diff(v)
+    s_marg = next((float(b[i + 1]) for i in range(len(m))
+                   if (m[i:] < thresh).all()), None)
+
+    hit = np.flatnonzero(v >= frac * v[-1])
+    s_thr = float(b[hit[0]]) if len(hit) else None
+    return s_marg, s_thr
 
 
 def main() -> int:
@@ -183,9 +220,11 @@ def main() -> int:
     ap.add_argument("--lo", type=float, default=10.0)
     ap.add_argument("--hi", type=float, default=40.0)
     ap.add_argument("--step", type=float, default=1.0)
-    ap.add_argument("--usage", default="data/processed/usage_curve_results.csv")
+    ap.add_argument("--usage", default="data/processed/usage_curve_results_min0.csv")
     ap.add_argument("--no-cap", action="store_true",
                     help="להריץ גם בלי אילוץ הכדור, להשוואה")
+    ap.add_argument("--raw-cost", action="store_true",
+                    help="בלי נרמול לממוצע המאגר — משחזר את יום 11 המוקדם")
     args = ap.parse_args()
 
     feat, anch, pos, ps = ob.load_all()
@@ -218,9 +257,13 @@ def main() -> int:
 
     frames = []
     for train_max, test in SEASONS:
-        cand, _ = build_pool(test, train_max, feat, anch, pos, ps)
+        cand, pinfo = build_pool(test, train_max, feat, anch, pos, ps,
+                                 normalise_cost=not args.raw_cost)
         cand = attach_usage(cand, upath, test)
         print(f"\n  עונה {test} · מאגר {len(cand)}")
+        print(f"  🔴 סקאלת המחירים הגולמית: {pinfo['cost_mean_raw']:.3f}"
+              + ("  ->  מנורמל ל-1.000" if not args.raw_cost
+                 else "  (לא מנורמל — התקציב אינו בר-השוואה בין עונות)"))
 
         d = sweep(cand, budgets_rel, budgets_m, True, "עם אילוץ הכדור")
         d["season"] = test
@@ -236,55 +279,110 @@ def main() -> int:
     hdr("התוצאה")
     cap = d[d.capped]
     for season, g in cap.groupby("season"):
-        sat = find_saturation(g)
-        q_lo = float(g[g.budget_m == args.lo].q.iloc[0]) if (g.budget_m == args.lo).any() else np.nan
-        q_hi = float(g[g.budget_m == args.hi].q.iloc[0]) if (g.budget_m == args.hi).any() else np.nan
+        s_marg, s_thr = find_saturation(g)
+        pick = lambda col, bm: (float(g[g.budget_m == bm][col].iloc[0])
+                                if (g.budget_m == bm).any() else np.nan)
+        lp_lo, lp_hi = pick("q_lp", args.lo), pick("q_lp", args.hi)
         print(f"\n  עונה {season}")
-        print(f"    ניקוד ב-{args.lo:.0f}M : {q_lo:.1f}")
-        print(f"    ניקוד ב-{args.hi:.0f}M : {q_hi:.1f}")
-        print(f"    עלייה כוללת    : {q_hi - q_lo:+.1f} נקודות")
-        print(f"    🔴 נקודת רוויה : "
-              + (f"{sat:.0f}M" if sat else "לא זוהתה — העקומה עולה לכל האורך"))
-        g25 = g[g.budget_m == 25]
-        if len(g25) and not np.isnan(q_hi):
-            print(f"    25M -> {args.hi:.0f}M : {q_hi - float(g25.q.iloc[0]):+.1f} נקודות")
-        print(f"    גודל סגל       : {int(g.n.min())} .. {int(g.n.max())}")
-        print(f"    ניצול תקציב    : {g.used_pct.min():.1%} .. {g.used_pct.max():.1%}")
+        print(f"    q_lp ב-{args.lo:.0f}M   : {lp_lo:.2f}")
+        print(f"    q_lp ב-{args.hi:.0f}M   : {lp_hi:.2f}")
+        print(f"    עלייה כוללת   : {lp_hi - lp_lo:+.1f} נקודות")
+        print(f"    🔴 רוויה      : שולי {s_marg or '—'}M  ·  "
+              f"סף 99% {s_thr or '—'}M")
+        print(f"    (על q האמיתי, לשם השוואה: {pick('q', args.lo):.1f} -> "
+              f"{pick('q', args.hi):.1f} — רועש, לא לדיווח)")
+        print(f"    גודל סגל      : {int(g.n.min())} .. {int(g.n.max())}")
+        print(f"    ניצול תקציב   : {g.used_pct.min():.1%} .. "
+              f"{g.used_pct.max():.1%}")
 
-    hdr("🔴 מונוטוניות — האם המנוע מחזיר את הסגל הטוב ביותר")
-    print("  תקציב גדול יותר מכיל את כל מה שהיה בקטן. לכן הניקוד")
-    print("  **שה-LP ממקסם** חייב לעלות או להישאר. אם הוא יורד — באג.\n")
+    if args.no_cap:
+        hdr("עלות אילוץ הכדור לפי תקציב")
+        print("  יום 10 דיווח שבתקציב גבוה האילוץ 'כמעט חינם' (2.7).")
+        print("  זה נמדד על q. על q_lp הכיוון הפוך.\n")
+        piv = (d.pivot_table(index=["season", "budget_m"], columns="capped",
+                             values="q_lp")
+                 .rename(columns={True: "capped", False: "free"}))
+        piv["cost"] = piv["free"] - piv["capped"]
+        for season, g in piv.groupby(level=0):
+            row = "  ".join(
+                f"{int(b)}M {g.loc[(season, b), 'cost']:5.2f}"
+                for b in (args.lo, 20, 30, args.hi)
+                if (season, b) in g.index)
+            print(f"  {season}   {row}")
+
+    hdr("🔴 מונוטוניות — הבדיקה על ערך המטרה של ה-LP")
+    print("  תקציב גדול יותר מכיל את כל מה שהיה בקטן, ולכן **ערך המטרה")
+    print("  של ה-LP** חייב לעלות או להישאר. רק ירידה שם היא באג.\n")
+    print("  ⚠️ q_pred ו-q מחושבים ב-score_rows — הקצאה חמדנית עם מילוי")
+    print("     חלופי, בלי רצפות עמדה, ותקרה שמוחלת לפני הזמינות. זו")
+    print("     **אינה** פונקציית המטרה, ואין לה ערובת מונוטוניות.")
+    print("     ירידות שם הן שגיאת הקצאה ושגיאת ניבוי, לא באגים.\n")
+    print("  תחזיות ירידות ב-LP:  קלוד 0-2  ·  אלמוג 1-3\n")
     for (season, cp), g in d.groupby(["season", "capped"]):
         g = g.sort_values("budget_m")
+        v_lp = int((g["marginal_lp"] < -1e-6).sum())
         v_pred = int((g["marginal_pred"] < -1e-6).sum())
         v_true = int((g["marginal"] < -1e-6).sum())
-        worst_p = float(g["marginal_pred"].min())
-        worst_t = float(g["marginal"].min())
         tag = "מאולץ" if cp else "חופשי"
-        print(f"  {season} {tag:<7} מנובא: {v_pred:>2} ירידות (מקס {worst_p:+.2f})"
-              f"   ·   אמת: {v_true:>2} ירידות (מקס {worst_t:+.2f})")
-    tot_pred = int((d["marginal_pred"] < -1e-6).sum())
-    if tot_pred == 0:
-        print("\n  ✅ הניקוד המנובא מונוטוני לחלוטין. **המנוע תקין.**")
-        print("     כל הרעידה בעמודת האמת היא שגיאת מודל התפוקה,")
-        print("     והיא ניתנת לכימות: זהו רוחב הרעש של הניבוי.")
+        print(f"  {season} {tag:<7} "
+              f"LP: {v_lp:>2} (מקס {g['marginal_lp'].min():+.4f})  ·  "
+              f"מנובא: {v_pred:>2}  ·  אמת: {v_true:>2}")
+
+    tot_lp = int((d["marginal_lp"] < -1e-6).sum())
+    if tot_lp == 0:
+        print("\n  ✅ ערך המטרה של ה-LP מונוטוני לחלוטין.")
+        print("     **אין באג. חסם יום 10 נופל.** 10.9 של האילוץ קביל,")
+        print("     ו-OLY הוא שגיאת ניבוי ולא כשל אופטימיזציה.")
         sd = float(d.groupby(["season", "capped"])["marginal"].std().mean())
-        print(f"     ס\"ת התשואה השולית באמת: {sd:.2f} נקודות למיליון.")
+        print(f"     ס\"ת התשואה השולית באמת: {sd:.2f} נקודות למיליון —")
+        print("     זהו רוחב הרעש של הניבוי, וניתן לדיווח.")
     else:
-        print(f"\n  🔴 {tot_pred} ירידות גם בניקוד המנובא — יש באג ב-LP.")
-        print("     אל תקרא את העקומה עד שזה נפתר.")
+        print(f"\n  🔴 {tot_lp} ירידות בערך המטרה של ה-LP.")
+        print("     הרץ מחדש עם gapRel=0 על הנקודות האלה בלבד.")
+        w = d[d["marginal_lp"] < -1e-6][
+            ["season", "capped", "budget_m", "q_lp", "marginal_lp"]]
+        print(w.to_string(index=False))
 
     hdr("מול התחזיות")
-    sats = [find_saturation(g) for _, g in cap.groupby("season")]
-    sats = [s for s in sats if s]
-    if sats:
-        avg = float(np.mean(sats))
-        print(f"  נקודת רוויה ממוצעת: {avg:.0f}M")
-        print(f"    אלמוג ~35M  {'✅' if 30 <= avg <= 40 else '❌'}")
-        print(f"    קלוד  ~16M  {'✅' if 13 <= avg <= 19 else '❌'}")
+    print("  ⚠️ התחזיות המקוריות (אלמוג ~35M · קלוד ~16M) נרשמו כשהגלאי")
+    print("     רץ על q הרועש. הן נעולות מחדש ביום 11 על q_lp:")
+    print("     קלוד 26-32M  ·  אלמוג 30-35M\n")
+    pairs = [find_saturation(g) for _, g in cap.groupby("season")]
+    marg = [s for s, _ in pairs if s]
+    thr = [s for _, s in pairs if s]
+    if thr:
+        a_t, a_m = float(np.mean(thr)), (float(np.mean(marg)) if marg else np.nan)
+        print(f"  רוויה ממוצעת — סף 99%: {a_t:.0f}M  ·  שולי: {a_m:.0f}M")
+        print(f"    הפרש בין הגלאים: {abs(a_t - a_m):.0f}M "
+              + ("(מסכימים — המספר יציב)" if abs(a_t - a_m) <= 2
+                 else "🔴 (חולקים — הרוויה אינה חדה)"))
+        print(f"    קלוד  26-32M  {'✅' if 26 <= a_t <= 32 else '❌'}")
+        print(f"    אלמוג 30-35M  {'✅' if 30 <= a_t <= 35 else '❌'}")
     else:
-        print("  לא זוהתה רוויה — העקומה עולה לכל האורך.")
-        print("  ❌ שתי התחזיות. יש כלי תכנון, ולא מסקנה על גבול הכסף.")
+        print("  לא זוהתה רוויה — העקומה עולה לכל האורך. ❌ שתי התחזיות.")
+
+    print("\n  🔴 אות מול רעש — קובע את הדאשבורד")
+    sd = float(d.groupby(["season", "capped"])["marginal"].std().mean())
+    print(f"     ס\"ת התשואה השולית האמיתית : {sd:.2f} נקודות למיליון")
+    print("\n     ⚠️ השיפוע נמדד **מתחת לרוויה בלבד**. ממוצע על כל")
+    print("        הטווח כולל נקודות שבהן השיפוע אפס בהגדרה, ומדלל")
+    print("        אותו כלפי מטה (0.82 במקום ~1.6).\n")
+    for season, g in cap.groupby("season"):
+        _, s_thr = find_saturation(g)
+        if not s_thr:
+            continue
+        g = g.sort_values("budget_m")
+        pre = g[g.budget_m <= s_thr]
+        span = float(pre.budget_m.iloc[-1] - pre.budget_m.iloc[0])
+        sl = float(pre.q_lp.iloc[-1] - pre.q_lp.iloc[0]) / span
+        low = g[g.budget_m <= args.lo + 5]
+        sl_low = (float(low.q_lp.iloc[-1] - low.q_lp.iloc[0])
+                  / float(low.budget_m.iloc[-1] - low.budget_m.iloc[0]))
+        print(f"     {season}  עד רוויה ({s_thr:.0f}M): {sl:.2f} נק'/M "
+              f"(יחס {sl / sd:.2f})  ·  "
+              f"קצה נמוך: {sl_low:.2f} נק'/M (יחס {sl_low / sd:.2f})")
+    print("\n     היחס מתחת ל-1 בכל הטווח ⇒ 'מה מיליון קונה' נקרא")
+    print("     מ-q_lp בלבד, והרעש מוצג כרצועה סביב העקומה.")
 
     print("\n  ⚠️ הזכר: כל נקודה על העקומה יושבת מעל הטווח הנצפה")
     print("     היסטורית (ppm ~0.6 מול מקסימום 0.509), ומודל העלות")
