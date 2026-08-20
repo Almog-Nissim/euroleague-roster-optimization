@@ -28,6 +28,20 @@ data/processed/*
 # --- Χ Χ•Χ΅Χ¤Χ• Χ‘Χ™Χ•Χ 8 ---
 !data/processed/salary_external_2025.csv
 !data/processed/club_budgets_gemini.csv
+# --- Χ Χ•Χ΅Χ¤Χ• Χ‘Χ™Χ•Χ 10 ---
+!data/processed/game_index.csv
+!data/processed/team_season_games.csv
+!data/processed/engine_rosters.csv
+!data/processed/roster_usage.csv
+!data/processed/usage_decompose.csv
+!data/processed/usage_constrained_results.csv
+!data/processed/usage_curve_results.csv
+!data/processed/id_seam_unmatched.csv
+!data/processed/budget_curve.csv
+!data/processed/budget_relative.csv
+!data/processed/real_returns.csv
+# Χ‘Χ•Χ§Χ΅Χ§Χ•Χ¨Χ™Χ β€” 84,646 Χ©Χ•Χ¨Χ•Χª, 10 ΧΆΧ•Χ Χ•Χª
+!data/processed/boxscore_player_*.csv
 
 # ============================================================
 # Χ΅Χ‘Χ™Χ‘Χ”
@@ -39,3 +53,6 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# --- ιεν 10: αεχρχεψιν. δξωιλδ ςμϊδ ωιωδ ρααιν, δ-API μΰ ιφια ---
+!data/raw/boxscore_player_*.csv
