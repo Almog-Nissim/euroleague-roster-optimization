@@ -51,7 +51,7 @@ from paths import RAW_DIR
 
 from euroleague_api.boxscore_data import BoxScoreData
 
-SLEEP = 0.8          # שניות בין בקשות. 2.2/שנ' הפיל אותנו ב-429
+SLEEP = 1.8          # שניות בין בקשות. 2.2/שנ' הפיל אותנו ב-429
 MAX_RETRY = 6
 CHKPT = 25
 SEP = "=" * 74
@@ -186,14 +186,70 @@ def fetch_season(season):
 
 
 def main(seasons):
+    """🔴 יום 10: ריצת אצווה על 7 עונות.
+
+    הגרסה הקודמת זרקה חריגה על עונה חסרה, וכך **הרגה את כל
+    האצווה** — עונה אחת שנפלה על 429 מנעה משש האחרות לרוץ.
+    עכשיו כל עונה נתפסת בנפרד, הטיוטה שלה נשמרת, והריצה
+    ממשיכה. בסוף מודפס סיכום.
+
+    הרצה חוזרת משלימה רק את מה שחסר — הטיוטות נשארות.
+    """
+    seasons = [int(x) for x in seasons]
+    print(f"{SEP}\nאצווה: {len(seasons)} עונות — "
+          + ", ".join(map(str, seasons)) + f"\n{SEP}")
+    ok, failed, t0 = [], [], time.time()
     for s in seasons:
         print(f"\n{SEP}\nעונה {s}\n{SEP}")
-        df = fetch_season(int(s))
-        print(f"  עמודות: {df.columns.tolist()}")
-    print(f"\n{SEP}")
-    print("הבא: python src/split_multiclub.py " + " ".join(map(str, seasons)))
+        try:
+            df = fetch_season(s)
+            ok.append((s, len(df)))
+            print(f"  עמודות: {df.columns.tolist()}")
+        except Exception as exc:
+            failed.append((s, str(exc).splitlines()[0]))
+            print(f"  🔴 {s} לא הושלמה — ממשיך לעונה הבאה.")
+            print(f"     {str(exc).splitlines()[0]}")
+
+    el = time.time() - t0
+    print(f"\n{SEP}\nסיכום אצווה   ({el/60:.0f} דקות)\n{SEP}")
+    for s, n in ok:
+        print(f"  ✅ {s}   {n:,} שורות")
+    for s, why in failed:
+        print(f"  🔴 {s}   {why}")
+    if failed:
+        print(f"\n  {len(failed)} עונות לא הושלמו. הטיוטות נשמרו —")
+        print("  הרץ את אותה פקודה שוב והיא תמשיך מהנקודה שנעצרה.")
+        print("  אם 429 חוזר, העלה את SLEEP מ-0.8 ל-1.5.")
+    else:
+        print("\n  הבא: python src/split_multiclub.py "
+              + " ".join(str(s) for s, _ in ok))
     print(SEP)
+    return len(failed)
+
+
+DEFAULT_SEASONS = "2016 2017 2018 2019 2020 2021 2022 2023"
+
+
+def parse_seasons(argv):
+    """מקבל כל צורה: ארגומנטים, מחרוזת עם פסיקים, או ברירת מחדל.
+
+    🔴 PyCharm מריץ בלי ארגומנטים, ולכן הרשימה נכתבה כמחרוזת
+       אחת עם פסיקים ו-int() נפל עליה. פרסור סובלני פותר את זה
+       פעם אחת לכל צורות ההרצה.
+    """
+    raw = " ".join(argv) if argv else DEFAULT_SEASONS
+    out = []
+    for tok in raw.replace(",", " ").split():
+        tok = tok.strip()
+        if not tok:
+            continue
+        if not tok.isdigit():
+            raise SystemExit(f"עונה לא חוקית: {tok!r}. צפוי מספר, למשל 2016.")
+        out.append(int(tok))
+    if not out:
+        raise SystemExit("לא נמסרו עונות.")
+    return out
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or ["2025"])
+    sys.exit(main(parse_seasons(sys.argv[1:])))
