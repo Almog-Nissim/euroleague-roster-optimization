@@ -209,6 +209,7 @@ def solve(pool, budget, cost=None, value=None, quiet=True):
     cost = pool.cost.values if cost is None else cost
     value = pool.value.values if value is None else value
 
+    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
     p = pulp.LpProblem("roster", pulp.LpMaximize)
     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(len(pool))]
 

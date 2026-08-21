@@ -80,6 +80,7 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE):
     מהמקור פרט לאילוץ, ההשוואה אינה תקפה.
     """
     n = len(pool)
+    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
     p = pulp.LpProblem("roster_capped", pulp.LpMaximize)
     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
     e = [pulp.LpVariable(f"e{i}", lowBound=0) for i in range(n)]

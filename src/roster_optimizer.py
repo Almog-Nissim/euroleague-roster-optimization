@@ -234,6 +234,7 @@ def optimise(pool, budget, min_roster, locked=None, budget_offset=0.0):
     """locked: אינדקסים שחייבים להיבחר. budget_offset: תקציב שכבר
     מחויב לשחקנים חתומים שאינם במאגר (אין להם פיצ'רים)."""
     n = len(pool)
+    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
     p = pulp.LpProblem("roster", pulp.LpMaximize)
     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
     m = [pulp.LpVariable(f"m{i}", lowBound=0, upBound=MAX_MIN_PLAYER)
@@ -331,7 +332,7 @@ def scenarios(pool, budget, lock_offset):
     ההפרש ביניהם הוא **המחיר של הליבה הישראלית** ביחידות איכות.
     הוא לא בהכרח חיובי לרעה: אם הוא קטן, הליבה כמעט חינם.
     """
-    isr = list(pool.index[pool.is_israeli == 1])
+    isr = list(np.flatnonzero((pool.is_israeli == 1).to_numpy()))   # מיקומי
     return [("חופשי", [], 0.0),
             ("נעול (ליבה ישראלית)", isr, lock_offset)]
 

@@ -104,6 +104,7 @@ def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
     כבר בתוך התקרה. זהה בדיוק ל-score_rows.
     """
     n = len(pool)
+    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
     p = pulp.LpProblem("roster_v2", pulp.LpMaximize)
     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
     e = [pulp.LpVariable(f"e{i}", lowBound=0) for i in range(n)]

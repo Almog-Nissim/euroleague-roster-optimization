@@ -112,7 +112,8 @@ def main():
               if selA is not None else np.nan)
 
         # --- ב. נעילת המכסה ---
-        idx = list(cand.index[cand.player_code.astype(str).isin(isr)])
+        idx = list(np.flatnonzero(
+            cand.player_code.astype(str).isin(isr).to_numpy()))   # מיקומי
         n_lock = len(idx)
         selB, _ = optimise_v2(cand, B, MIN_LEGAL_ROSTER, locked=idx)
         qB = (score_rows(cand[selB], "ppm_true", "avail_true", REPL)[0]

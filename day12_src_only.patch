@@ -1,0 +1,86 @@
+diff --git a/src/minute_profile.py b/src/minute_profile.py
+index a24e71b..e4b693d 100644
+--- a/src/minute_profile.py
++++ b/src/minute_profile.py
+@@ -105,6 +105,7 @@ def optimise_v3(pool, budget, min_roster, caps, locked=None,
+     חסום בתקרה שנצפתה במציאות, לכל k עד KMAX.
+     """
+     n = len(pool)
++    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
+     p = pulp.LpProblem("roster_v3", pulp.LpMaximize)
+     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
+     e = [pulp.LpVariable(f"e{i}", lowBound=0) for i in range(n)]
+diff --git a/src/optimise_consistent.py b/src/optimise_consistent.py
+index 38ca6cd..cf34878 100644
+--- a/src/optimise_consistent.py
++++ b/src/optimise_consistent.py
+@@ -103,6 +103,7 @@ def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
+     והמטרה היא Σ ppm(i)·e(i) — בלי הכפלה נוספת בזמינות, כי היא
+     כבר בתוך התקרה. זהה בדיוק ל-score_rows.
+     """
++    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
+     n = len(pool)
+     p = pulp.LpProblem("roster_v2", pulp.LpMaximize)
+     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
+diff --git a/src/quota_cost.py b/src/quota_cost.py
+index 97cbbbd..f75d685 100644
+--- a/src/quota_cost.py
++++ b/src/quota_cost.py
+@@ -112,7 +112,8 @@ def main():
+               if selA is not None else np.nan)
+
+         # --- ב. נעילת המכסה ---
+-        idx = list(cand.index[cand.player_code.astype(str).isin(isr)])
++        idx = list(np.flatnonzero(
++            cand.player_code.astype(str).isin(isr).to_numpy()))   # מיקומי
+         n_lock = len(idx)
+         selB, _ = optimise_v2(cand, B, MIN_LEGAL_ROSTER, locked=idx)
+         qB = (score_rows(cand[selB], "ppm_true", "avail_true", REPL)[0]
+diff --git a/src/roster_optimizer.py b/src/roster_optimizer.py
+index 057fac4..6e53e53 100644
+--- a/src/roster_optimizer.py
++++ b/src/roster_optimizer.py
+@@ -231,9 +231,10 @@ def build_pool():
+
+ # ================= אופטימיזציה =================
+ def optimise(pool, budget, min_roster, locked=None, budget_offset=0.0):
+-    """locked: אינדקסים שחייבים להיבחר. budget_offset: תקציב שכבר
++    """locked: **מיקומים** (0..n-1) שחייבים להיבחר, לא תוויות אינדקס. budget_offset: תקציב שכבר
+     מחויב לשחקנים חתומים שאינם במאגר (אין להם פיצ'רים)."""
+     n = len(pool)
++    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
+     p = pulp.LpProblem("roster", pulp.LpMaximize)
+     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
+     m = [pulp.LpVariable(f"m{i}", lowBound=0, upBound=MAX_MIN_PLAYER)
+@@ -331,7 +332,7 @@ def scenarios(pool, budget, lock_offset):
+     ההפרש ביניהם הוא **המחיר של הליבה הישראלית** ביחידות איכות.
+     הוא לא בהכרח חיובי לרעה: אם הוא קטן, הליבה כמעט חינם.
+     """
+-    isr = list(pool.index[pool.is_israeli == 1])
++    isr = list(np.flatnonzero((pool.is_israeli == 1).to_numpy()))   # מיקומי
+     return [("חופשי", [], 0.0),
+             ("נעול (ליבה ישראלית)", isr, lock_offset)]
+
+diff --git a/src/usage_constrained.py b/src/usage_constrained.py
+index 5f73756..35199f4 100644
+--- a/src/usage_constrained.py
++++ b/src/usage_constrained.py
+@@ -80,6 +80,7 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE):
+     מהמקור פרט לאילוץ, ההשוואה אינה תקפה.
+     """
+     n = len(pool)
++    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
+     p = pulp.LpProblem("roster_capped", pulp.LpMaximize)
+     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(n)]
+     e = [pulp.LpVariable(f"e{i}", lowBound=0) for i in range(n)]
+diff --git a/src/v0_pipeline.py b/src/v0_pipeline.py
+index a1bcf24..ff34f82 100644
+--- a/src/v0_pipeline.py
++++ b/src/v0_pipeline.py
+@@ -209,6 +209,7 @@ def solve(pool, budget, cost=None, value=None, quiet=True):
+     cost = pool.cost.values if cost is None else cost
+     value = pool.value.values if value is None else value
+
++    pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
+     p = pulp.LpProblem("roster", pulp.LpMaximize)
+     x = [pulp.LpVariable(f"x{i}", cat="Binary") for i in range(len(pool))]
