@@ -1,0 +1,1587 @@
+{
+  "meta": {
+    "generated": "2026-08-23",
+    "units": "ציר התקציב ביחידות מנורמלות בלבד",
+    "budget_axis_valid_to": 19.5,
+    "extrapolation_from": 19.5
+  },
+  "headline": {
+    "primary": {
+      "value": 2.03,
+      "ci": [
+        0.38,
+        3.68
+      ],
+      "label": "ניצחונות נוספים בעונה מאופטימיזציה של התקציב הקיים",
+      "engine": "מאולץ (זהות הכדור)",
+      "caveat": "הרצועה סטטיסטית בלבד ואינה כוללת שגיאת אקסטרפולציה של הקיר"
+    },
+    "free_engine": {
+      "value": 5.17,
+      "ci": [
+        1.29,
+        9.14
+      ]
+    },
+    "decomposition": [
+      {
+        "step": "מבנה האילוצים לבדו (סגל אקראי)",
+        "wins": -1.65,
+        "ci": [
+          -3.6,
+          -0.34
+        ],
+        "note": "אקראי גרוע מהמועדון — האילוצים אינם מייצרים את היתרון"
+      },
+      {
+        "step": "האופטימיזציה (מנוע חופשי מול אקראי)",
+        "wins": 6.84,
+        "ci": [
+          1.85,
+          12.31
+        ],
+        "note": "ההשוואה הנקייה — שני הצדדים בלי אילוץ השימוש"
+      }
+    ]
+  },
+  "wasted": {
+    "share": 0.269,
+    "eur_m": 3.44,
+    "n_scoring_median": 10,
+    "roster_median": 16,
+    "label": "מועדון יורוליג ממוצע משלם על שחקנים שאינם מנקדים"
+  },
+  "benchmark": {
+    "n": 38,
+    "seasons": [
+      2024,
+      2025
+    ],
+    "adv_free_pct": 0.1826,
+    "adv_cap_pct": 0.0652,
+    "constraint_cost_lp": 11.83
+  },
+  "clubs": [
+    {
+      "season": 2024.0,
+      "club": "ASV",
+      "budget": 14.07,
+      "q_club": 100.75,
+      "q_free": 120.49,
+      "q_cap": 104.78,
+      "q_rand": 96.31,
+      "rand_win": 0.33
+    },
+    {
+      "season": 2024.0,
+      "club": "BAR",
+      "budget": 17.6,
+      "q_club": 107.2,
+      "q_free": 122.76,
+      "q_cap": 111.02,
+      "q_rand": 101.01,
+      "rand_win": 0.26
+    },
+    {
+      "season": 2024.0,
+      "club": "BAS",
+      "budget": 12.95,
+      "q_club": 105.18,
+      "q_free": 122.19,
+      "q_cap": 108.98,
+      "q_rand": 94.5,
+      "rand_win": 0.17
+    },
+    {
+      "season": 2024.0,
+      "club": "BER",
+      "budget": 13.6,
+      "q_club": 91.65,
+      "q_free": 115.8,
+      "q_cap": 110.23,
+      "q_rand": 96.22,
+      "rand_win": 0.72
+    },
+    {
+      "season": 2024.0,
+      "club": "IST",
+      "budget": 17.33,
+      "q_club": 112.23,
+      "q_free": 128.48,
+      "q_cap": 104.43,
+      "q_rand": 99.2,
+      "rand_win": 0.13
+    },
+    {
+      "season": 2024.0,
+      "club": "MAD",
+      "budget": 19.81,
+      "q_club": 106.34,
+      "q_free": 130.2,
+      "q_cap": 118.07,
+      "q_rand": 101.45,
+      "rand_win": 0.3
+    },
+    {
+      "season": 2024.0,
+      "club": "MCO",
+      "budget": 16.76,
+      "q_club": 103.02,
+      "q_free": 128.9,
+      "q_cap": 106.03,
+      "q_rand": 99.05,
+      "rand_win": 0.34
+    },
+    {
+      "season": 2024.0,
+      "club": "MIL",
+      "budget": 17.84,
+      "q_club": 105.29,
+      "q_free": 128.66,
+      "q_cap": 114.91,
+      "q_rand": 102.42,
+      "rand_win": 0.41
+    },
+    {
+      "season": 2024.0,
+      "club": "MUN",
+      "budget": 11.63,
+      "q_club": 103.44,
+      "q_free": 120.6,
+      "q_cap": 111.41,
+      "q_rand": 92.39,
+      "rand_win": 0.1
+    },
+    {
+      "season": 2024.0,
+      "club": "OLY",
+      "budget": 21.33,
+      "q_club": 114.07,
+      "q_free": 122.75,
+      "q_cap": 113.24,
+      "q_rand": 103.0,
+      "rand_win": 0.13
+    },
+    {
+      "season": 2024.0,
+      "club": "PAN",
+      "budget": 20.43,
+      "q_club": 116.49,
+      "q_free": 128.62,
+      "q_cap": 124.26,
+      "q_rand": 100.83,
+      "rand_win": 0.08
+    },
+    {
+      "season": 2024.0,
+      "club": "PAR",
+      "budget": 12.07,
+      "q_club": 100.89,
+      "q_free": 120.6,
+      "q_cap": 98.45,
+      "q_rand": 93.94,
+      "rand_win": 0.21
+    },
+    {
+      "season": 2024.0,
+      "club": "PRS",
+      "budget": 11.21,
+      "q_club": 101.08,
+      "q_free": 119.63,
+      "q_cap": 106.03,
+      "q_rand": 90.46,
+      "rand_win": 0.14
+    },
+    {
+      "season": 2024.0,
+      "club": "RED",
+      "budget": 14.35,
+      "q_club": 102.7,
+      "q_free": 123.1,
+      "q_cap": 111.34,
+      "q_rand": 95.24,
+      "rand_win": 0.25
+    },
+    {
+      "season": 2024.0,
+      "club": "TEL",
+      "budget": 13.71,
+      "q_club": 103.97,
+      "q_free": 121.56,
+      "q_cap": 105.65,
+      "q_rand": 96.75,
+      "rand_win": 0.21
+    },
+    {
+      "season": 2024.0,
+      "club": "ULK",
+      "budget": 22.16,
+      "q_club": 96.24,
+      "q_free": 127.53,
+      "q_cap": 121.18,
+      "q_rand": 104.06,
+      "rand_win": 0.78
+    },
+    {
+      "season": 2024.0,
+      "club": "VIR",
+      "budget": 14.7,
+      "q_club": 100.33,
+      "q_free": 122.98,
+      "q_cap": 115.5,
+      "q_rand": 95.59,
+      "rand_win": 0.33
+    },
+    {
+      "season": 2024.0,
+      "club": "ZAL",
+      "budget": 12.48,
+      "q_club": 93.63,
+      "q_free": 121.79,
+      "q_cap": 102.45,
+      "q_rand": 94.95,
+      "rand_win": 0.56
+    },
+    {
+      "season": 2025.0,
+      "club": "ASV",
+      "budget": 13.27,
+      "q_club": 83.88,
+      "q_free": 119.4,
+      "q_cap": 114.66,
+      "q_rand": 90.7,
+      "rand_win": 0.74
+    },
+    {
+      "season": 2025.0,
+      "club": "BAR",
+      "budget": 25.9,
+      "q_club": 101.95,
+      "q_free": 127.38,
+      "q_cap": 120.01,
+      "q_rand": 103.52,
+      "rand_win": 0.55
+    },
+    {
+      "season": 2025.0,
+      "club": "BAS",
+      "budget": 18.68,
+      "q_club": 104.36,
+      "q_free": 125.02,
+      "q_cap": 102.1,
+      "q_rand": 102.3,
+      "rand_win": 0.39
+    },
+    {
+      "season": 2025.0,
+      "club": "DUB",
+      "budget": 19.61,
+      "q_club": 112.98,
+      "q_free": 118.44,
+      "q_cap": 108.72,
+      "q_rand": 101.01,
+      "rand_win": 0.1
+    },
+    {
+      "season": 2025.0,
+      "club": "HTA",
+      "budget": 23.42,
+      "q_club": 110.1,
+      "q_free": 125.41,
+      "q_cap": 112.91,
+      "q_rand": 104.73,
+      "rand_win": 0.23
+    },
+    {
+      "season": 2025.0,
+      "club": "IST",
+      "budget": 23.3,
+      "q_club": 91.85,
+      "q_free": 124.79,
+      "q_cap": 112.91,
+      "q_rand": 104.72,
+      "rand_win": 0.88
+    },
+    {
+      "season": 2025.0,
+      "club": "MAD",
+      "budget": 23.64,
+      "q_club": 119.08,
+      "q_free": 125.41,
+      "q_cap": 113.27,
+      "q_rand": 102.55,
+      "rand_win": 0.07
+    },
+    {
+      "season": 2025.0,
+      "club": "MCO",
+      "budget": 24.86,
+      "q_club": 110.94,
+      "q_free": 126.31,
+      "q_cap": 112.0,
+      "q_rand": 95.56,
+      "rand_win": 0.11
+    },
+    {
+      "season": 2025.0,
+      "club": "MIL",
+      "budget": 24.62,
+      "q_club": 102.93,
+      "q_free": 121.63,
+      "q_cap": 113.25,
+      "q_rand": 103.98,
+      "rand_win": 0.55
+    },
+    {
+      "season": 2025.0,
+      "club": "MUN",
+      "budget": 14.34,
+      "q_club": 93.97,
+      "q_free": 123.83,
+      "q_cap": 120.73,
+      "q_rand": 92.75,
+      "rand_win": 0.45
+    },
+    {
+      "season": 2025.0,
+      "club": "OLY",
+      "budget": 36.93,
+      "q_club": 124.97,
+      "q_free": 131.14,
+      "q_cap": 140.62,
+      "q_rand": 110.25,
+      "rand_win": 0.07
+    },
+    {
+      "season": 2025.0,
+      "club": "PAM",
+      "budget": 15.38,
+      "q_club": 112.11,
+      "q_free": 119.92,
+      "q_cap": 115.16,
+      "q_rand": 95.45,
+      "rand_win": 0.04
+    },
+    {
+      "season": 2025.0,
+      "club": "PAN",
+      "budget": 32.12,
+      "q_club": 109.09,
+      "q_free": 133.57,
+      "q_cap": 120.41,
+      "q_rand": 106.18,
+      "rand_win": 0.38
+    },
+    {
+      "season": 2025.0,
+      "club": "PAR",
+      "budget": 20.89,
+      "q_club": 95.06,
+      "q_free": 123.05,
+      "q_cap": 120.2,
+      "q_rand": 103.75,
+      "rand_win": 0.83
+    },
+    {
+      "season": 2025.0,
+      "club": "PRS",
+      "budget": 12.94,
+      "q_club": 107.81,
+      "q_free": 121.29,
+      "q_cap": 114.69,
+      "q_rand": 90.34,
+      "rand_win": 0.05
+    },
+    {
+      "season": 2025.0,
+      "club": "RED",
+      "budget": 23.83,
+      "q_club": 108.98,
+      "q_free": 125.63,
+      "q_cap": 113.27,
+      "q_rand": 103.28,
+      "rand_win": 0.29
+    },
+    {
+      "season": 2025.0,
+      "club": "TEL",
+      "budget": 15.91,
+      "q_club": 106.1,
+      "q_free": 117.56,
+      "q_cap": 114.45,
+      "q_rand": 94.69,
+      "rand_win": 0.17
+    },
+    {
+      "season": 2025.0,
+      "club": "ULK",
+      "budget": 19.24,
+      "q_club": 98.66,
+      "q_free": 124.27,
+      "q_cap": 109.1,
+      "q_rand": 102.17,
+      "rand_win": 0.64
+    },
+    {
+      "season": 2025.0,
+      "club": "VIR",
+      "budget": 15.11,
+      "q_club": 102.27,
+      "q_free": 114.97,
+      "q_cap": 107.49,
+      "q_rand": 95.95,
+      "rand_win": 0.28
+    },
+    {
+      "season": 2025.0,
+      "club": "ZAL",
+      "budget": 14.75,
+      "q_club": 112.44,
+      "q_free": 123.51,
+      "q_cap": 110.17,
+      "q_rand": 93.36,
+      "rand_win": 0.03
+    }
+  ],
+  "budget_curve": [
+    {
+      "budget_rel": 11.2613,
+      "q": 105.546,
+      "q_lp": 112.0175,
+      "marginal": NaN,
+      "used_pct": 0.9958,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 12.3874,
+      "q": 108.7689,
+      "q_lp": 114.7691,
+      "marginal": 3.2229,
+      "used_pct": 0.9986,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 13.5135,
+      "q": 110.3288,
+      "q_lp": 117.2619,
+      "marginal": 1.5598,
+      "used_pct": 0.9996,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 14.6396,
+      "q": 105.8344,
+      "q_lp": 118.6476,
+      "marginal": -4.4944,
+      "used_pct": 0.9999,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 15.7658,
+      "q": 109.9337,
+      "q_lp": 120.9627,
+      "marginal": 4.0994,
+      "used_pct": 0.996,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 16.8919,
+      "q": 114.9868,
+      "q_lp": 122.1401,
+      "marginal": 5.0531,
+      "used_pct": 1.0,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 18.018,
+      "q": 108.8025,
+      "q_lp": 123.3416,
+      "marginal": -6.1844,
+      "used_pct": 0.9983,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 19.1441,
+      "q": 120.2334,
+      "q_lp": 125.4349,
+      "marginal": 11.431,
+      "used_pct": 0.9994,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 20.2703,
+      "q": 124.3544,
+      "q_lp": 126.7307,
+      "marginal": 4.121,
+      "used_pct": 0.9993,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 21.3964,
+      "q": 113.343,
+      "q_lp": 128.3643,
+      "marginal": -11.0115,
+      "used_pct": 0.9973,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 22.5225,
+      "q": 121.1152,
+      "q_lp": 128.8603,
+      "marginal": 7.7722,
+      "used_pct": 0.9947,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 23.6486,
+      "q": 120.9495,
+      "q_lp": 129.0203,
+      "marginal": -0.1657,
+      "used_pct": 0.9928,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 24.7748,
+      "q": 122.9773,
+      "q_lp": 129.0203,
+      "marginal": 2.0278,
+      "used_pct": 0.9936,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 25.9009,
+      "q": 122.9773,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.9504,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 27.027,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.1056,
+      "used_pct": 0.9401,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 28.1532,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.9025,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 29.2793,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.8678,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 30.4054,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.8357,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 31.5315,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.8058,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 32.6577,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.778,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 33.7838,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.7521,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 34.9099,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.7278,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 36.036,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.7051,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 37.1622,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.6837,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 38.2883,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.6636,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 39.4144,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.6447,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 40.5405,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.6268,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 41.6667,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.6098,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 42.7928,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.5938,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 43.9189,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.5785,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 45.045,
+      "q": 123.0829,
+      "q_lp": 129.0203,
+      "marginal": 0.0,
+      "used_pct": 0.5641,
+      "capped": true,
+      "season": 2024
+    },
+    {
+      "budget_rel": 11.2613,
+      "q": 116.5653,
+      "q_lp": 116.092,
+      "marginal": NaN,
+      "used_pct": 0.9926,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 12.3874,
+      "q": 120.5953,
+      "q_lp": 118.492,
+      "marginal": 4.03,
+      "used_pct": 0.9722,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 13.5135,
+      "q": 120.4248,
+      "q_lp": 121.0536,
+      "marginal": -0.1705,
+      "used_pct": 0.9941,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 14.6396,
+      "q": 121.8766,
+      "q_lp": 122.3448,
+      "marginal": 1.4518,
+      "used_pct": 0.9968,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 15.7658,
+      "q": 125.683,
+      "q_lp": 123.8341,
+      "marginal": 3.8064,
+      "used_pct": 0.9989,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 16.8919,
+      "q": 123.5964,
+      "q_lp": 125.0417,
+      "marginal": -2.0865,
+      "used_pct": 0.9986,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 18.018,
+      "q": 114.8671,
+      "q_lp": 126.6961,
+      "marginal": -8.7294,
+      "used_pct": 0.997,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 19.1441,
+      "q": 131.3923,
+      "q_lp": 127.8332,
+      "marginal": 16.5252,
+      "used_pct": 0.9973,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 20.2703,
+      "q": 130.2847,
+      "q_lp": 129.5357,
+      "marginal": -1.1076,
+      "used_pct": 0.9963,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 21.3964,
+      "q": 126.8036,
+      "q_lp": 131.0776,
+      "marginal": -3.4811,
+      "used_pct": 0.9982,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 22.5225,
+      "q": 128.7987,
+      "q_lp": 131.9986,
+      "marginal": 1.9951,
+      "used_pct": 0.9937,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 23.6486,
+      "q": 115.3228,
+      "q_lp": 132.961,
+      "marginal": -13.4759,
+      "used_pct": 0.9984,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 24.7748,
+      "q": 120.3123,
+      "q_lp": 133.9962,
+      "marginal": 4.9895,
+      "used_pct": 0.9887,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 25.9009,
+      "q": 122.1048,
+      "q_lp": 134.3287,
+      "marginal": 1.7924,
+      "used_pct": 0.9905,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 27.027,
+      "q": 127.6628,
+      "q_lp": 134.5589,
+      "marginal": 5.558,
+      "used_pct": 0.9972,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 28.1532,
+      "q": 134.6004,
+      "q_lp": 134.5877,
+      "marginal": 6.9376,
+      "used_pct": 0.9961,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 29.2793,
+      "q": 130.2731,
+      "q_lp": 134.706,
+      "marginal": -4.3273,
+      "used_pct": 0.9971,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 30.4054,
+      "q": 125.1724,
+      "q_lp": 134.7162,
+      "marginal": -5.1007,
+      "used_pct": 0.9982,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 31.5315,
+      "q": 125.6538,
+      "q_lp": 134.7162,
+      "marginal": 0.4814,
+      "used_pct": 0.9838,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 32.6577,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.127,
+      "used_pct": 0.9961,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 33.7838,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.9629,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 34.9099,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.9319,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 36.036,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.9027,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 37.1622,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.8754,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 38.2883,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.8496,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 39.4144,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.8254,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 40.5405,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.8024,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 41.6667,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.7807,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 42.7928,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.7602,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 43.9189,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.7407,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 45.045,
+      "q": 125.7808,
+      "q_lp": 134.7162,
+      "marginal": 0.0,
+      "used_pct": 0.7222,
+      "capped": false,
+      "season": 2024
+    },
+    {
+      "budget_rel": 11.2613,
+      "q": 112.2887,
+      "q_lp": 114.4733,
+      "marginal": NaN,
+      "used_pct": 0.9991,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 12.3874,
+      "q": 115.1582,
+      "q_lp": 118.1841,
+      "marginal": 2.8694,
+      "used_pct": 0.9961,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 13.5135,
+      "q": 114.9012,
+      "q_lp": 120.1219,
+      "marginal": -0.257,
+      "used_pct": 0.9939,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 14.6396,
+      "q": 109.2825,
+      "q_lp": 122.51,
+      "marginal": -5.6186,
+      "used_pct": 0.9972,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 15.7658,
+      "q": 108.719,
+      "q_lp": 123.7228,
+      "marginal": -0.5636,
+      "used_pct": 0.9974,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 16.8919,
+      "q": 120.1959,
+      "q_lp": 125.5081,
+      "marginal": 11.477,
+      "used_pct": 0.9952,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 18.018,
+      "q": 121.6722,
+      "q_lp": 125.7726,
+      "marginal": 1.4763,
+      "used_pct": 0.9889,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 19.1441,
+      "q": 112.874,
+      "q_lp": 126.6139,
+      "marginal": -8.7982,
+      "used_pct": 0.999,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 20.2703,
+      "q": 112.0047,
+      "q_lp": 126.673,
+      "marginal": -0.8693,
+      "used_pct": 0.9833,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 21.3964,
+      "q": 120.0093,
+      "q_lp": 126.8752,
+      "marginal": 8.0046,
+      "used_pct": 0.9714,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 22.5225,
+      "q": 130.7826,
+      "q_lp": 127.8374,
+      "marginal": 10.7733,
+      "used_pct": 0.9965,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 23.6486,
+      "q": 119.9003,
+      "q_lp": 128.6461,
+      "marginal": -10.8823,
+      "used_pct": 0.9962,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 24.7748,
+      "q": 126.0495,
+      "q_lp": 128.9424,
+      "marginal": 6.1492,
+      "used_pct": 0.994,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 25.9009,
+      "q": 120.0244,
+      "q_lp": 129.1135,
+      "marginal": -6.0251,
+      "used_pct": 0.9841,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 27.027,
+      "q": 136.7054,
+      "q_lp": 129.2728,
+      "marginal": 16.681,
+      "used_pct": 0.9939,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 28.1532,
+      "q": 132.2007,
+      "q_lp": 129.4858,
+      "marginal": -4.5047,
+      "used_pct": 0.9988,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 29.2793,
+      "q": 140.6393,
+      "q_lp": 129.5031,
+      "marginal": 8.4386,
+      "used_pct": 0.9986,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 30.4054,
+      "q": 140.6629,
+      "q_lp": 129.5282,
+      "marginal": 0.0236,
+      "used_pct": 0.991,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 31.5315,
+      "q": 140.1726,
+      "q_lp": 129.6088,
+      "marginal": -0.4903,
+      "used_pct": 0.9978,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 32.6577,
+      "q": 140.1726,
+      "q_lp": 129.6088,
+      "marginal": 0.0,
+      "used_pct": 0.9869,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 33.7838,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.9965,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 34.9099,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.9943,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 36.036,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.9836,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 37.1622,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.9538,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 38.2883,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.9257,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 39.4144,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.8993,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 40.5405,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.8743,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 41.6667,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.8507,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 42.7928,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.8283,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 43.9189,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.807,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 45.045,
+      "q": 140.1726,
+      "q_lp": 129.6216,
+      "marginal": 0.0,
+      "used_pct": 0.7869,
+      "capped": true,
+      "season": 2025
+    },
+    {
+      "budget_rel": 11.2613,
+      "q": 125.3023,
+      "q_lp": 118.5955,
+      "marginal": NaN,
+      "used_pct": 0.9942,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 12.3874,
+      "q": 120.1239,
+      "q_lp": 122.5019,
+      "marginal": -5.1785,
+      "used_pct": 0.9984,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 13.5135,
+      "q": 115.5388,
+      "q_lp": 126.3909,
+      "marginal": -4.585,
+      "used_pct": 0.9984,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 14.6396,
+      "q": 118.3241,
+      "q_lp": 129.8966,
+      "marginal": 2.7853,
+      "used_pct": 0.9971,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 15.7658,
+      "q": 115.9232,
+      "q_lp": 132.2023,
+      "marginal": -2.401,
+      "used_pct": 0.9955,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 16.8919,
+      "q": 123.0519,
+      "q_lp": 134.123,
+      "marginal": 7.1288,
+      "used_pct": 0.9963,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 18.018,
+      "q": 133.7521,
+      "q_lp": 135.1374,
+      "marginal": 10.7002,
+      "used_pct": 0.9965,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 19.1441,
+      "q": 125.411,
+      "q_lp": 136.2096,
+      "marginal": -8.3411,
+      "used_pct": 0.9852,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 20.2703,
+      "q": 126.3212,
+      "q_lp": 137.4883,
+      "marginal": 0.9101,
+      "used_pct": 0.9833,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 21.3964,
+      "q": 127.9927,
+      "q_lp": 138.4652,
+      "marginal": 1.6716,
+      "used_pct": 0.9911,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 22.5225,
+      "q": 122.868,
+      "q_lp": 139.0979,
+      "marginal": -5.1247,
+      "used_pct": 0.9831,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 23.6486,
+      "q": 119.8466,
+      "q_lp": 139.2462,
+      "marginal": -3.0214,
+      "used_pct": 0.9734,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 24.7748,
+      "q": 129.109,
+      "q_lp": 139.8532,
+      "marginal": 9.2624,
+      "used_pct": 0.9921,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 25.9009,
+      "q": 133.5727,
+      "q_lp": 141.112,
+      "marginal": 4.4637,
+      "used_pct": 0.994,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 27.027,
+      "q": 131.6863,
+      "q_lp": 142.0091,
+      "marginal": -1.8864,
+      "used_pct": 0.9953,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 28.1532,
+      "q": 130.204,
+      "q_lp": 142.7307,
+      "marginal": -1.4823,
+      "used_pct": 0.9927,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 29.2793,
+      "q": 131.1471,
+      "q_lp": 142.9042,
+      "marginal": 0.9432,
+      "used_pct": 0.9902,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 30.4054,
+      "q": 131.1425,
+      "q_lp": 142.9042,
+      "marginal": -0.0046,
+      "used_pct": 0.9702,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 31.5315,
+      "q": 129.6447,
+      "q_lp": 143.1985,
+      "marginal": -1.4978,
+      "used_pct": 0.9973,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 32.6577,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.119,
+      "used_pct": 0.968,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 33.7838,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.9358,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 34.9099,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.9056,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 36.036,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.8773,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 37.1622,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.8507,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 38.2883,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.8257,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 39.4144,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.8021,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 40.5405,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.7798,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 41.6667,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.7587,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 42.7928,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.7388,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 43.9189,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.7198,
+      "capped": false,
+      "season": 2025
+    },
+    {
+      "budget_rel": 45.045,
+      "q": 129.7638,
+      "q_lp": 143.1985,
+      "marginal": 0.0,
+      "used_pct": 0.7018,
+      "capped": false,
+      "season": 2025
+    }
+  ],
+  "stability": {
+    "ratio_by_season": {
+      "שלוש עונות": 0.748,
+      "2019": 0.837,
+      "2024": 0.367,
+      "2025": 0.837
+    },
+    "note": "היחס נמדד על המדגם המאוחד בלבד",
+    "permutation_p": 0.189,
+    "ci_2024": [
+      -0.339,
+      1.11
+    ]
+  },
+  "limitations": [
+    "כל השחקנים מונחים זמינים במחיר שוק — הנחת מודל מוצהרת, לא פגם. אין דאטה על זמינות בפועל.",
+    "אי-הוודאות הדומיננטית אינה סטטיסטית אלא בבחירות המפרט. רצועת הרוויה 6.8M מול פער 11M בין שלושה מפרטים לגיטימיים.",
+    "הרגרסיה נאמדה על פיזור ניקוד 6–10 ומוחלת על פער 18.6. אזור האקסטרפולציה מסומן באפור.",
+    "השיפוע נאמד בין מועדונים. מועדון עם ניקוד גבוה הוא גם עשיר ועם מאמן טוב יותר. המספר הוא חסם עליון על תרומת ההקצאה.",
+    "מודל העלות אינו יכול לתמחר שחקן בעונתו הראשונה ביורוליג — הוא נשען על pir_lag.",
+    "מודל העלות מכווץ הפרשים בין מועדונים פי 3.33. זו האידיאליזציה (שוק אחד לכולם), לא שגיאה — אבל היא פוגעת בכיול.",
+    "ההמרה ליורו הוקפאה. ציר התקציב ביחידות מנורמלות בלבד."
+  ]
+}

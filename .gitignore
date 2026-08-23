@@ -71,3 +71,7 @@ __pycache__/
 !data/processed/ratio_2025_loo.csv
 !data/processed/why_100_results.csv
 !data/processed/scale_regression.csv
+
+!data/processed/null_to_wins.csv
+
+!data/processed/null_to_wins.csv
