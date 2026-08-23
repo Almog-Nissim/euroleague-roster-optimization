@@ -52,6 +52,7 @@ import league_backtest as lb                       # noqa: E402
 import optimizer_backtest as ob                    # noqa: E402
 from player_id import canonical                    # noqa: E402
 from roster_optimizer import PROCESSED_DIR         # noqa: E402
+RAW_DIR = PROCESSED_DIR.parent / "raw"
 from roster_membership_audit import score_rows     # noqa: E402
 
 # (עונת מבחן, train_max). 2019 מאומנת על <=2023 — ראו הערה למעלה.
@@ -79,7 +80,7 @@ def h(t):
 
 def derive_membership(year: int, ps: pd.DataFrame) -> pd.DataFrame:
     """חברות בסגל מהבוקסקורים — הקבוצה עם הכי הרבה דקות."""
-    bs = pd.read_csv(f"data/raw/boxscore_player_{year}.csv",
+    bs = pd.read_csv(RAW_DIR / f"boxscore_player_{year}.csv",
                      low_memory=False)
     bs["pc"] = bs.Player_ID.map(canonical)
     bs["mn"] = pd.to_numeric(

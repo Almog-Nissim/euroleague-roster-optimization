@@ -61,3 +61,13 @@ __pycache__/
 !data/processed/dilution_test.csv
 !data/processed/price_structure.csv
 !data/processed/scale_sensitivity.csv
+
+# --- תוצאות יום 12-13 ---
+!data/processed/wins_conversion.csv
+!data/processed/season_heterogeneity.csv
+!data/processed/qclub_3seasons.csv
+!data/processed/season_gap_test.csv
+!data/processed/ratio_2025_pairs.csv
+!data/processed/ratio_2025_loo.csv
+!data/processed/why_100_results.csv
+!data/processed/scale_regression.csv
