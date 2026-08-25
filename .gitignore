@@ -75,3 +75,6 @@ __pycache__/
 !data/processed/null_to_wins.csv
 
 !data/processed/null_to_wins.csv
+
+!data/processed/fair_compare_clubs.csv
+!data/processed/usage_fill_sensitivity.csv
