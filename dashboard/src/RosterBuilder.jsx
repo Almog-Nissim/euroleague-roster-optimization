@@ -1,0 +1,472 @@
+import { useState, useEffect, useMemo } from "react";
+
+/* ══════════════════════════════════════════════════════════════
+   RosterBuilder — הבנאי
+   קורא public/roster_sweep.json
+
+   q          ערך המטרה החזוי. מונוטוני, 0 הפרות ב-64 מעברים.
+   q_realised הנצפה — score_rows על ppm_true.
+   clubs[].q  גם הוא score_rows על ppm_true → בר-השוואה ל-q_realised.
+   ⛔ ולא ל-q. חזוי מול חזוי מנפח את היתרון ב-155% (fair_compare.py).
+══════════════════════════════════════════════════════════════ */
+
+const POSN = { G: "אחורי (Guard)", F: "כנף (Forward)", C: "מרכז (Center)" };
+/* רצפות העמדה ב-LP מול מה שהליגה עושה בפועל (why_100, יום 8).
+   רופפות פי ~2 — ולכן חמישייה של 4 אחוריים היא פתרון חוקי. */
+const FLOORS = { model: { G: .163, F: .146, C: .043 },
+                 real:  { G: .325, F: .255, C: .126 } };
+const PRANK = { G: 0, F: 1, C: 2 };
+
+/* מהסל החוצה: מרכז בצבע · כנפיים באגפים · אחוריים מאחור */
+const SPOTS = [
+  { x: 200, y: 74 },                                  // C
+  { x: 100, y: 152 }, { x: 300, y: 152 },             // F
+  { x: 142, y: 224 }, { x: 258, y: 224 },             // G
+];
+
+/* יחידות מנורמלות → מיליוני יורו נטו.
+   נאמד על 20 מועדוני 2025: r=0.868 · R²=0.753 · MAE 2.15M€.
+   ⚠️ רועש בכוונה מוצג: שגיאה מקסימלית 5.39M€ (דובאי).
+   מודל העלות מכווץ הפרשים בין מועדונים פי 3.33 — מיסוי, שחקנים
+   מקומיים וחניכי נוער אינם בו. לכן ± ולא מספר נקי.
+   📌 להעביר ל-roster_sweep.py כדי שיהיה לו סקריפט מייצר. */
+const EUR = { a: 0.7639, b: -2.119, mae: 2.15, lo: 12.9, hi: 36.9 };
+const toEur = (u) => EUR.a * u + EUR.b;
+
+const tc = (s) => s.split(/[\s,]+/).filter(Boolean)
+  .map((w) => w[0] + w.slice(1).toLowerCase()).join(" ");
+const nice = (n) => {
+  if (!n || n.startsWith("#")) return "לא מזוהה";
+  const [l, fst] = n.split(",").map((s) => s.trim());
+  return fst ? `${tc(fst)} ${tc(l)}` : tc(n);
+};
+const f = (n, d = 1) => (n == null || Number.isNaN(n) ? "—" : n.toFixed(d));
+
+export default function RosterBuilder() {
+  const [data, setData] = useState(null);
+  const [fail, setFail] = useState(false);
+  const [i, setI] = useState(0);
+  const [typed, setTyped] = useState("");
+
+  useEffect(() => {
+    fetch("/roster_sweep.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => { setData(d); setI(Math.floor(d.free.length / 2)); })
+      .catch(() => setFail(true));
+  }, []);
+
+  const pts = data?.free ?? [];
+  const p = pts[i];
+  const prev = pts[i - 1];
+
+  useEffect(() => { if (p) setTyped(String(p.budget)); }, [p?.budget]);
+
+  const diff = useMemo(() => {
+    if (!p || !prev) return { inn: [], out: [] };
+    const cur = new Set(p.roster.map((r) => r.code));
+    const old = new Set(prev.roster.map((r) => r.code));
+    return {
+      inn: p.roster.filter((r) => !old.has(r.code)),
+      out: prev.roster.filter((r) => !cur.has(r.code)),
+    };
+  }, [p, prev]);
+
+  const marginal = prev ? (p.q - prev.q) / (p.budget - prev.budget) : null;
+
+  const [pick, setPick] = useState("");
+  const rival = useMemo(() => {
+    if (!p || !data?.clubs?.length) return null;
+    if (pick) return data.clubs.find((c) => c.club === pick) ?? null;
+    return data.clubs.reduce((a, b) =>
+      Math.abs(b.budget - p.budget) < Math.abs(a.budget - p.budget) ? b : a);
+  }, [p, data, pick]);
+  const bGap = rival ? Math.abs(rival.budget - p.budget) : 0;
+
+  const snap = (v) => {
+    if (Number.isNaN(v)) return setTyped(String(p.budget));
+    setI(pts.reduce((best, d, k) =>
+      Math.abs(d.budget - v) < Math.abs(pts[best].budget - v) ? k : best, 0));
+  };
+
+  if (fail) return <Fail />;
+  if (!data) return <div style={{ padding: 60, color: "#8894AC" }}>טוען…</div>;
+
+  /* חמישייה מוצעת: 2G · 2F · 1C, המובילים בדקות בכל עמדה.
+     ⚠️ המנוע מקצה דקות ואינו מרכיב חמישיות — זו תוספת של הממשק.
+     אם חסר בעמדה, מושלם מהנותרים לפי דקות. */
+  const byMin = [...p.roster].sort((a, b) => b.minutes - a.minutes);
+  const five = (() => {
+    const need = { C: 1, F: 2, G: 2 };
+    const out = [];
+    for (const pos of ["C", "F", "G"])
+      out.push(...byMin.filter((r) => r.pos === pos).slice(0, need[pos]));
+    if (out.length < 5) {
+      const have = new Set(out.map((r) => r.code));
+      out.push(...byMin.filter((r) => !have.has(r.code)).slice(0, 5 - out.length));
+    }
+    return out.sort((a, b) => PRANK[b.pos] - PRANK[a.pos] || b.minutes - a.minutes)
+      .slice(0, 5);
+  })();
+  const fiveSet = new Set(five.map((r) => r.code));
+  const bench = p.roster.filter((r) => !fiveSet.has(r.code))
+    .sort((a, b) => b.minutes - a.minutes);
+  const idle = p.roster.filter((r) => r.minutes < 0.5);
+
+  const W = 780, H = 260, L = 46, R = 16, T = 22, B = 40;
+  const vals = pts.flatMap((d) => [d.q, d.q_realised]);
+  const lo = Math.floor(Math.min(...vals) / 10) * 10;
+  const hi = Math.ceil(Math.max(...vals) / 10) * 10;
+  const X = (b) => L + ((b - pts[0].budget) /
+    (pts[pts.length - 1].budget - pts[0].budget)) * (W - L - R);
+  const Y = (v) => H - B - ((v - lo) / (hi - lo)) * (H - T - B);
+  const line = (k) => pts.map((d, n) =>
+    `${n ? "L" : "M"}${X(d.budget).toFixed(1)},${Y(d[k]).toFixed(1)}`).join("");
+  const band = line("q") + pts.slice().reverse()
+    .map((d) => `L${X(d.budget).toFixed(1)},${Y(d.q_realised).toFixed(1)}`).join("") + "Z";
+  const sat = data.meta.saturation;
+
+  return (
+    <div dir="rtl" className="rb">
+      <style>{CSS}</style>
+
+      <header className="hd">
+        <div className="eyebrow">
+          יורוליג {data.meta.label} · מאגר {data.meta.pool_size} שחקנים
+        </div>
+        <h1>איזו קבוצה אפשר לבנות<br />עם התקציב שלך?</h1>
+
+        <div className="ctl">
+          <div className="budget">
+            <input className="bnum" type="number" value={typed}
+              min={data.meta.b_lo} max={data.meta.b_hi} step={data.meta.step}
+              onChange={(e) => setTyped(e.target.value)}
+              onBlur={() => snap(parseFloat(typed))}
+              onKeyDown={(e) => e.key === "Enter" && snap(parseFloat(typed))}
+              aria-label="תקציב" />
+            <span className="bunit">
+              יחידות
+              <b className="eur">
+                ≈ {f(toEur(p.budget))}M€ <span className="pm">±{EUR.mae}</span>
+              </b>
+              {(p.budget < EUR.lo || p.budget > EUR.hi) && (
+                <em className="oob">מחוץ לטווח שנצפה בליגה</em>
+              )}
+            </span>
+          </div>
+          <input className="slider" type="range" min={0} max={pts.length - 1}
+            value={i} onChange={(e) => setI(+e.target.value)}
+            aria-label="סליידר תקציב" />
+        </div>
+
+        <div className="kpis">
+          <Kpi v={f(p.q)} l="ניקוד חזוי" c="pred"
+            h="מה שהמודל ציפה מהסגל הזה, לפני העונה" />
+          <Kpi v={f(p.q_realised)} l="בפועל" c="real"
+            h="מה שאותם שחקנים באמת ייצרו באותה עונה" />
+          <Kpi v={marginal == null ? "—" : `+${f(marginal, 2)}`}
+            l="תשואה שולית" c={marginal != null && marginal < 0.5 ? "dim" : ""}
+            h="כמה ניקוד קנתה יחידת התקציב האחרונה" />
+          <Kpi v={f(p.unspent, 2)} l="לא נוצל" c="dim"
+            h="תקציב שנשאר על השולחן" />
+        </div>
+      </header>
+
+      <section className="panel">
+        <div className="ph">
+          <h2>הסגל</h2>
+          <span className="sub">
+            חמישייה מוצעת · הוצא {f(p.spent, 2)} מתוך {f(p.budget)} יחידות
+          </span>
+        </div>
+
+        <div className="courtwrap">
+          <svg viewBox="0 0 400 300" className="court">
+            <path d="M60 10 L60 88 A140 140 0 0 0 340 88 L340 10" className="cline" fill="none" />
+            <rect x="160" y="10" width="80" height="96" className="cline" fill="none" />
+            <circle cx="200" cy="106" r="36" className="cline" fill="none" />
+            <line x1="176" y1="22" x2="224" y2="22" className="choop" />
+            <circle cx="200" cy="34" r="8" className="choop" fill="none" />
+            {five.map((r, k) => (
+              <g key={r.code} transform={`translate(${SPOTS[k].x},${SPOTS[k].y})`}
+                className={diff.inn.some((x) => x.code === r.code) ? "pl in" : "pl"}>
+                <circle r="23" className={`pdot p${r.pos}`} />
+                <text y="6" className="pnum">{f(r.minutes, 0)}</text>
+                <text y="41" className="pname">{nice(r.name)}</text>
+                <text y="55" className="pcost">
+                  {r.pos} · {f(toEur(r.cost * 12) / 12, 2)}M€
+                </text>
+              </g>
+            ))}
+          </svg>
+        </div>
+
+        <ol className="bench">
+          {bench.map((r) => (
+            <li key={r.code} className={"bl" + (r.minutes < 0.5 ? " idle" : "") +
+              (diff.inn.some((x) => x.code === r.code) ? " in" : "")}>
+              <span className={`chip p${r.pos}`} title={POSN[r.pos]}>{r.pos}</span>
+              <span className="bname">
+                {nice(r.name)}
+              </span>
+              <span className="bbar"><i style={{ width: `${(r.minutes / 32) * 100}%` }} /></span>
+              <span className="bmin">{f(r.minutes, 0)}׳</span>
+              <span className="bcost">{f(r.cost, 2)}</span>
+            </li>
+          ))}
+        </ol>
+
+        {idle.length > 0 && (
+          <p className="note">
+            המנוע מקצה דקות ל<b>משחק צפוי אחד</b>, ולכן <b>{idle.length}</b> שחקנים
+            נשארים על אפס. זה לגיטימי — סגל של 12 תמיד כולל DNP.
+            אבל המנוע גם לא יודע לתמחר ביטוח: הוא רואה זמינות כתוחלת ולא
+            כהתפלגות, ולכן מעריך בחסר את מי שנכנס כשהחמישייה נופלת.
+          </p>
+        )}
+
+        {(diff.inn.length > 0 || diff.out.length > 0) && (
+          <div className="diff">
+            <span className="dlbl">לעומת {f(prev.budget)}</span>
+            {diff.out.map((r) => <span key={r.code} className="tag out">{nice(r.name)}</span>)}
+            {diff.inn.map((r) => <span key={r.code} className="tag in">{nice(r.name)}</span>)}
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="ph">
+          <h2>מה המנוע חשב, ומה קרה</h2>
+          <span className="legend"><i className="lk pred" />חזוי<i className="lk real" />בפועל</span>
+        </div>
+
+        <svg viewBox={`0 0 ${W} ${H}`} className="chart">
+          <defs>
+            <pattern id="hx" width="7" height="7" patternTransform="rotate(45)"
+              patternUnits="userSpaceOnUse"><line y2="7" className="hxl" /></pattern>
+          </defs>
+          {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
+            <g key={v}>
+              <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} className="grid" />
+              <text x={L - 8} y={Y(v) + 4} className="ax">{v}</text>
+            </g>
+          ))}
+          {data.clubs.map((c) => (
+            <line key={c.club} x1={X(c.budget)} x2={X(c.budget)}
+              y1={H - B} y2={H - B + 6} className="tick" />
+          ))}
+          {sat && (
+            <>
+              <line x1={X(sat)} x2={X(sat)} y1={T} y2={H - B} className="sat" />
+              <text x={X(sat) - 7} y={T + 10} className="satl">מכאן הכסף כמעט מפסיק לקנות</text>
+            </>
+          )}
+          <path d={band} fill="url(#hx)" />
+          <path d={line("q")} className="lpred" fill="none" />
+          <path d={line("q_realised")} className="lreal" fill="none" />
+          <line x1={X(p.budget)} x2={X(p.budget)} y1={T} y2={H - B} className="cur" />
+          <circle cx={X(p.budget)} cy={Y(p.q)} r="5" className="dpred" />
+          <circle cx={X(p.budget)} cy={Y(p.q_realised)} r="4" className="dreal" />
+          {[pts[0].budget, sat, pts[pts.length - 1].budget].filter(Boolean).map((b) => (
+            <text key={b} x={X(b)} y={H - 12} className="ax mid">{b}</text>
+          ))}
+          <text x={(L + W - R) / 2} y={H - 1} className="ax mid dimx">
+            תקציב (יחידות מנורמלות) · כל קו קטן הוא מועדון אמיתי
+          </text>
+        </svg>
+
+        <p className="note">
+          כאן המנוע אופטימי ב־<b className="real">{f(p.optimism ?? p.q - p.q_realised)}</b> נקודות.
+          הרצועה רחבה בתקציבים נמוכים ומצטמצמת בגבוהים: בעוני הוא נאלץ לקנות
+          שחקנים זולים, ובדיוק שם התחזית פחות בטוחה.
+        </p>
+      </section>
+
+      {rival && (
+        <section className="panel">
+          <div className="ph">
+            <h2>מול מועדון אמיתי</h2>
+            <select className="sel" value={pick} onChange={(e) => setPick(e.target.value)}>
+              <option value="">הקרוב בתקציב</option>
+              {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
+                <option key={c.club} value={c.club}>
+                  {c.club} · ≈{f(toEur(c.budget))}M€
+                </option>
+              ))}
+            </select>
+          </div>
+          {bGap > 1.5 && (
+            <p className="alert">
+              ⚠️ פער תקציב של {f(bGap)} יחידות (≈{f(EUR.a * bGap)}M€) בין שני
+              הצדדים. זו אינה השוואה באותו כסף — לחצו על
+              <button className="lnk" onClick={() => snap(rival.budget)}>
+                השוו באותו תקציב
+              </button>
+            </p>
+          )}
+          <div className="vs">
+            <div className="vsc">
+              <span className="vsname">{rival.club}</span>
+              <span className="vsn">{f(rival.q)}</span>
+              <span className="vsl">
+                ≈{f(toEur(rival.budget))}M€ · {rival.n} שחקנים
+              </span>
+            </div>
+            <div className="vsgap">
+              <span className={p.q_realised >= rival.q ? "up" : "down"}>
+                {p.q_realised >= rival.q ? "+" : ""}{f(p.q_realised - rival.q)}
+              </span>
+              <span className="vsl">הפרש</span>
+            </div>
+            <div className="vsc">
+              <span className="vsname">המנוע</span>
+              <span className="vsn pred">{f(p.q_realised)}</span>
+              <span className="vsl">≈{f(toEur(p.budget))}M€ · {p.n} שחקנים</span>
+            </div>
+          </div>
+          <p className="note">
+            שני הצדדים נמדדים ב<b>תוצאות שקרו בפועל</b>, לא בתחזית — השוואת
+            תחזית לתחזית מנפחת את יתרון המנוע ב־155%. ולכן המנוע יכול גם
+            להפסיד: בתקציבים נמוכים הוא קונה שחקנים זולים שהמודל הכי פחות
+            בטוח לגביהם, והתוצאה בפועל נופלת מהתחזית.
+          </p>
+        </section>
+      )}
+
+      <footer>
+        המנוע בונה תמיד 12 שחקנים — המינימום החוקי — בכל תקציב.
+        הניקוד ביחידות פנימיות; ההמרה ליורו הוקפאה כי שלושה מפרטי כיול
+        לגיטימיים נותנים תשובות שונות.
+      </footer>
+    </div>
+  );
+}
+
+const Kpi = ({ v, l, c, h }) => (
+  <div className="kpi">
+    <span className={`kv ${c || ""}`}>{v}</span>
+    <span className="kl">{l}</span>
+    {h && <span className="kh">{h}</span>}
+  </div>
+);
+const Fail = () => (
+  <div dir="rtl" style={{ padding: 60, fontFamily: "system-ui", color: "#E9EDF5",
+    background: "#0E1420", minHeight: "100vh" }}>
+    <h2>roster_sweep.json לא נמצא</h2>
+    <p style={{ color: "#8894AC" }}>העתק אותו אל <code>dashboard/public/</code> ורענן.</p>
+  </div>
+);
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+.rb{--bg:#0E1420;--pan:#141C2B;--ln:#26314A;--tx:#E9EDF5;--dim:#8894AC;
+ --pred:#5AA9FF;--real:#F2A13C;
+ background:var(--bg);color:var(--tx);min-height:100vh;
+ font-family:'Assistant',system-ui,sans-serif;
+ padding:clamp(16px,4vw,52px);max-width:960px;margin:0 auto;}
+.rb h1{font-family:'Secular One',sans-serif;font-size:clamp(32px,6vw,58px);
+ line-height:1.06;margin:6px 0 34px;font-weight:400;}
+.rb h2{font-size:14px;letter-spacing:.04em;margin:0;font-weight:700;}
+.eyebrow{font-size:12px;letter-spacing:.16em;color:var(--dim);}
+.hd{border-bottom:1px solid var(--ln);padding-bottom:30px;margin-bottom:30px;}
+.ctl{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
+.budget{display:flex;align-items:baseline;gap:7px;}
+.bnum{font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600;
+ width:148px;background:transparent;border:none;border-bottom:2px solid var(--pred);
+ color:var(--tx);padding:0 4px 4px;text-align:center;}
+.bnum:focus{outline:none;border-bottom-color:var(--real);}
+.bunit{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:2px;}
+.eur{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tx);font-weight:600;}
+.eur .pm{color:var(--dim);font-size:11px;font-weight:400;}
+.oob{font-style:normal;font-size:10px;color:var(--real);}
+.bpos{font-style:normal;font-size:10.5px;color:var(--dim);
+ font-weight:400;margin-inline-start:7px;}
+.slider{flex:1;min-width:220px;-webkit-appearance:none;appearance:none;
+ background:transparent;height:24px;}
+.slider::-webkit-slider-runnable-track{height:3px;background:var(--ln);border-radius:2px;}
+.slider::-moz-range-track{height:3px;background:var(--ln);border-radius:2px;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-10px;
+ border-radius:50%;background:var(--pred);border:3px solid var(--bg);cursor:grab;}
+.slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pred);
+ border:3px solid var(--bg);cursor:grab;}
+.slider:focus-visible{outline:2px solid var(--real);outline-offset:6px;}
+.kpis{display:flex;flex-wrap:wrap;gap:18px 40px;margin-top:26px;}
+.kv{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;
+ display:block;line-height:1.1;}
+.kv.pred{color:var(--pred);}.kv.real{color:var(--real);}.kv.dim{color:var(--dim);}
+.kl{font-size:11.5px;color:var(--dim);}
+.kh{font-size:10.5px;color:var(--dim);opacity:.72;max-width:170px;
+ line-height:1.45;margin-top:2px;}
+.kpi{max-width:190px;}
+.sel{background:var(--bg);color:var(--tx);border:1px solid var(--ln);
+ border-radius:3px;font-family:'Assistant',sans-serif;font-size:12px;padding:4px 8px;}
+.alert{font-size:12px;color:var(--real);background:rgba(242,161,60,.08);
+ border:1px solid rgba(242,161,60,.3);border-radius:3px;padding:8px 11px;
+ margin:0 0 12px;line-height:1.6;}
+.lnk{background:none;border:none;color:var(--pred);font:inherit;
+ cursor:pointer;text-decoration:underline;padding:0 4px;}
+.panel{background:var(--pan);border:1px solid var(--ln);border-radius:3px;
+ padding:20px clamp(14px,3vw,26px);margin-bottom:22px;}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+ border-bottom:1px solid var(--ln);padding-bottom:10px;margin-bottom:16px;flex-wrap:wrap;}
+.sub,.legend{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:6px;}
+.lk{width:16px;height:2px;display:inline-block;margin-inline-start:8px;}
+.lk.pred{background:var(--pred);}.lk.real{background:var(--real);}
+.courtwrap{max-width:430px;margin:0 auto;}
+.court{width:100%;height:auto;overflow:visible;}
+.cline{stroke:var(--ln);stroke-width:1.5;}
+.choop{stroke:var(--real);stroke-width:2.4;fill:none;stroke-linecap:round;}
+.pdot{stroke:var(--bg);stroke-width:2.5;}
+.pG{fill:#5AA9FF;}.pF{fill:#8B93F0;}.pC{fill:#F2A13C;}
+.pnum{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+ fill:#0E1420;text-anchor:middle;}
+.pname{font-size:11.5px;fill:var(--tx);text-anchor:middle;font-weight:600;}
+.pcost{font-size:9.5px;fill:var(--dim);text-anchor:middle;}
+.pl.in .pdot{animation:pop .45s ease;}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.bench{list-style:none;margin:22px 0 0;padding:0;}
+.bl{display:grid;grid-template-columns:24px 1fr 90px 40px 46px;gap:10px;
+ align-items:center;padding:6px 0;border-bottom:1px solid var(--ln);font-size:13.5px;}
+.bl.idle{opacity:.42;}
+.bl.in{background:rgba(90,169,255,.09);}
+.chip{font-size:10.5px;font-weight:700;text-align:center;border-radius:2px;
+ color:#0E1420;padding:2px 0;}
+.bname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bbar{height:5px;background:var(--ln);border-radius:3px;overflow:hidden;}
+.bbar i{display:block;height:100%;background:var(--dim);}
+.bmin,.bcost{font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+ color:var(--dim);text-align:end;}
+.note{font-size:12.5px;line-height:1.7;color:var(--dim);margin:14px 0 0;max-width:640px;}
+.note b{color:var(--tx);}.note b.real{color:var(--real);}
+.diff{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:14px;}
+.dlbl{font-size:11px;color:var(--dim);}
+.tag{font-size:11.5px;padding:3px 9px;border-radius:2px;border:1px solid;}
+.tag.in{border-color:var(--pred);color:var(--pred);}
+.tag.out{border-color:var(--ln);color:var(--dim);text-decoration:line-through;}
+.chart{width:100%;height:auto;}
+.grid{stroke:var(--ln);stroke-width:1;}
+.ax{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--dim);text-anchor:end;}
+.ax.mid{text-anchor:middle;}
+.ax.dimx{font-family:'Assistant',sans-serif;font-size:9.5px;opacity:.7;}
+.tick{stroke:var(--dim);stroke-width:1.5;opacity:.55;}
+.sat{stroke:var(--real);stroke-width:1;stroke-dasharray:3 4;opacity:.7;}
+.satl{font-size:10px;fill:var(--real);text-anchor:end;}
+.hxl{stroke:var(--real);stroke-width:1;opacity:.3;}
+.lpred{stroke:var(--pred);stroke-width:2.4;}
+.lreal{stroke:var(--real);stroke-width:1.6;stroke-dasharray:2 4;stroke-linecap:round;}
+.cur{stroke:var(--tx);stroke-width:1;opacity:.45;}
+.dpred{fill:var(--pred);}.dreal{fill:var(--real);}
+.vs{display:flex;align-items:center;justify-content:space-around;gap:14px;
+ text-align:center;padding:8px 0;flex-wrap:wrap;}
+.vsc{display:flex;flex-direction:column;gap:3px;min-width:120px;}
+.vsname{font-size:13px;font-weight:700;letter-spacing:.06em;}
+.vsn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;}
+.vsn.pred{color:var(--pred);}
+.vsl{font-size:11px;color:var(--dim);}
+.vsgap span:first-child{font-family:'IBM Plex Mono',monospace;font-size:20px;
+ font-weight:600;display:block;}
+.vsgap .up{color:var(--pred);}.vsgap .down{color:var(--real);}
+.rb footer{font-size:11.5px;line-height:1.75;color:var(--dim);
+ border-top:1px solid var(--ln);padding-top:16px;max-width:640px;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+@media (max-width:560px){.bl{grid-template-columns:22px 1fr 44px 42px;}.bbar{display:none;}}
+`;
