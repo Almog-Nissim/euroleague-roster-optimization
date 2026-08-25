@@ -98,6 +98,7 @@ from usage_constrained import optimise_capped, attach_usage  # noqa: E402
 from roster_membership_audit import score_rows      # noqa: E402
 from roster_optimizer import PROCESSED_DIR          # noqa: E402
 from final_day7 import MIN_LEGAL_ROSTER             # noqa: E402
+from club_codes import NAME2CODE                    # noqa: E402
 
 SEASON, TRAIN_MAX = 2025, 2024        # 25/26
 B_LO, B_HI, B_STEP = 8.0, 40.0, 0.5
@@ -153,6 +154,48 @@ def roster_payload(cand, sel, mins, names):
     ) for _, x in r.iterrows()]
 
 
+def fit_eur(clubs, season):
+    """כיול מנורמל → מיליוני יורו נטו, על מועדוני העונה עצמה.
+
+    ⚠️ מוצג בממשק עם ± ולא כמספר נקי. מודל העלות מכווץ הפרשים
+       בין מועדונים פי 3.33 (scale_regression, יום 12): מיסוי,
+       שחקנים מקומיים וחניכי נוער אינם בו. דובאי ובאסקוניה
+       יושבות על תקציב מנורמל כמעט זהה ומשלמות 18.25M€ ו-8.50M€.
+
+    ⛔ אינו מחליף את הכיול המוקפא של scale_regression. זה מיפוי
+       תצוגה בלבד, נאמד על 20 נקודות, לצורך קריאוּת הסליידר.
+    """
+    bud = pd.read_csv(PROCESSED_DIR / "club_budgets_gemini.csv")
+    bud["club"] = bud.club.map(NAME2CODE)
+    m = (pd.DataFrame(clubs)[["club", "budget"]]
+         .merge(bud[bud.season == season][["club", "net_eur"]], on="club")
+         .dropna())
+    if len(m) < 8:
+        print(f"  ⚠️ רק {len(m)} מועדונים עם תקציב — הכיול לא נאמד")
+        return None
+    x, y = m.budget.values, m.net_eur.values
+    a, b = np.polyfit(x, y, 1)
+    pred = a * x + b
+    r = float(np.corrcoef(x, y)[0, 1])
+    mae = float(np.abs(y - pred).mean())
+    worst = m.assign(err=y - pred).reindex(
+        np.abs(y - pred).argsort()[::-1]).head(2)
+    print(f"  net_eur = {a:.4f}·norm {b:+.3f}   n={len(m)} · "
+          f"r={r:.3f} · R²={r*r:.3f} · MAE={mae:.2f}M€")
+    for _, w in worst.iterrows():
+        print(f"    חריג: {w.club} · מנורמל {w.budget:.1f} → "
+              f"ניבוי {a*w.budget+b:.1f} · בפועל {w.net_eur:.1f} "
+              f"({w.err:+.1f})")
+    print("  ⚠️ מוצג בממשק עם ± ולא כמספר נקי.")
+    return dict(a=round(float(a), 4), b=round(float(b), 4),
+                r2=round(r * r, 3), mae=round(mae, 2),
+                lo=round(float(x.min()), 1), hi=round(float(x.max()), 1),
+                n=int(len(m)),
+                note="מיפוי תצוגה בלבד. מודל העלות מכווץ הפרשים בין "
+                     "מועדונים פי 3.33, ולכן שני מועדונים באותו תקציב "
+                     "מנורמל יכולים לשלם סכומים שונים מאוד.")
+
+
 def main() -> int:
     print(SEP)
     print(f"roster_sweep — פרה-חישוב לעונת {SEASON}/{SEASON+1-2000}")
@@ -160,9 +203,16 @@ def main() -> int:
     print(SEP)
 
     feat, anch, pos, ps = ob.load_all()
-    names = (feat.drop_duplicates("player_code")
-             .set_index(feat.drop_duplicates("player_code")
-                        .player_code.astype(str)).player_name.to_dict())
+    # שמות משלושה מקורות. feat אחרון — הוא המוסמך במקרה של סתירה.
+    # ⚠️ feat לבדו נתן 228/335 בלבד: 107 שחקנים קיימים רק ב-
+    #    player_season / player_positions.
+    names = {}
+    for src in (ps, pos, feat):
+        if "player_name" in src.columns:
+            s = src.dropna(subset=["player_name"]).copy()
+            s["k"] = s.player_code.astype(str)
+            names.update(s.drop_duplicates("k").set_index("k")
+                         .player_name.to_dict())
     cand, _ = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
     cand = cand.reset_index(drop=True)          # ⚠️ באג היישור, יום 12
     print(f"\n  מאגר: {len(cand)} שחקנים · "
@@ -241,6 +291,10 @@ def main() -> int:
         print(f"  {club:<5} תקציב {B:>6.2f} · סגל {len(keep):>2} · "
               f"ניקוד {clubs[-1]['q']:>6.1f}")
 
+    # ------------------------------------------------ כיול יורו
+    h("כיול תצוגה — יחידות מנורמלות → מיליוני יורו")
+    eur = fit_eur(clubs, SEASON)
+
     # ------------------------------------------------ כתיבה
     h("בקרת מונוטוניות — יום 11, מיושם")
     v_lp = [(pts[i]["budget"], pts[i]["q"] - pts[i-1]["q"])
@@ -293,7 +347,8 @@ def main() -> int:
                                        "יש להשתמש ב-"
                                        "usage_constrained_results.csv.",
                   usage_fill_sensitivity="−0.66 יחידות בלבד (−2.9%) "
-                                         "במעבר ממילוי 20 ל-28"),
+                                         "במעבר ממילוי 20 ל-28",
+                  eur=eur),
         free=pts, capped=capped, clubs=clubs)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(D, ensure_ascii=False), encoding="utf-8")

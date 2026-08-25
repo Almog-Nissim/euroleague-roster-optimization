@@ -24,14 +24,9 @@ const SPOTS = [
   { x: 142, y: 224 }, { x: 258, y: 224 },             // G
 ];
 
-/* יחידות מנורמלות → מיליוני יורו נטו.
-   נאמד על 20 מועדוני 2025: r=0.868 · R²=0.753 · MAE 2.15M€.
-   ⚠️ רועש בכוונה מוצג: שגיאה מקסימלית 5.39M€ (דובאי).
-   מודל העלות מכווץ הפרשים בין מועדונים פי 3.33 — מיסוי, שחקנים
-   מקומיים וחניכי נוער אינם בו. לכן ± ולא מספר נקי.
-   📌 להעביר ל-roster_sweep.py כדי שיהיה לו סקריפט מייצר. */
-const EUR = { a: 0.7639, b: -2.119, mae: 2.15, lo: 12.9, hi: 36.9 };
-const toEur = (u) => EUR.a * u + EUR.b;
+/* ✅ הכיול מגיע מ-meta.eur — נאמד ב-roster_sweep.py, לא כאן.
+   אין מספר בממשק בלי סקריפט מייצר. */
+const EUR_FALLBACK = { a: 0.7639, b: -2.119, mae: 2.15, lo: 12.9, hi: 36.9 };
 
 const tc = (s) => s.split(/[\s,]+/).filter(Boolean)
   .map((w) => w[0] + w.slice(1).toLowerCase()).join(" ");
@@ -44,6 +39,9 @@ const f = (n, d = 1) => (n == null || Number.isNaN(n) ? "—" : n.toFixed(d));
 
 export default function RosterBuilder() {
   const [data, setData] = useState(null);
+  const [dash, setDash] = useState(null);
+  const [season, setSeason] = useState(null);
+  const [sortBy, setSortBy] = useState("gap");
   const [fail, setFail] = useState(false);
   const [i, setI] = useState(0);
   const [typed, setTyped] = useState("");
@@ -53,8 +51,18 @@ export default function RosterBuilder() {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => { setData(d); setI(Math.floor(d.free.length / 2)); })
       .catch(() => setFail(true));
+    fetch("/dashboard_data.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        setDash(d);
+        const ss = [...new Set((d.clubs || []).map((c) => c.season))];
+        setSeason(Math.max(...ss));
+      })
+      .catch(() => {});
   }, []);
 
+  const EUR = data?.meta?.eur ?? EUR_FALLBACK;
+  const toEur = (u) => EUR.a * u + EUR.b;
   const pts = data?.free ?? [];
   const p = pts[i];
   const prev = pts[i - 1];
@@ -145,8 +153,9 @@ export default function RosterBuilder() {
               aria-label="תקציב" />
             <span className="bunit">
               יחידות
-              <b className="eur">
-                ≈ {f(toEur(p.budget))}M€ <span className="pm">±{EUR.mae}</span>
+              <b className="eur" dir="ltr">
+                ≈ {f(toEur(p.budget))}M EUR
+                <span className="pm"> ± {EUR.mae}</span>
               </b>
               {(p.budget < EUR.lo || p.budget > EUR.hi) && (
                 <em className="oob">מחוץ לטווח שנצפה בליגה</em>
@@ -158,6 +167,7 @@ export default function RosterBuilder() {
             aria-label="סליידר תקציב" />
         </div>
 
+        <div className="kpihead">מה יוצא מהתקציב הזה</div>
         <div className="kpis">
           <Kpi v={f(p.q)} l="ניקוד חזוי" c="pred"
             h="מה שהמודל ציפה מהסגל הזה, לפני העונה" />
@@ -175,7 +185,7 @@ export default function RosterBuilder() {
         <div className="ph">
           <h2>הסגל</h2>
           <span className="sub">
-            חמישייה מוצעת · הוצא {f(p.spent, 2)} מתוך {f(p.budget)} יחידות
+            חמישייה מוצעת (2G · 2F · 1C) · הוצא {f(p.spent, 2)} מתוך {f(p.budget)}
           </span>
         </div>
 
@@ -192,8 +202,8 @@ export default function RosterBuilder() {
                 <circle r="23" className={`pdot p${r.pos}`} />
                 <text y="6" className="pnum">{f(r.minutes, 0)}</text>
                 <text y="41" className="pname">{nice(r.name)}</text>
-                <text y="55" className="pcost">
-                  {r.pos} · {f(toEur(r.cost * 12) / 12, 2)}M€
+                <text y="55" className="pcost" direction="ltr">
+                  {`${f(toEur(r.cost * 12) / 12, 2)}M EUR · ${r.pos}`}
                 </text>
               </g>
             ))}
@@ -289,14 +299,14 @@ export default function RosterBuilder() {
               <option value="">הקרוב בתקציב</option>
               {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
                 <option key={c.club} value={c.club}>
-                  {c.club} · ≈{f(toEur(c.budget))}M€
+                  {c.club} · ≈{f(toEur(c.budget))}M
                 </option>
               ))}
             </select>
           </div>
           {bGap > 1.5 && (
             <p className="alert">
-              ⚠️ פער תקציב של {f(bGap)} יחידות (≈{f(EUR.a * bGap)}M€) בין שני
+              ⚠️ פער תקציב של {f(bGap)} יחידות (≈{f(EUR.a * bGap)}M) בין שני
               הצדדים. זו אינה השוואה באותו כסף — לחצו על
               <button className="lnk" onClick={() => snap(rival.budget)}>
                 השוו באותו תקציב
@@ -308,7 +318,7 @@ export default function RosterBuilder() {
               <span className="vsname">{rival.club}</span>
               <span className="vsn">{f(rival.q)}</span>
               <span className="vsl">
-                ≈{f(toEur(rival.budget))}M€ · {rival.n} שחקנים
+                <span dir="ltr">≈{f(toEur(rival.budget))}M EUR</span> · {rival.n} שחקנים
               </span>
             </div>
             <div className="vsgap">
@@ -320,7 +330,7 @@ export default function RosterBuilder() {
             <div className="vsc">
               <span className="vsname">המנוע</span>
               <span className="vsn pred">{f(p.q_realised)}</span>
-              <span className="vsl">≈{f(toEur(p.budget))}M€ · {p.n} שחקנים</span>
+              <span className="vsl"><span dir="ltr">≈{f(toEur(p.budget))}M EUR</span> · {p.n} שחקנים</span>
             </div>
           </div>
           <p className="note">
@@ -331,6 +341,70 @@ export default function RosterBuilder() {
           </p>
         </section>
       )}
+
+      {dash?.clubs?.length > 0 && (() => {
+        const rows = dash.clubs
+          .filter((c) => c.season === season)
+          .map((c) => ({ ...c, gap: c.q_free - c.q_club,
+                         gapc: c.q_cap - c.q_club }))
+          .sort((a, b) => sortBy === "gap" ? b.gap - a.gap
+            : sortBy === "budget" ? b.budget - a.budget
+            : b.q_club - a.q_club);
+        const seasons = [...new Set(dash.clubs.map((c) => c.season))].sort();
+        return (
+          <section className="panel">
+            <div className="ph">
+              <h2>המנוע מול כל המועדונים</h2>
+              <span className="tabs">
+                {seasons.map((s) => (
+                  <button key={s} className={"tb" + (s === season ? " on" : "")}
+                    onClick={() => setSeason(s)}>{s}/{(s + 1) % 100}</button>
+                ))}
+              </span>
+            </div>
+
+            <div className="tblwrap">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th onClick={() => setSortBy("q")} className="clk">מועדון</th>
+                    <th onClick={() => setSortBy("budget")} className="clk num">תקציב</th>
+                    <th className="num">המועדון</th>
+                    <th className="num">אקראי</th>
+                    <th className="num">מנוע מאולץ</th>
+                    <th className="num">מנוע חופשי</th>
+                    <th onClick={() => setSortBy("gap")} className="clk num">פער</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((c) => (
+                    <tr key={c.club} className={c.club === rival?.club ? "hl" : ""}>
+                      <td><b>{c.club}</b></td>
+                      <td className="num" dir="ltr">{f(toEur(c.budget))}M</td>
+                      <td className="num">{f(c.q_club)}</td>
+                      <td className="num dimc">{c.q_rand == null ? "—" : f(c.q_rand)}</td>
+                      <td className="num">{c.q_cap == null ? "—" : f(c.q_cap)}</td>
+                      <td className="num predc">{f(c.q_free)}</td>
+                      <td className={"num " + (c.gap >= 0 ? "up" : "down")}>
+                        {c.gap >= 0 ? "+" : ""}{f(c.gap)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="note">
+              כל שורה בתקציב האמיתי של אותו מועדון, וכל העמודות בתוצאות
+              שקרו בפועל. <b>אקראי</b> הוא סגל שהוגרל מהמאגר תחת אותם
+              אילוצים — הוא מנצח את המועדון ב־9 מתוך 38 בלבד, ולכן היתרון
+              אינו מיוצר על ידי מבנה האילוצים.
+              <b> מאולץ</b> הוא המנוע תחת זהות הכדור: אי אפשר לקנות חמישה
+              שחקנים שכל אחד צורך 30% מההתקפות.
+            </p>
+          </section>
+        );
+      })()}
 
       <footer>
         המנוע בונה תמיד 12 שחקנים — המינימום החוקי — בכל תקציב.
@@ -374,8 +448,10 @@ const CSS = `
  width:148px;background:transparent;border:none;border-bottom:2px solid var(--pred);
  color:var(--tx);padding:0 4px 4px;text-align:center;}
 .bnum:focus{outline:none;border-bottom-color:var(--real);}
-.bunit{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:2px;}
-.eur{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tx);font-weight:600;}
+.bunit{font-size:10.5px;letter-spacing:.1em;color:var(--dim);
+ display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
+.eur{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--tx);
+ font-weight:600;letter-spacing:0;white-space:nowrap;}
 .eur .pm{color:var(--dim);font-size:11px;font-weight:400;}
 .oob{font-style:normal;font-size:10px;color:var(--real);}
 .bpos{font-style:normal;font-size:10.5px;color:var(--dim);
@@ -389,14 +465,17 @@ const CSS = `
 .slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pred);
  border:3px solid var(--bg);cursor:grab;}
 .slider:focus-visible{outline:2px solid var(--real);outline-offset:6px;}
-.kpis{display:flex;flex-wrap:wrap;gap:18px 40px;margin-top:26px;}
-.kv{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;
- display:block;line-height:1.1;}
+.kpihead{font-size:11px;letter-spacing:.14em;color:var(--dim);
+ margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--ln);}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.kpi{display:grid;grid-template-rows:auto auto 1fr;gap:4px;
+ padding:2px 16px;border-inline-start:1px solid var(--ln);max-width:none;}
+.kpi:first-child{border-inline-start:none;padding-inline-start:0;}
+.kv{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;
+ display:block;line-height:1;}
 .kv.pred{color:var(--pred);}.kv.real{color:var(--real);}.kv.dim{color:var(--dim);}
-.kl{font-size:11.5px;color:var(--dim);}
-.kh{font-size:10.5px;color:var(--dim);opacity:.72;max-width:170px;
- line-height:1.45;margin-top:2px;}
-.kpi{max-width:190px;}
+.kl{font-size:12.5px;color:var(--tx);font-weight:600;line-height:1.2;}
+.kh{font-size:10.5px;color:var(--dim);line-height:1.5;}
 .sel{background:var(--bg);color:var(--tx);border:1px solid var(--ln);
  border-radius:3px;font-family:'Assistant',sans-serif;font-size:12px;padding:4px 8px;}
 .alert{font-size:12px;color:var(--real);background:rgba(242,161,60,.08);
@@ -404,6 +483,23 @@ const CSS = `
  margin:0 0 12px;line-height:1.6;}
 .lnk{background:none;border:none;color:var(--pred);font:inherit;
  cursor:pointer;text-decoration:underline;padding:0 4px;}
+.tabs{display:flex;gap:4px;}
+.tb{background:none;border:1px solid var(--ln);color:var(--dim);border-radius:3px;
+ font:inherit;font-size:11.5px;padding:3px 10px;cursor:pointer;}
+.tb.on{border-color:var(--pred);color:var(--pred);}
+.tblwrap{overflow-x:auto;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{font-size:10.5px;color:var(--dim);font-weight:600;text-align:start;
+ padding:0 8px 8px;border-bottom:1px solid var(--ln);white-space:nowrap;}
+.tbl th.clk{cursor:pointer;}
+.tbl th.clk:hover{color:var(--pred);}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--ln);}
+.tbl .num{font-family:'IBM Plex Mono',monospace;text-align:end;}
+.tbl tr.hl{background:rgba(90,169,255,.08);}
+.tbl .predc{color:var(--pred);}
+.tbl .dimc{color:var(--dim);}
+.tbl .up{color:var(--pred);}
+.tbl .down{color:var(--real);}
 .panel{background:var(--pan);border:1px solid var(--ln);border-radius:3px;
  padding:20px clamp(14px,3vw,26px);margin-bottom:22px;}
 .ph{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
@@ -468,5 +564,8 @@ const CSS = `
 .rb footer{font-size:11.5px;line-height:1.75;color:var(--dim);
  border-top:1px solid var(--ln);padding-top:16px;max-width:640px;}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
-@media (max-width:560px){.bl{grid-template-columns:22px 1fr 44px 42px;}.bbar{display:none;}}
+@media (max-width:720px){.kpis{grid-template-columns:1fr 1fr;gap:18px 0;}
+ .kpi:nth-child(3){border-inline-start:none;padding-inline-start:0;}}
+@media (max-width:560px){.bl{grid-template-columns:22px 1fr 44px 42px;}
+ .bbar{display:none;}.kv{font-size:22px;}}
 `;
