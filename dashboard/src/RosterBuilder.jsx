@@ -210,6 +210,10 @@ export default function RosterBuilder() {
           </svg>
         </div>
 
+        <div className="benchhead">
+          <span>ספסל</span><span></span><span>דקות</span>
+          <span className="bh-n">דק׳</span><span className="bh-n">עלות</span>
+        </div>
         <ol className="bench">
           {bench.map((r) => (
             <li key={r.code} className={"bl" + (r.minutes < 0.5 ? " idle" : "") +
@@ -343,14 +347,26 @@ export default function RosterBuilder() {
       )}
 
       {dash?.clubs?.length > 0 && (() => {
-        const rows = dash.clubs
-          .filter((c) => c.season === season)
-          .map((c) => ({ ...c, gap: c.q_free - c.q_club,
-                         gapc: c.q_cap - c.q_club }))
+        const seasons = [...new Set(dash.clubs.map((c) => c.season))].sort();
+        const shown = season === "all" ? dash.clubs
+          : dash.clubs.filter((c) => c.season === season);
+        const rows = shown
+          .map((c) => ({ ...c, gap: c.q_free - c.q_club }))
           .sort((a, b) => sortBy === "gap" ? b.gap - a.gap
             : sortBy === "budget" ? b.budget - a.budget
             : b.q_club - a.q_club);
-        const seasons = [...new Set(dash.clubs.map((c) => c.season))].sort();
+
+        /* דמבל: קו אחד למועדון, ארבע נקודות עליו.
+           ⚠️ כל הערכים על ppm_true — נצפים. חזוי היה מנפח ב-155%. */
+        const vals = rows.flatMap((c) => [c.q_club, c.q_free,
+          c.q_cap ?? c.q_club, c.q_rand ?? c.q_club]);
+        const lo = Math.floor(Math.min(...vals) / 10) * 10;
+        const hi = Math.ceil(Math.max(...vals) / 10) * 10;
+        const RW = 720, LB = 74, RB = 18, ROW = 26, TOP = 26;
+        const RH = TOP + rows.length * ROW + 14;
+        const px = (v) => LB + ((v - lo) / (hi - lo)) * (RW - LB - RB);
+        const py = (i) => TOP + i * ROW + ROW / 2;
+
         return (
           <section className="panel">
             <div className="ph">
@@ -360,48 +376,101 @@ export default function RosterBuilder() {
                   <button key={s} className={"tb" + (s === season ? " on" : "")}
                     onClick={() => setSeason(s)}>{s}/{(s + 1) % 100}</button>
                 ))}
+                <button className={"tb" + (season === "all" ? " on" : "")}
+                  onClick={() => setSeason("all")}>שתיהן</button>
               </span>
             </div>
 
+            <div className="lgnd">
+              <span><i className="d rand" />סגל אקראי</span>
+              <span><i className="d club" />המועדון</span>
+              <span><i className="d cap" />מנוע מאולץ</span>
+              <span><i className="d free" />מנוע חופשי</span>
+            </div>
+
             <div className="tblwrap">
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th onClick={() => setSortBy("q")} className="clk">מועדון</th>
-                    <th onClick={() => setSortBy("budget")} className="clk num">תקציב</th>
-                    <th className="num">המועדון</th>
-                    <th className="num">אקראי</th>
-                    <th className="num">מנוע מאולץ</th>
-                    <th className="num">מנוע חופשי</th>
-                    <th onClick={() => setSortBy("gap")} className="clk num">פער</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((c) => (
-                    <tr key={c.club} className={c.club === rival?.club ? "hl" : ""}>
-                      <td><b>{c.club}</b></td>
-                      <td className="num" dir="ltr">{f(toEur(c.budget))}M</td>
-                      <td className="num">{f(c.q_club)}</td>
-                      <td className="num dimc">{c.q_rand == null ? "—" : f(c.q_rand)}</td>
-                      <td className="num">{c.q_cap == null ? "—" : f(c.q_cap)}</td>
-                      <td className="num predc">{f(c.q_free)}</td>
-                      <td className={"num " + (c.gap >= 0 ? "up" : "down")}>
-                        {c.gap >= 0 ? "+" : ""}{f(c.gap)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <svg viewBox={`0 0 ${RW} ${RH}`} className="dumb"
+                style={{ minWidth: 560 }}>
+                {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
+                  <g key={v}>
+                    <line x1={px(v)} x2={px(v)} y1={TOP - 6} y2={RH - 12}
+                      className="gy" />
+                    <text x={px(v)} y={TOP - 12} className="gt">{v}</text>
+                  </g>
+                ))}
+                {rows.map((c, i) => {
+                  const a = Math.min(c.q_club, c.q_free);
+                  const b = Math.max(c.q_club, c.q_free);
+                  return (
+                    <g key={c.club + c.season}
+                      className={c.club === rival?.club ? "dr on" : "dr"}>
+                      <rect x="0" y={py(i) - ROW / 2} width={RW} height={ROW}
+                        className="dbg" />
+                      <text x={LB - 10} y={py(i) + 4} className="dlab">
+                        {c.club}{season === "all" ? ` ${c.season % 100}` : ""}
+                      </text>
+                      <line x1={px(a)} x2={px(b)} y1={py(i)} y2={py(i)}
+                        className="dline" />
+                      {c.q_rand != null &&
+                        <circle cx={px(c.q_rand)} cy={py(i)} r="4" className="rand" />}
+                      <circle cx={px(c.q_club)} cy={py(i)} r="5" className="club" />
+                      {c.q_cap != null &&
+                        <circle cx={px(c.q_cap)} cy={py(i)} r="4" className="cap" />}
+                      <circle cx={px(c.q_free)} cy={py(i)} r="5.5" className="free" />
+                      <title>
+                        {`${c.club} ${c.season} · אקראי ${f(c.q_rand)} · מועדון ${f(c.q_club)} · מאולץ ${f(c.q_cap)} · חופשי ${f(c.q_free)}`}
+                      </title>
+                    </g>
+                  );
+                })}
+              </svg>
             </div>
 
             <p className="note">
-              כל שורה בתקציב האמיתי של אותו מועדון, וכל העמודות בתוצאות
-              שקרו בפועל. <b>אקראי</b> הוא סגל שהוגרל מהמאגר תחת אותם
-              אילוצים — הוא מנצח את המועדון ב־9 מתוך 38 בלבד, ולכן היתרון
-              אינו מיוצר על ידי מבנה האילוצים.
-              <b> מאולץ</b> הוא המנוע תחת זהות הכדור: אי אפשר לקנות חמישה
-              שחקנים שכל אחד צורך 30% מההתקפות.
+              כל שורה היא מועדון בתקציבו האמיתי, וכל הנקודות בתוצאות
+              שקרו בפועל. הדבר שכדאי לחפש: <b>נקודת האקראי כמעט תמיד
+              משמאל לנקודת המועדון</b> — סגל שהוגרל מהמאגר, תחת אותם
+              אילוצים בדיוק, מנצח את המועדון ב־9 מתוך 38 בלבד. כלומר
+              היתרון של המנוע אינו מיוצר על ידי 12 השחקנים ורצפות
+              העמדה, אלא על ידי הבחירה עצמה.
             </p>
+
+            <details className="det">
+              <summary>הצג נתונים מלאים</summary>
+              <div className="tblwrap">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th onClick={() => setSortBy("q")} className="clk">מועדון</th>
+                      {season === "all" && <th>עונה</th>}
+                      <th onClick={() => setSortBy("budget")} className="clk num">תקציב</th>
+                      <th className="num">אקראי</th>
+                      <th className="num">המועדון</th>
+                      <th className="num">מאולץ</th>
+                      <th className="num">חופשי</th>
+                      <th onClick={() => setSortBy("gap")} className="clk num">פער</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((c) => (
+                      <tr key={c.club + c.season}
+                        className={c.club === rival?.club ? "hl" : ""}>
+                        <td><b>{c.club}</b></td>
+                        {season === "all" && <td className="num">{c.season}</td>}
+                        <td className="num" dir="ltr">{f(toEur(c.budget))}M</td>
+                        <td className="num dimc">{c.q_rand == null ? "—" : f(c.q_rand)}</td>
+                        <td className="num">{f(c.q_club)}</td>
+                        <td className="num">{c.q_cap == null ? "—" : f(c.q_cap)}</td>
+                        <td className="num predc">{f(c.q_free)}</td>
+                        <td className={"num " + (c.gap >= 0 ? "up" : "down")}>
+                          {c.gap >= 0 ? "+" : ""}{f(c.gap)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
           </section>
         );
       })()}
@@ -488,6 +557,28 @@ const CSS = `
  font:inherit;font-size:11.5px;padding:3px 10px;cursor:pointer;}
 .tb.on{border-color:var(--pred);color:var(--pred);}
 .tblwrap{overflow-x:auto;}
+.lgnd{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);
+ margin-bottom:10px;}
+.lgnd span{display:flex;align-items:center;gap:6px;}
+.lgnd .d{width:9px;height:9px;border-radius:50%;display:inline-block;}
+.dumb{width:100%;height:auto;}
+.dumb .gy{stroke:var(--ln);stroke-width:1;}
+.dumb .gt{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+ fill:var(--dim);text-anchor:middle;}
+.dumb .dbg{fill:transparent;}
+.dumb .dr:hover .dbg{fill:rgba(90,169,255,.06);}
+.dumb .dr.on .dbg{fill:rgba(90,169,255,.1);}
+.dumb .dlab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+ fill:var(--tx);text-anchor:end;}
+.dumb .dline{stroke:var(--ln);stroke-width:2;}
+.d.rand,.dumb .rand{background:#5A6478;fill:#5A6478;}
+.d.club,.dumb .club{background:var(--tx);fill:var(--tx);}
+.d.cap,.dumb .cap{background:var(--real);fill:var(--real);}
+.d.free,.dumb .free{background:var(--pred);fill:var(--pred);}
+.det{margin-top:16px;}
+.det summary{font-size:12px;color:var(--dim);cursor:pointer;
+ padding:8px 0;border-top:1px solid var(--ln);}
+.det summary:hover{color:var(--pred);}
 .tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl th{font-size:10.5px;color:var(--dim);font-weight:600;text-align:start;
  padding:0 8px 8px;border-bottom:1px solid var(--ln);white-space:nowrap;}
@@ -519,7 +610,11 @@ const CSS = `
 .pcost{font-size:9.5px;fill:var(--dim);text-anchor:middle;}
 .pl.in .pdot{animation:pop .45s ease;}
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
-.bench{list-style:none;margin:22px 0 0;padding:0;}
+.benchhead{display:grid;grid-template-columns:24px 1fr 90px 40px 46px;gap:10px;
+ margin-top:26px;padding-bottom:7px;border-bottom:1px solid var(--ln);
+ font-size:10px;letter-spacing:.12em;color:var(--dim);}
+.benchhead .bh-n{text-align:end;}
+.bench{list-style:none;margin:0;padding:0;}
 .bl{display:grid;grid-template-columns:24px 1fr 90px 40px 46px;gap:10px;
  align-items:center;padding:6px 0;border-bottom:1px solid var(--ln);font-size:13.5px;}
 .bl.idle{opacity:.42;}
@@ -566,6 +661,7 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 @media (max-width:720px){.kpis{grid-template-columns:1fr 1fr;gap:18px 0;}
  .kpi:nth-child(3){border-inline-start:none;padding-inline-start:0;}}
-@media (max-width:560px){.bl{grid-template-columns:22px 1fr 44px 42px;}
+@media (max-width:560px){.bl,.benchhead{grid-template-columns:22px 1fr 44px 42px;}
+ .benchhead span:nth-child(3){display:none;}
  .bbar{display:none;}.kv{font-size:22px;}}
 `;
