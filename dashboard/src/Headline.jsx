@@ -6,6 +6,10 @@ import { useState, useEffect } from "react";
 
    כל מספר כאן עבר בקרת הקפאה. שינוי בכל אחד מהם שובר את
    הבנייה בפייתון לפני שהוא מגיע לכאן.
+
+   ⚠️ יום 14: "CI95 [x, y]" הוחלף ב"בין x ל־y". רצועת סמך היא
+      מושג סטטיסטי; הקיצור האנגלי אינו אומר דבר לקורא שאינו
+      בקיא, והמסך הזה נועד דווקא לו.
 ══════════════════════════════════════════════════════════════ */
 
 const f = (n, d = 2) => (n == null || Number.isNaN(n) ? "—" : n.toFixed(d));
@@ -71,8 +75,8 @@ export default function Headline({ onOpenBuilder }) {
           </div>
           <p className="sd">
             זה מה שאופטימיזציה של אותו תקציב מייצרת — בלי שקל נוסף,
-            רק הקצאה אחרת. <span className="ci" dir="ltr">
-              CI95 [{f(H.ci[0])}, {f(H.ci[1])}]
+            רק הקצאה אחרת. <span className="ci">
+              בין {f(H.ci[0])} ל־{f(H.ci[1])} ניצחונות
             </span>
             <em className="cav">{H.caveat}</em>
           </p>
@@ -96,8 +100,8 @@ export default function Headline({ onOpenBuilder }) {
               <div>
                 <b>מבנה האילוצים לבדו</b>
                 <p>{struct.note}</p>
-                <span className="cin" dir="ltr">
-                  CI95 [{f(struct.ci[0])}, {f(struct.ci[1])}]
+                <span className="cin">
+                  בין {f(struct.ci[0])} ל־{f(struct.ci[1])}
                 </span>
               </div>
             </li>
@@ -106,8 +110,8 @@ export default function Headline({ onOpenBuilder }) {
               <div>
                 <b>האופטימיזציה עצמה</b>
                 <p>{model.note}</p>
-                <span className="cin" dir="ltr">
-                  CI95 [{f(model.ci[0])}, {f(model.ci[1])}]
+                <span className="cin">
+                  בין {f(model.ci[0])} ל־{f(model.ci[1])}
                 </span>
               </div>
             </li>
@@ -155,9 +159,9 @@ export default function Headline({ onOpenBuilder }) {
             היחס נע בין העונות, ובדיקת תמורות על 5,000 חלוקות אקראיות
             נותנת <b dir="ltr">p = {d.stability.permutation_p}</b> —
             הפער בין העונות <b>אינו מובהק</b>.
-            רצועת 2024 לבדה היא <span dir="ltr">
-              [{f(d.stability.ci_2024[0])}, {f(d.stability.ci_2024[1])}]
-            </span>: על 18 מועדונים אי אפשר להבחין בין "התקציב מסביר
+            הטווח של 2024 לבדה נע{" "}
+            <span>בין {f(d.stability.ci_2024[0])} ל־{f(d.stability.ci_2024[1])}</span>
+            : על 18 מועדונים אי אפשר להבחין בין "התקציב מסביר
             הכל" ל"התקציב לא מסביר כלום". לכן {d.stability.note}.
           </p>
         </section>
@@ -241,7 +245,7 @@ const CSS = `
  color:var(--pred);line-height:1;}
 .sl{font-size:12px;color:var(--dim);margin-top:4px;}
 .sd{font-size:14px;line-height:1.7;color:var(--dim);flex:1;min-width:260px;margin:0;}
-.ci{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tx);
+.ci{font-size:13px;color:var(--tx);
  display:inline-block;margin-inline-start:6px;}
 .cav{display:block;font-style:normal;font-size:12px;color:var(--real);
  margin-top:8px;line-height:1.6;}
@@ -257,7 +261,7 @@ const CSS = `
 .stepnum.bad{color:var(--real);}.stepnum.good{color:var(--pred);}
 .steps b{font-size:14px;display:block;margin-bottom:5px;}
 .steps p{font-size:13px;color:var(--dim);margin:0 0 6px;line-height:1.65;}
-.cin{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);}
+.cin{font-size:12px;color:var(--dim);}
 .punch{font-size:14px;line-height:1.75;color:var(--dim);
  border-top:1px solid var(--ln);padding-top:16px;margin:14px 0 0;}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:18px;}

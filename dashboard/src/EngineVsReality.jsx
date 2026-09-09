@@ -9,6 +9,9 @@ import { useState, useEffect, useMemo } from "react";
 
    כל סעיף עונה על שאלה אחת. זו לא החלטה עיצובית אלא הכרחית:
    ארבע נקודות באותו גרף הפכו את הדמבל לפיזור חסר משמעות.
+
+   ⚠️ יום 14: סעיף 01 (המנוע מול כל המועדונים) מוסתר ב-{false && }
+      ולא נמחק. randBeats/engBeats נשארים מחושבים למקרה שיוחזר.
 ══════════════════════════════════════════════════════════════ */
 
 const f = (n, d = 1) => (n == null || Number.isNaN(n) ? "—" : n.toFixed(d));
@@ -98,7 +101,8 @@ export default function EngineVsReality() {
         </div>
       </header>
 
-      {/* ═══ 1 ═══ */}
+      {/* ═══ 1 — מוסתר, יום 14 ═══ */}
+      {false && (
       <section className="q">
         <div className="qh">
           <span className="qn">01</span>
@@ -160,11 +164,12 @@ export default function EngineVsReality() {
           הוא לא — ולכן היתרון מגיע מהבחירה.
         </p>
       </section>
+      )}
 
       {/* ═══ 2 ═══ */}
       <section className="q">
         <div className="qh">
-          <span className="qn">02</span>
+          <span className="qn">01</span>
           <div>
             <h2>למי יש יותר מה להרוויח — לעשירים או לעניים?</h2>
             <p className="qs">
@@ -217,7 +222,7 @@ export default function EngineVsReality() {
       {/* ═══ 3 ═══ */}
       <section className="q">
         <div className="qh">
-          <span className="qn">03</span>
+          <span className="qn">02</span>
           <div>
             <h2>עד כמה זה יציב בין מועדונים?</h2>
             <p className="qs">

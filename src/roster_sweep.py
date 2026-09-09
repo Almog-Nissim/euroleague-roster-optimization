@@ -1,4 +1,4 @@
-"""roster_sweep.py — יום 13. פרה-חישוב לבנאי האינטראקטיבי.
+"""roster_sweep.py — יום 13, מעודכן יום 14. פרה-חישוב לבנאי האינטראקטיבי.
 
 --------------------------------------------------------------------
 למה פרה-חישוב ולא פותר בדפדפן
@@ -11,6 +11,19 @@
 יותר: הזזת סליידר היא lookup, בלי המתנה לרשת.
 
 --------------------------------------------------------------------
+🔴 יום 14 — סנכרון ל-dashboard/public
+--------------------------------------------------------------------
+הקובץ נכתב לשני יעדים: `data/dashboard/` (מקור אמת) ו-
+`dashboard/public/` (מה ש-Vite אורז ל-dist).
+
+ביום 14 התגלה שהם היו **מנותקים**: התיקונים נכתבו ל-data/ בעוד
+`public/` נשאר על גרסת 25.8 2:29. `npm run build` ארז את הישנה
+וסימן ✓. בדיוק המשפחה של שני מיפויי NAME2CODE — אותו דאטה בשני
+מקומות, אחד מתעדכן והשני לא.
+
+⇒ אין להעתיק ידנית. הכתיבה מסנכרנת, והפלט מדפיס hash של שניהם.
+
+--------------------------------------------------------------------
 טווח הסליידר — 8 עד 40, בלי אזור אפור
 --------------------------------------------------------------------
 ⛔ ה-19.5 שנרשם ביום 12 שייך לכיול **מנורמל→יורו**, שנאמד על 18
@@ -19,15 +32,19 @@
    19.5, כולל חציון 2025 (20.25) — אזור אפור שם היה שגוי.
 
 ✅ מה שכן קיים בדאטה: **התשואה השולית מתאפסת מעל ~25**, בשתי
-   העונות, על 52 נקודות עקומה. וניצול התקציב ב-2024 מעל 19.5
-   יורד ל-88.9% — המנוע לא מצליח לבזבז את הכסף. **המאגר נגמר.**
+   העונות, על 52 נקודות עקומה.
 
-   זה ממצא, לא היעדר תמיכה. הסמן הוא "מכאן הכסף מפסיק לקנות",
-   ולא "מכאן איננו יודעים".
+⚠️ תוקן ביום 14: הניסוח "**המאגר נגמר**" שהיה כאן ובפלט הופרך.
+   הסריקה מראה ניצול חציוני 99.1% מעל 25 והמנוע בוחר 12 שחקנים
+   בכל 65 הנקודות. המאגר אינו נגמר — הכסף מפסיק לקנות שיפור.
+   **תשואה פוחתת, לא מיצוי.** הסמן הוא "מכאן הכסף מפסיק לקנות",
+   ולא "מכאן איננו יודעים" וגם לא "מכאן אין את מי לקנות".
 
-⚠️ הסתייגות שנרשמת בפלט: צורת העקומה **לפני** הרוויה רועשת בין
-   העונות (2024 שיאה ב-15–19.5 עם +3.95; 2025 שלילית ב-10–15
-   עם −2.42). הרוויה יציבה; המסלול אליה פחות.
+⚠️ הסתייגות שנרשמת בפלט: צורת העקומה **לפני** הרוויה אינה
+   יציבה. הניסוח הקודם ("2024 שיאה ב-15–19.5, 2025 שלילית
+   ב-10–15") נבדק ביום 14 מול budget_curve.csv ולא תאם: 2024 אכן
+   שיאה ב-17.0, אבל שתי העונות שליליות בנקודות מפוזרות לאורך כל
+   הטווח. הניגוד המסודר לא קיים. הרוויה יציבה; המסלול אליה לא.
 
 --------------------------------------------------------------------
 מה נשמר
@@ -49,8 +66,8 @@
 ביתר, ולכן `ppm_true` שלהם נמוך מהתחזית.
 
 ⇒ **אסור להציג חזוי מול חזוי בממשק.** זה מנפח את המנוע ב-12
-  נקודות אחוז. למסך "אתה מול המנוע" יש להשתמש ב-
-  `usage_constrained_results.csv`, ששני צדדיו נצפים.
+  נקודות אחוז (30.0% − 18.3%). למסך "אתה מול המנוע" יש להשתמש
+  ב-`usage_constrained_results.csv`, ששני צדדיו נצפים.
 
 ⇒ כאן נשמרות **שתיהן**: `q` (חזוי, מונוטוני, מה שהמנוע ידע
   בזמן ההחלטה) ו-`q_realised` (נצפה, מה שקרה). הפער ביניהן
@@ -80,7 +97,9 @@
 `q_club` להשוואה ובלי המרה לניצחונות, כי אין תוצאה לאמת מולה.
 """
 
+import hashlib
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -103,7 +122,11 @@ from club_codes import NAME2CODE                    # noqa: E402
 SEASON, TRAIN_MAX = 2025, 2024        # 25/26
 B_LO, B_HI, B_STEP = 8.0, 40.0, 0.5
 SATURATION = 25.0
+
+# ⚠️ שני יעדים. ROOT = PROCESSED_DIR.parent.parent (data/processed → הפרויקט)
+ROOT = PROCESSED_DIR.parent.parent
 OUT = PROCESSED_DIR.parent / "dashboard" / "roster_sweep.json"
+PUB = ROOT / "dashboard" / "public" / "roster_sweep.json"
 SEP = "=" * 76
 
 
@@ -133,6 +156,20 @@ def q_lp(cand, sel, mins):
     return float((cand[sel].ppm.values * m).sum())
 
 
+def fnum(v, nd=3):
+    """float בטוח ל-JSON. NaN/inf → None.
+
+    ⚠️ יום 14: `avail=round(float(x.avail_true), 3)` היה חשוף. NaN
+       חשוף ב-JSON מפיל את JSON.parse בדפדפן ("Unexpected token
+       'N'") — בדיוק הבאג שהפיל מסך שלם ביום 13.
+    """
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return round(f, nd) if np.isfinite(f) else None
+
+
 def roster_payload(cand, sel, mins, names):
     r = cand[sel].copy()
     m = np.asarray(mins)[np.asarray(sel)]
@@ -144,13 +181,12 @@ def roster_payload(cand, sel, mins, names):
         code=str(x.player_code),
         name=(x["name"] if isinstance(x["name"], str) else f"#{x.player_code}"),
         pos=str(x.position),
-        cost=round(float(x.cost), 3),
-        minutes=round(float(x.minutes), 1),
-        ppm=round(float(x.ppm), 3),
-        ppm_true=(round(float(x.ppm_true), 3)
-                  if np.isfinite(x.ppm_true) else None),
-        avail=round(float(x.avail_true), 3),
-        contrib=round(float(x.contrib), 2),
+        cost=fnum(x.cost),
+        minutes=fnum(x.minutes, 1),
+        ppm=fnum(x.ppm),
+        ppm_true=fnum(x.ppm_true),
+        avail=fnum(x.avail_true),
+        contrib=fnum(x.contrib, 2),
     ) for _, x in r.iterrows()]
 
 
@@ -196,9 +232,20 @@ def fit_eur(clubs, season):
                      "מנורמל יכולים לשלם סכומים שונים מאוד.")
 
 
+def clean(o):
+    """מנקה NaN/inf רקורסיבית לפני הכתיבה. שכבת הגנה שנייה על fnum."""
+    if isinstance(o, dict):
+        return {k: clean(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [clean(v) for v in o]
+    if isinstance(o, float) and not np.isfinite(o):
+        return None
+    return o
+
+
 def main() -> int:
     print(SEP)
-    print(f"roster_sweep — פרה-חישוב לעונת {SEASON}/{SEASON+1-2000}")
+    print(f"roster_sweep — פרה-חישוב לעונת {SEASON}/{(SEASON + 1) % 100:02d}")
     print(f"טווח {B_LO}–{B_HI} בצעדי {B_STEP} · בלי אזור אפור")
     print(SEP)
 
@@ -246,7 +293,11 @@ def main() -> int:
             entered=[code2name.get(c, c) for c in inn],
             left=[c for c in out],
         ))
-        mono = "" if (not pts[:-1] or q >= pts[-2]["q"] - 1e-6) else "  ⚠ ירידה"
+        # ⚠️ יום 14: ההשוואה חייבת להיות מעוגל מול מעוגל. `q` הגולמי
+        #    מול `pts[-2]["q"]` המעוגל ייצר 7 דגלי "ירידה" שווא על
+        #    נקודות עם 0 נכנס/0 יצא — כלומר בדיוק אותו סגל.
+        mono = ("" if (not pts[:-1] or round(q, 2) >= pts[-2]["q"] - 1e-9)
+                else "  ⚠ ירידה")
         print(f"  {b:>7.1f}{len(rp):>4}{spent:>8.2f}{spent/b:>8.1%}"
               f"{q:>9.2f}{q_sr:>9.1f}{len(inn):>6}{len(out):>5}{mono}")
         prev = cur
@@ -285,8 +336,8 @@ def main() -> int:
             roster=[dict(code=str(r.player_code),
                          name=names.get(str(r.player_code),
                                         f"#{r.player_code}"),
-                         pos=str(r.position), cost=round(float(r.cost), 3),
-                         ppm=round(float(r.ppm), 3))
+                         pos=str(r.position), cost=fnum(r.cost),
+                         ppm=fnum(r.ppm))
                     for _, r in keep.iterrows()]))
         print(f"  {club:<5} תקציב {B:>6.2f} · סגל {len(keep):>2} · "
               f"ניקוד {clubs[-1]['q']:>6.1f}")
@@ -295,7 +346,7 @@ def main() -> int:
     h("כיול תצוגה — יחידות מנורמלות → מיליוני יורו")
     eur = fit_eur(clubs, SEASON)
 
-    # ------------------------------------------------ כתיבה
+    # ------------------------------------------------ בקרות
     h("בקרת מונוטוניות — יום 11, מיושם")
     v_lp = [(pts[i]["budget"], pts[i]["q"] - pts[i-1]["q"])
             for i in range(1, len(pts)) if pts[i]["q"] < pts[i-1]["q"] - 1e-6]
@@ -321,21 +372,40 @@ def main() -> int:
 
     h("סיכום")
     sat = [p for p in pts if p["budget"] >= SATURATION]
+    used_sat = 0.0
     if sat:
-        print(f"  מעל {SATURATION}: ניצול חציוני "
-              f"{np.median([p['used_pct'] for p in sat]):.1%} · "
+        used_sat = float(np.median([p['used_pct'] for p in sat]))
+        print(f"  מעל {SATURATION}: ניצול חציוני {used_sat:.1%} · "
               f"לא מנוצל חציוני "
               f"{np.median([p['unspent'] for p in sat]):.2f}")
+        # ⚠️ הבקרה שהייתה חסרה: הטענה "המאגר אינו נגמר" נשענת על
+        #    ניצול גבוה מעל הרוויה. אם הוא יצנח, המחרוזת בממשק
+        #    הופכת שקרית — וזה בדיוק איך ש"סעיף 8א" שרד חמישה ימים.
+        if used_sat < 0.95:
+            print(f"  ❌ הניצול מעל הרוויה צנח ל-{used_sat:.1%}. "
+                  f"saturation_note טוען 'המאגר אינו נגמר' — עוצרים.")
+            return 1
+        n_sat = {p["n"] for p in sat}
+        print(f"  ✅ ניצול {used_sat:.1%} · גודל סגל מעל הרוויה: "
+              f"{sorted(n_sat)}")
+
     D = dict(
-        meta=dict(season=SEASON, label=f"{SEASON-1}/{SEASON-2000}",
+        meta=dict(season=SEASON, label=f"{SEASON}/{(SEASON + 1) % 100:02d}",
                   units="יחידות מנורמלות",
                   b_lo=B_LO, b_hi=B_HI, step=B_STEP,
                   saturation=SATURATION,
-                  saturation_note="מעל נקודה זו התשואה השולית מתאפסת "
-                                  "והמנוע אינו מצליח לנצל את התקציב — "
-                                  "המאגר נגמר. ממצא, לא היעדר תמיכה.",
-                  shape_caveat="צורת העקומה לפני הרוויה רועשת בין העונות: "
-                               "2024 שיאה ב-15–19.5, 2025 שלילית ב-10–15.",
+                  saturation_note="מעל נקודה זו התשואה השולית אינה תורמת עוד. "
+                                  "הניצול נשאר 99.1% והמנוע בוחר 12 "
+                                  "שחקנים, המאגר אינו נגמר, הכסף "
+                                  "מפסיק לקנות שיפור. תשואה פוחתת, "
+                                  "לא מיצוי.",
+                  shape_caveat="צורת העקומה לפני הרוויה אינה יציבה: "
+                               "ב-budget_curve (20.8) התשואה השולית "
+                               "שלילית בנקודות מפוזרות לאורך הטווח "
+                               "בשתי העונות שנבדקו. הריצה ההיא קדמה "
+                               "לתיקון האינדקס של יום 12 ולא שוחזרה "
+                               "תחת הקוד הנוכחי. הסייג נוגע לאמינות "
+                               "הצורה, לא לעקומה המוצגת.",
                   pool_size=int(len(cand)),
                   display_series="q",
                   display_note="q = ערך המטרה החזוי, מונוטוני. "
@@ -345,14 +415,36 @@ def main() -> int:
                                        "מועדון בערך חזוי — זה מנפח "
                                        "ב-12 נק' אחוז. למסך ההשוואה "
                                        "יש להשתמש ב-"
-                                       "usage_constrained_results.csv.",
+                                       "usage_constrained_results.csv. "
+                                       "נמדד על 11 מ-20 מועדונים "
+                                       "(סגלים ≤16 בלבד), הנוטים "
+                                       "להיות עניים יותר.",
                   usage_fill_sensitivity="−0.66 יחידות בלבד (−2.9%) "
                                          "במעבר ממילוי 20 ל-28",
                   eur=eur),
         free=pts, capped=capped, clubs=clubs)
+
+    # ------------------------------------------------ כתיבה + סנכרון
+    D = clean(D)
+    try:
+        txt = json.dumps(D, ensure_ascii=False, allow_nan=False)
+    except ValueError as e:
+        print(f"\n  ❌ ערך לא-סופי ב-JSON: {e}")
+        print("     NaN חשוף מפיל את JSON.parse בדפדפן — לא נכתב דבר.")
+        return 1
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(D, ensure_ascii=False), encoding="utf-8")
-    print(f"\n  נכתב: {OUT}  ({OUT.stat().st_size/1024:.0f} KB)")
+    OUT.write_text(txt, encoding="utf-8")
+    PUB.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(OUT, PUB)
+
+    ha = hashlib.md5(OUT.read_bytes()).hexdigest()[:12]
+    hb = hashlib.md5(PUB.read_bytes()).hexdigest()[:12]
+    print(f"\n  נכתב:   {OUT}  ({OUT.stat().st_size/1024:.0f} KB)")
+    print(f"  סונכרן: {PUB}")
+    print(f"  hash:   {ha} · {hb}  {'✅' if ha == hb else '❌ לא זהים'}")
+    if ha != hb:
+        return 1
     print(f"  {len(pts)} נקודות חופשי · {len(capped)} מאולץ · "
           f"{len(clubs)} מועדונים")
     print(SEP)

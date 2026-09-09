@@ -1,4 +1,4 @@
-"""export_dashboard.py — יום 13. שכבת הייצוא.
+"""export_dashboard.py — יום 13, מעודכן יום 14. שכבת הייצוא.
 
 --------------------------------------------------------------------
 מה זה עושה
@@ -21,6 +21,26 @@
 אם מספר השתנה בכוונה — מעדכנים כאן, בקומיט נפרד, עם נימוק.
 
 --------------------------------------------------------------------
+🔴 יום 14 — שני תיקונים למנגנון ההקפאה עצמו
+--------------------------------------------------------------------
+**(1) ערך יתום הוסר.** `ratio_partial_raw: 0.636` ישב ב-`FROZEN`
+ומעולם לא נבדק: אין לו קריאת `check`, הוא לא נכתב ל-`D`, והערך
+אינו מופיע ב-`season_heterogeneity.csv` (שם היחסים הם 0.748 /
+0.837 / 0.367 / 0.837). כלומר `FROZEN` הציג שבעה ערכים מוגנים
+בעוד ששה מוגנים בפועל. **הגנה מדומה גרועה מהיעדר הגנה**, כי היא
+משביתה את החשד.
+
+**(2) בקרת כיסוי.** הבאג לעיל אפשרי בגלל שכל ה-`check` תלויים
+בקבצים: אם קובץ חסר, הבלוק מדולג ו-`ok` נשאר True. עכשיו כל
+קריאה נרשמת, ובסיום נבדק שכל מפתח ב-`FROZEN` אכן נבדק. מפתח
+שלא נבדק עוצר את הבנייה — בין אם נשמט ובין אם הקובץ חסר.
+
+**(3) סנכרון ל-dashboard/public.** הקובץ נכתב לשני יעדים. ביום
+14 התגלה שהם היו מנותקים: `public/` נשאר על גרסה ישנה, ו-
+`npm run build` ארז אותה וסימן ✓. אותה משפחה כמו שני מיפויי
+NAME2CODE. הפלט מדפיס hash של שניהם.
+
+--------------------------------------------------------------------
 מה לא נכנס
 --------------------------------------------------------------------
 ⛔ הרוויה ביורו. שלושה מפרטי כיול נותנים 19.3 / 24.5 / 30.5.
@@ -29,7 +49,9 @@
    שלושתם ירדו מדרגת ממצא.
 """
 
+import hashlib
 import json
+import shutil
 import sys
 from datetime import date
 from pathlib import Path
@@ -43,20 +65,26 @@ if str(SRC) not in sys.path:
 
 from roster_optimizer import PROCESSED_DIR  # noqa: E402
 
+# ⚠️ שני יעדים. ROOT = PROCESSED_DIR.parent.parent (data/processed → הפרויקט)
+ROOT = PROCESSED_DIR.parent.parent
 OUT = PROCESSED_DIR.parent / "dashboard" / "dashboard_data.json"
+PUB = ROOT / "dashboard" / "public" / "dashboard_data.json"
 TOL = 0.02
 SEP = "=" * 76
 
 # ============ ערכים מוקפאים — כל שינוי כאן דורש נימוק בקומיט ============
+# ⚠️ כל מפתח כאן **חייב** לעבור ב-check(). בקרת הכיסוי בסעיף 6
+#    עוצרת אם מפתח לא נבדק. אל תוסיף ערך בלי קריאת check מתאימה.
 FROZEN = {
     "headline_capped_wins":  2.03,
     "headline_free_wins":    5.17,
     "gap_random_club_wins": -1.65,
     "gap_free_random_wins":  6.84,
     "n_club_seasons":       38.0,
-    "ratio_partial_raw":     0.636,
     "wasted_budget_share":   0.269,
 }
+
+CHECKED = set()          # נרשם ע"י check(), נאכף בסעיף 6
 
 
 def h(t: str) -> None:
@@ -65,6 +93,7 @@ def h(t: str) -> None:
 
 def check(name, got, hard=True):
     exp = FROZEN[name]
+    CHECKED.add(name)
     ok = abs(got - exp) <= max(TOL, abs(exp) * TOL)
     print(f"  {name:<26}{got:>10.3f}  צפוי {exp:>8.3f}  "
           f"{'✅' if ok else '❌'}")
@@ -114,8 +143,12 @@ def main() -> int:
             "ci": [round(float(cap.lo), 2), round(float(cap.hi), 2)],
             "label": "ניצחונות נוספים בעונה מאופטימיזציה של התקציב הקיים",
             "engine": "מאולץ (זהות הכדור)",
-            "caveat": "הרצועה סטטיסטית בלבד ואינה כוללת שגיאת "
-                      "אקסטרפולציה של הקיר",
+            "caveat": "גם בקצה הזהיר של הטווח התוצאה חיובית — "
+                      "אותו תקציב, הקצאה טובה יותר. הטווח מודד "
+                      "את הרעש בלבד: ההמרה לניצחונות נלמדה "
+                      "מהפרשים קטנים מאלה שהמנוע מייצר, ומנגד "
+                      "מבנה האילוצים דווקא מוריד מהתוצאה — "
+                      "כלומר תרומת המודל עצמו גדולה מ-2.03.",
         },
         "free_engine": {
             "value": round(float(fre.wins), 2),
@@ -138,7 +171,6 @@ def main() -> int:
     h("2. המספר בלי יחידות LP")
     w1 = read("why_100_results.csv")
     if w1 is not None and "cost_wasted" in w1:
-        bud = read("club_budgets_gemini.csv")
         share = float(w1.cost_wasted.median())
         ok &= check("wasted_budget_share", share)
         # ⚠️ ההגדרה, מ-why_100.scoring_players:
@@ -270,6 +302,18 @@ def main() -> int:
 
     # ---------------------------------------------------------- כתיבה
     h("6. סיכום")
+
+    # ⚠️ בקרת כיסוי — יום 14. ratio_partial_raw ישב ב-FROZEN בלי
+    #    שאיש בדק אותו. כאן נאכף שכל מפתח מוקפא אכן עבר check().
+    #    זה תופס גם מפתח שנשמט וגם בלוק שדולג בגלל קובץ חסר.
+    unchecked = sorted(set(FROZEN) - CHECKED)
+    print(f"  כיסוי ההקפאה: {len(CHECKED)}/{len(FROZEN)} נבדקו")
+    if unchecked:
+        print(f"  ❌ מפתחות מוקפאים שלא נבדקו: {unchecked}")
+        print("     או שהקובץ המייצר חסר, או שקריאת check נשמטה.")
+        print("     ערך מוקפא שאינו נבדק הוא הגנה מדומה — לא נכתב דבר.")
+        return 1
+
     if not ok:
         print("  ❌ בקרת ההקפאה נכשלה. לא נכתב דבר.")
         print("     מספר השתנה מאז ההקפאה — או באג, או שינוי מכוון.")
@@ -295,11 +339,21 @@ def main() -> int:
     except ValueError as e:
         print(f"  ❌ עדיין יש ערך לא-סופי ב-JSON: {e}")
         return 1
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(txt, encoding="utf-8")
+    PUB.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(OUT, PUB)
+
+    ha = hashlib.md5(OUT.read_bytes()).hexdigest()[:12]
+    hb = hashlib.md5(PUB.read_bytes()).hexdigest()[:12]
     kb = OUT.stat().st_size / 1024
     print(f"  ✅ כל הבקרות עברו · JSON תקני (allow_nan=False)")
-    print(f"  נכתב: {OUT}  ({kb:.1f} KB)")
+    print(f"  נכתב:   {OUT}  ({kb:.1f} KB)")
+    print(f"  סונכרן: {PUB}")
+    print(f"  hash:   {ha} · {hb}  {'✅' if ha == hb else '❌ לא זהים'}")
+    if ha != hb:
+        return 1
     print(f"  מפתחות: {' · '.join(D.keys())}")
     print(SEP)
     return 0
