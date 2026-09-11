@@ -71,6 +71,8 @@ its *level* across clubs.
 | `roster_sweep.json` md5 | `c285173871cf`    | `f26e57f601b2`                 |
 | `dashboard_data.json` md5 | `e5bbe2f8285b`    | `15fde5d0ee64`                 |
 | 's_partial/s_raw | 0.42              | 0.636                          |
+|עלות קללת מנצח| 9.7%| 2.9%|
+|עלות קללת מנצח מאולץ| 2.5%| 5.5|
 
 Roster changes at the median club budget (each specification at its own median
 club budget, i.e. the same real basket): **5 of 12** in, 5 out, 7 unchanged.
