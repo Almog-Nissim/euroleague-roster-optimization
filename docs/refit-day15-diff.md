@@ -48,29 +48,29 @@ its *level* across clubs.
 
 ## Side by side
 
-| quantity | before             | after                          |
-|---|--------------------|--------------------------------|
-| β₁ | 0.2317             | **0.1727** (se 0.0298, t 5.81) |
-| calibration sample | n = 27, 1 club     | n = 61, 13 clubs, R² 0.813     |
-| most expensive pool player | 10.24× mean        | 4.68× mean                     |
-| median 2025 club budget | 20.25              | 17.41                          |
-| saturation | 25.0               | **22.5**                       |
-| spend ceiling | —                  | **23.43 from budget 23.5**     |
-| `fit_eur` a, b | 0.7639, −2.1195    | 1.4430, −10.5159               |
-| `fit_eur` MAE | 2.15 M€            | 2.21 M€                        |
-| `adv_free` median | +18.26 %           | +16.82 %                       |
-| `adv_cap` median | +6.52 %            | **+14.1 %**                    |
-| clubs the engine loses to | 7 / 38             | 1 / 38                         |
-| `q_cap > q_free` on `ppm_true` | 4 / 38             | **18 / 38**                    |
-| `headline_capped_wins` | 2.03               | 5.10                           |
-| `headline_free_wins` | 5.17               | 4.90                           |
-| `gap_random_club_wins` | −1.65              | −1.72                          |
-| `gap_free_random_wins` | 6.84               | 6.61                           |
-| `wasted_budget_share` | 0.269              | 0.308                          |
+| quantity | before            | after                          |
+|---|-------------------|--------------------------------|
+| β₁ | 0.2317            | **0.1727** (se 0.0298, t 5.81) |
+| calibration sample | n = 27, 1 club    | n = 61, 13 clubs, R² 0.813     |
+| most expensive pool player | 10.24× mean       | 4.68× mean                     |
+| median 2025 club budget | 20.25             | 17.41                          |
+| saturation | 25.0              | **22.5**                       |
+| spend ceiling | —                 | **23.43 from budget 23.5**     |
+| `fit_eur` a, b | 0.7639, −2.1195   | 1.4430, −10.5159               |
+| `fit_eur` MAE | 2.15 M€           | 2.21 M€                        |
+| `adv_free` median | +18.26 %          | +16.82 %                       |
+| `adv_cap` median | +6.52 %           | **+14.1 %**                    |
+| clubs the engine loses to | 7 / 38            | 1 / 38                         |
+| `q_cap > q_free` on `ppm_true` | 4 / 38            | **18 / 38**                    |
+| `headline_capped_wins` | 2.03              | 4.26                           |
+| `headline_free_wins` | 5.17              | 4.90                           |
+| `gap_random_club_wins` | −1.65             | −1.72                          |
+| `gap_free_random_wins` | 6.84              | 6.61                           |
+| `wasted_budget_share` | 0.269             | 0.308                          |
 | displayed money vs real salary | MAE 1.279, ρ 0.610 | MAE 0.893, ρ 0.895             |
-| `roster_sweep.json` md5 | `c285173871cf`     | `a3cfd56c9acd`                 |
-| `dashboard_data.json` md5 | `e5bbe2f8285b`     | `f6ea861a2170`                 |
-| 's_partial/s_raw | 0.42               | 0.636 |
+| `roster_sweep.json` md5 | `c285173871cf`    | `f26e57f601b2`                 |
+| `dashboard_data.json` md5 | `e5bbe2f8285b`    | `15fde5d0ee64`                 |
+| 's_partial/s_raw | 0.42              | 0.636                          |
 
 Roster changes at the median club budget (each specification at its own median
 club budget, i.e. the same real basket): **5 of 12** in, 5 out, 7 unchanged.
