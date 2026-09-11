@@ -1,3 +1,27 @@
+> **Provenance note — added after the fact, day 15.**
+> This handoff was written by a sandbox session that ran on a *regenerated*
+> `usage_curve_results_min0.csv`. The original file was later found on the local
+> machine and committed; `COST_SPEC=club_relative python src/usage_constrained.py`
+> on it reproduces the day-14 capped baseline (6.5 %, the same 7 negative clubs;
+> the regenerated file gives 7.96 % and 4).
+>
+> Where the numbers below differ from `docs/refit-day15-diff.md` and the committed
+> results files, those win (local run, original file):
+>
+> | quantity | this handoff (sandbox) | local, original file |
+> |---|---|---|
+> | `adv_cap` median, market | 0.1724 | 0.1414 (`usage_constrained_results.csv`) |
+> | sweep hash | `a3cfd56c9acd` | `f26e57f601b2` |
+> | curse cost, capped roster | old 3.9 pp → new 1.9 pp | old 2.5 pp → new 5.5 pp |
+>
+> The "Blocking issue" section is resolved. "Next, in order" item 1 (step 1c) is
+> done — pricing error by player type falsified. Item 2 (fatigue tiers) is
+> superseded by the day-15 grill decisions recorded in ADR 0004: tier ceiling 34
+> (observed max season-average minutes), not 40; δ enters only through a
+> three-outcome rule declared in advance, not "δ ≈ 0 → falsified"; tiers are not
+> claimed to give depth value (the top-k minutes-shape constraint is the deferred
+> alternative).
+
 # Day 15 handoff — where the refit stands
 
 ## Apply the work

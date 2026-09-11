@@ -1,0 +1,2 @@
+path,saturation,regime,eur_a,eur_b,eur_mae,budget,median_club_budget,n_roster,n_matched,mae,bias,rho,p,n_med,mae_med,rho_med,n_negative
+roster_sweep.json,22.5,exhausted,1.443,-10.5159,2.21,17.5,17.41,12,13,0.893,-0.388,0.895,0.0,4,0.355,1.0,1

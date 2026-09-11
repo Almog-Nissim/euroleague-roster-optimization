@@ -1,0 +1,2 @@
+spec,season,beta1,n_fit,n_clubs_fit,pool_cost_mean,club_budget_median,fit_eur_a,fit_eur_b,fit_eur_r2,fit_eur_mae,identity_mae,player_n,player_rho,player_mae,player_bias_med,t1,t2,t3,verdict
+market,2025,0.1727,61,13,1.0,17.408,1.4429,-10.5159,0.754,2.21,3.687,28,0.4889,0.663,0.24,False,False,False,False
