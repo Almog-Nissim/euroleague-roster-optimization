@@ -1,51 +1,51 @@
 {
   "meta": {
-    "generated": "2026-08-25",
+    "generated": "2026-09-11",
     "units": "ציר התקציב ביחידות מנורמלות בלבד",
     "budget_axis_valid_to": 19.5,
     "extrapolation_from": 19.5
   },
   "headline": {
     "primary": {
-      "value": 2.03,
+      "value": 4.26,
       "ci": [
-        0.38,
-        3.68
+        0.92,
+        7.45
       ],
       "label": "ניצחונות נוספים בעונה מאופטימיזציה של התקציב הקיים",
       "engine": "מאולץ (זהות הכדור)",
-      "caveat": "הרצועה סטטיסטית בלבד ואינה כוללת שגיאת אקסטרפולציה של הקיר"
+      "caveat": "גם בקצה הזהיר של הטווח התוצאה חיובית — אותו תקציב, הקצאה טובה יותר. הטווח מודד את הרעש בלבד: ההמרה לניצחונות נלמדה מהפרשים קטנים מאלה שהמנוע מייצר, ומנגד מבנה האילוצים דווקא מוריד מהתוצאה — כלומר תרומת המודל עצמו גדולה מ-2.03."
     },
     "free_engine": {
-      "value": 5.17,
+      "value": 4.9,
       "ci": [
-        1.29,
-        9.14
+        1.26,
+        9.04
       ]
     },
     "decomposition": [
       {
         "step": "מבנה האילוצים לבדו (סגל אקראי)",
-        "wins": -1.65,
+        "wins": -1.72,
         "ci": [
-          -3.6,
-          -0.34
+          -3.32,
+          -0.35
         ],
         "note": "אקראי גרוע מהמועדון — האילוצים אינם מייצרים את היתרון"
       },
       {
         "step": "האופטימיזציה (מנוע חופשי מול אקראי)",
-        "wins": 6.84,
+        "wins": 6.61,
         "ci": [
-          1.85,
-          12.31
+          1.75,
+          11.51
         ],
         "note": "ההשוואה הנקייה — שני הצדדים בלי אילוץ השימוש"
       }
     ]
   },
   "wasted": {
-    "share": 0.269,
+    "share": 0.308,
     "eur_m": 3.44,
     "n_scoring_median": 10,
     "roster_median": 16,
@@ -59,390 +59,390 @@
       2024,
       2025
     ],
-    "adv_free_pct": 0.1826,
-    "adv_cap_pct": 0.0652,
-    "constraint_cost_lp": 11.83
+    "adv_free_pct": 0.1682,
+    "adv_cap_pct": 0.1414,
+    "constraint_cost_lp": 1.3
   },
   "clubs": [
     {
       "season": 2024.0,
       "club": "ASV",
-      "budget": 14.07,
+      "budget": 15.25,
       "q_club": 100.75,
-      "q_free": 120.49,
-      "q_cap": 104.78,
-      "q_rand": 96.31,
+      "q_free": 124.07,
+      "q_cap": 106.03,
+      "q_rand": 97.21,
       "rand_win": 0.33
     },
     {
       "season": 2024.0,
       "club": "BAR",
-      "budget": 17.6,
+      "budget": 17.79,
       "q_club": 107.2,
-      "q_free": 122.76,
-      "q_cap": 111.02,
-      "q_rand": 101.01,
-      "rand_win": 0.26
+      "q_free": 124.82,
+      "q_cap": 118.08,
+      "q_rand": 100.29,
+      "rand_win": 0.25
     },
     {
       "season": 2024.0,
       "club": "BAS",
-      "budget": 12.95,
+      "budget": 14.26,
       "q_club": 105.18,
-      "q_free": 122.19,
-      "q_cap": 108.98,
-      "q_rand": 94.5,
-      "rand_win": 0.17
+      "q_free": 119.32,
+      "q_cap": 113.66,
+      "q_rand": 95.26,
+      "rand_win": 0.19
     },
     {
       "season": 2024.0,
       "club": "BER",
-      "budget": 13.6,
+      "budget": 15.85,
       "q_club": 91.65,
-      "q_free": 115.8,
-      "q_cap": 110.23,
-      "q_rand": 96.22,
-      "rand_win": 0.72
+      "q_free": 122.72,
+      "q_cap": 123.03,
+      "q_rand": 95.81,
+      "rand_win": 0.71
     },
     {
       "season": 2024.0,
       "club": "IST",
-      "budget": 17.33,
+      "budget": 17.4,
       "q_club": 112.23,
-      "q_free": 128.48,
-      "q_cap": 104.43,
-      "q_rand": 99.2,
-      "rand_win": 0.13
+      "q_free": 128.62,
+      "q_cap": 122.84,
+      "q_rand": 100.16,
+      "rand_win": 0.1
     },
     {
       "season": 2024.0,
       "club": "MAD",
-      "budget": 19.81,
+      "budget": 19.26,
       "q_club": 106.34,
-      "q_free": 130.2,
-      "q_cap": 118.07,
-      "q_rand": 101.45,
-      "rand_win": 0.3
+      "q_free": 123.47,
+      "q_cap": 121.88,
+      "q_rand": 101.0,
+      "rand_win": 0.31
     },
     {
       "season": 2024.0,
       "club": "MCO",
-      "budget": 16.76,
+      "budget": 16.33,
       "q_club": 103.02,
-      "q_free": 128.9,
-      "q_cap": 106.03,
-      "q_rand": 99.05,
+      "q_free": 127.71,
+      "q_cap": 117.24,
+      "q_rand": 97.15,
       "rand_win": 0.34
     },
     {
       "season": 2024.0,
       "club": "MIL",
-      "budget": 17.84,
+      "budget": 18.02,
       "q_club": 105.29,
-      "q_free": 128.66,
-      "q_cap": 114.91,
-      "q_rand": 102.42,
-      "rand_win": 0.41
+      "q_free": 130.77,
+      "q_cap": 114.87,
+      "q_rand": 101.51,
+      "rand_win": 0.37
     },
     {
       "season": 2024.0,
       "club": "MUN",
-      "budget": 11.63,
+      "budget": 13.05,
       "q_club": 103.44,
-      "q_free": 120.6,
-      "q_cap": 111.41,
-      "q_rand": 92.39,
+      "q_free": 115.8,
+      "q_cap": 107.05,
+      "q_rand": 91.54,
       "rand_win": 0.1
     },
     {
       "season": 2024.0,
       "club": "OLY",
-      "budget": 21.33,
+      "budget": 19.93,
       "q_club": 114.07,
-      "q_free": 122.75,
-      "q_cap": 113.24,
-      "q_rand": 103.0,
-      "rand_win": 0.13
+      "q_free": 120.11,
+      "q_cap": 122.66,
+      "q_rand": 103.35,
+      "rand_win": 0.16
     },
     {
       "season": 2024.0,
       "club": "PAN",
-      "budget": 20.43,
+      "budget": 19.01,
       "q_club": 116.49,
-      "q_free": 128.62,
-      "q_cap": 124.26,
-      "q_rand": 100.83,
+      "q_free": 115.32,
+      "q_cap": 120.38,
+      "q_rand": 102.6,
       "rand_win": 0.08
     },
     {
       "season": 2024.0,
       "club": "PAR",
-      "budget": 12.07,
+      "budget": 13.66,
       "q_club": 100.89,
-      "q_free": 120.6,
-      "q_cap": 98.45,
-      "q_rand": 93.94,
-      "rand_win": 0.21
-    },
-    {
-      "season": 2024.0,
-      "club": "PRS",
-      "budget": 11.21,
-      "q_club": 101.08,
-      "q_free": 119.63,
-      "q_cap": 106.03,
-      "q_rand": 90.46,
-      "rand_win": 0.14
-    },
-    {
-      "season": 2024.0,
-      "club": "RED",
-      "budget": 14.35,
-      "q_club": 102.7,
-      "q_free": 123.1,
-      "q_cap": 111.34,
-      "q_rand": 95.24,
+      "q_free": 118.25,
+      "q_cap": 115.5,
+      "q_rand": 94.66,
       "rand_win": 0.25
     },
     {
       "season": 2024.0,
+      "club": "PRS",
+      "budget": 13.29,
+      "q_club": 101.08,
+      "q_free": 118.76,
+      "q_cap": 101.84,
+      "q_rand": 92.15,
+      "rand_win": 0.13
+    },
+    {
+      "season": 2024.0,
+      "club": "RED",
+      "budget": 14.65,
+      "q_club": 102.7,
+      "q_free": 115.45,
+      "q_cap": 120.68,
+      "q_rand": 94.31,
+      "rand_win": 0.22
+    },
+    {
+      "season": 2024.0,
       "club": "TEL",
-      "budget": 13.71,
+      "budget": 16.01,
       "q_club": 103.97,
-      "q_free": 121.56,
-      "q_cap": 105.65,
-      "q_rand": 96.75,
-      "rand_win": 0.21
+      "q_free": 131.39,
+      "q_cap": 122.71,
+      "q_rand": 97.65,
+      "rand_win": 0.23
     },
     {
       "season": 2024.0,
       "club": "ULK",
-      "budget": 22.16,
+      "budget": 21.18,
       "q_club": 96.24,
-      "q_free": 127.53,
-      "q_cap": 121.18,
-      "q_rand": 104.06,
-      "rand_win": 0.78
+      "q_free": 127.31,
+      "q_cap": 122.98,
+      "q_rand": 104.83,
+      "rand_win": 0.8
     },
     {
       "season": 2024.0,
       "club": "VIR",
-      "budget": 14.7,
+      "budget": 14.97,
       "q_club": 100.33,
-      "q_free": 122.98,
-      "q_cap": 115.5,
-      "q_rand": 95.59,
-      "rand_win": 0.33
+      "q_free": 128.9,
+      "q_cap": 118.6,
+      "q_rand": 95.44,
+      "rand_win": 0.3
     },
     {
       "season": 2024.0,
       "club": "ZAL",
-      "budget": 12.48,
+      "budget": 14.37,
       "q_club": 93.63,
-      "q_free": 121.79,
-      "q_cap": 102.45,
-      "q_rand": 94.95,
-      "rand_win": 0.56
+      "q_free": 119.32,
+      "q_cap": 113.98,
+      "q_rand": 95.01,
+      "rand_win": 0.55
     },
     {
       "season": 2025.0,
       "club": "ASV",
-      "budget": 13.27,
+      "budget": 12.65,
       "q_club": 83.88,
-      "q_free": 119.4,
-      "q_cap": 114.66,
-      "q_rand": 90.7,
-      "rand_win": 0.74
+      "q_free": 112.58,
+      "q_cap": 119.13,
+      "q_rand": 91.76,
+      "rand_win": 0.81
     },
     {
       "season": 2025.0,
       "club": "BAR",
-      "budget": 25.9,
+      "budget": 18.84,
       "q_club": 101.95,
-      "q_free": 127.38,
-      "q_cap": 120.01,
-      "q_rand": 103.52,
+      "q_free": 127.93,
+      "q_cap": 135.3,
+      "q_rand": 103.03,
       "rand_win": 0.55
     },
     {
       "season": 2025.0,
       "club": "BAS",
-      "budget": 18.68,
+      "budget": 17.44,
       "q_club": 104.36,
-      "q_free": 125.02,
-      "q_cap": 102.1,
-      "q_rand": 102.3,
-      "rand_win": 0.39
+      "q_free": 125.38,
+      "q_cap": 128.47,
+      "q_rand": 103.83,
+      "rand_win": 0.46
     },
     {
       "season": 2025.0,
       "club": "DUB",
-      "budget": 19.61,
+      "budget": 17.37,
       "q_club": 112.98,
-      "q_free": 118.44,
-      "q_cap": 108.72,
-      "q_rand": 101.01,
-      "rand_win": 0.1
+      "q_free": 125.38,
+      "q_cap": 128.47,
+      "q_rand": 102.83,
+      "rand_win": 0.15
     },
     {
       "season": 2025.0,
       "club": "HTA",
-      "budget": 23.42,
+      "budget": 18.92,
       "q_club": 110.1,
-      "q_free": 125.41,
-      "q_cap": 112.91,
-      "q_rand": 104.73,
-      "rand_win": 0.23
+      "q_free": 127.92,
+      "q_cap": 126.09,
+      "q_rand": 103.3,
+      "rand_win": 0.25
     },
     {
       "season": 2025.0,
       "club": "IST",
-      "budget": 23.3,
+      "budget": 17.66,
       "q_club": 91.85,
-      "q_free": 124.79,
-      "q_cap": 112.91,
-      "q_rand": 104.72,
-      "rand_win": 0.88
+      "q_free": 127.39,
+      "q_cap": 124.04,
+      "q_rand": 103.12,
+      "rand_win": 0.87
     },
     {
       "season": 2025.0,
       "club": "MAD",
-      "budget": 23.64,
+      "budget": 17.77,
       "q_club": 119.08,
-      "q_free": 125.41,
-      "q_cap": 113.27,
-      "q_rand": 102.55,
-      "rand_win": 0.07
+      "q_free": 124.34,
+      "q_cap": 123.1,
+      "q_rand": 101.66,
+      "rand_win": 0.05
     },
     {
       "season": 2025.0,
       "club": "MCO",
-      "budget": 24.86,
+      "budget": 16.65,
       "q_club": 110.94,
-      "q_free": 126.31,
-      "q_cap": 112.0,
-      "q_rand": 95.56,
-      "rand_win": 0.11
+      "q_free": 124.41,
+      "q_cap": 113.3,
+      "q_rand": 96.65,
+      "rand_win": 0.12
     },
     {
       "season": 2025.0,
       "club": "MIL",
-      "budget": 24.62,
+      "budget": 18.12,
       "q_club": 102.93,
-      "q_free": 121.63,
-      "q_cap": 113.25,
-      "q_rand": 103.98,
-      "rand_win": 0.55
+      "q_free": 128.92,
+      "q_cap": 129.93,
+      "q_rand": 103.56,
+      "rand_win": 0.54
     },
     {
       "season": 2025.0,
       "club": "MUN",
-      "budget": 14.34,
+      "budget": 12.73,
       "q_club": 93.97,
-      "q_free": 123.83,
-      "q_cap": 120.73,
-      "q_rand": 92.75,
-      "rand_win": 0.45
+      "q_free": 115.38,
+      "q_cap": 118.93,
+      "q_rand": 91.39,
+      "rand_win": 0.4
     },
     {
       "season": 2025.0,
       "club": "OLY",
-      "budget": 36.93,
+      "budget": 25.26,
       "q_club": 124.97,
-      "q_free": 131.14,
-      "q_cap": 140.62,
-      "q_rand": 110.25,
-      "rand_win": 0.07
+      "q_free": 129.76,
+      "q_cap": 140.17,
+      "q_rand": 109.72,
+      "rand_win": 0.05
     },
     {
       "season": 2025.0,
       "club": "PAM",
-      "budget": 15.38,
+      "budget": 14.63,
       "q_club": 112.11,
-      "q_free": 119.92,
-      "q_cap": 115.16,
-      "q_rand": 95.45,
-      "rand_win": 0.04
+      "q_free": 116.27,
+      "q_cap": 114.97,
+      "q_rand": 97.3,
+      "rand_win": 0.05
     },
     {
       "season": 2025.0,
       "club": "PAN",
-      "budget": 32.12,
+      "budget": 22.99,
       "q_club": 109.09,
-      "q_free": 133.57,
-      "q_cap": 120.41,
-      "q_rand": 106.18,
-      "rand_win": 0.38
+      "q_free": 129.56,
+      "q_cap": 140.17,
+      "q_rand": 107.51,
+      "rand_win": 0.43
     },
     {
       "season": 2025.0,
       "club": "PAR",
-      "budget": 20.89,
+      "budget": 18.59,
       "q_club": 95.06,
-      "q_free": 123.05,
-      "q_cap": 120.2,
-      "q_rand": 103.75,
+      "q_free": 122.87,
+      "q_cap": 124.51,
+      "q_rand": 105.63,
       "rand_win": 0.83
     },
     {
       "season": 2025.0,
       "club": "PRS",
-      "budget": 12.94,
+      "budget": 12.93,
       "q_club": 107.81,
-      "q_free": 121.29,
-      "q_cap": 114.69,
-      "q_rand": 90.34,
-      "rand_win": 0.05
+      "q_free": 117.6,
+      "q_cap": 126.28,
+      "q_rand": 91.82,
+      "rand_win": 0.08
     },
     {
       "season": 2025.0,
       "club": "RED",
-      "budget": 23.83,
+      "budget": 18.71,
       "q_club": 108.98,
-      "q_free": 125.63,
-      "q_cap": 113.27,
-      "q_rand": 103.28,
+      "q_free": 122.87,
+      "q_cap": 123.3,
+      "q_rand": 104.07,
       "rand_win": 0.29
     },
     {
       "season": 2025.0,
       "club": "TEL",
-      "budget": 15.91,
+      "budget": 14.66,
       "q_club": 106.1,
-      "q_free": 117.56,
-      "q_cap": 114.45,
-      "q_rand": 94.69,
-      "rand_win": 0.17
+      "q_free": 116.27,
+      "q_cap": 114.97,
+      "q_rand": 98.74,
+      "rand_win": 0.25
     },
     {
       "season": 2025.0,
       "club": "ULK",
-      "budget": 19.24,
+      "budget": 15.61,
       "q_club": 98.66,
-      "q_free": 124.27,
-      "q_cap": 109.1,
-      "q_rand": 102.17,
-      "rand_win": 0.64
+      "q_free": 120.03,
+      "q_cap": 121.8,
+      "q_rand": 99.02,
+      "rand_win": 0.52
     },
     {
       "season": 2025.0,
       "club": "VIR",
-      "budget": 15.11,
+      "budget": 14.07,
       "q_club": 102.27,
-      "q_free": 114.97,
-      "q_cap": 107.49,
-      "q_rand": 95.95,
+      "q_free": 117.56,
+      "q_cap": 111.51,
+      "q_rand": 96.09,
       "rand_win": 0.28
     },
     {
       "season": 2025.0,
       "club": "ZAL",
-      "budget": 14.75,
+      "budget": 12.46,
       "q_club": 112.44,
-      "q_free": 123.51,
-      "q_cap": 110.17,
-      "q_rand": 93.36,
-      "rand_win": 0.03
+      "q_free": 114.59,
+      "q_cap": 113.81,
+      "q_rand": 92.13,
+      "rand_win": 0.02
     }
   ],
   "budget_curve": [
@@ -1605,13 +1605,13 @@
     },
     {
       "t": "המנוע מתמחר את כל הליגה באותו שוק",
-      "p": "בפועל מועדון בספרד משלם אחרת ממועדון בישראל — מיסים, שחקנים מקומיים, שחקני נוער שגדלו במועדון. המנוע מתעלם מזה בכוונה, כי השאלה היא 'מה אפשר לקנות בכסף' ולא 'כמה זה עולה לכם'. המחיר: הפרשים בין מועדונים מכווצים פי 3.3.",
-      "x": "log(שכר/ממוצע_המועדון) כפול salary_mean יחיד — מודל מחיר תוך-מועדוני המשמש כבין-מועדוני. נבדק ולא תוקן."
+      "p": "בפועל מועדון בספרד משלם אחרת ממועדון בישראל — מיסים, שחקנים מקומיים, שחקני נוער שגדלו במועדון. המנוע מתעלם מזה בכוונה, כי השאלה היא 'מה אפשר לקנות בכסף' ולא 'כמה זה עולה לכם'. עקומת המחיר נלמדת עכשיו מ-13 מועדונים במקום מאחד, אבל **הרמה** עדיין אחת לכל הליגה.",
+      "x": "יום 15: המפרט הוחלף ל-log(שכר) = α_מועדון + β·x (ADR 0001). β₁ ירד מ-0.2317 ל-0.1727. הרמה עדיין משותפת: קריאת הציר כיורו נכשלה במבחן קבלה מוצהר (refit_acceptance, MAE 8.57M€), ולכן הציר נשאר ביחידות מנורמלות."
     },
     {
       "t": "הסכומים ביורו הם הערכה, לא מדידה",
       "p": "המרנו יחידות פנימיות ליורו כדי שהמספרים יהיו קריאים. אבל שלוש דרכים סבירות להמיר נותנות תשובות שרחוקות 11 מיליון זו מזו, ולכן כל סכום מוצג עם ±.",
-      "x": "ההמרה הרשמית הוקפאה. ציר התקציב ביחידות מנורמלות; התצוגה ביורו נאמדת ב-roster_sweep.fit_eur על 20 מועדונים (r=0.87, MAE 2.15M€)."
+      "x": "ההמרה הרשמית הוקפאה. ציר התקציב ביחידות מנורמלות; התצוגה ביורו נאמדת ב-roster_sweep.fit_eur על 20 מועדונים (r=0.87, MAE 2.21M€ אחרי הריפיט של יום 15)."
     }
   ]
 }
