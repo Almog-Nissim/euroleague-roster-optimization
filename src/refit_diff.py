@@ -22,8 +22,13 @@ refit_diff.py — טבלת לפני/אחרי של הריפיט (ADR 0001), מק�
 (קבצי הקללה ושגיאת התמחור) נקראים מ-HEAD, מהקובץ של המפרט הישן.
 עמודות source_before / source_after אומרות מאיפה כל ערך הגיע.
 
-שורה בלי קובץ תוצאות שבמעקב מקבלת NaN ומודפסת ברשימת "לא מקורות".
-הסקריפט אינו מקליד מספר אחד ביד.
+ערך "לפני" חסר מסיבה אחת משתיים, ועמודת before_status מבדילה ביניהן:
+    unsourced   — היה ערך לפני, הוא כתוב במסמך או ב-ADR, אבל אין לו
+                  קובץ תוצאות שבמעקב. source_before אומר איפה הוא כתוב.
+                  זה חוב, לא מידע.
+    after_only  — המושג לא היה קיים לפני הריפיט (שער היורו, משטר
+                  הרוויה, סקאלת הנרמול). אין מה לחפש.
+הסקריפט אינו מקליד מספר אחד ביד — גם לא את ערכי ה-unsourced.
 
 md5 מחושב על הבייטים שב-git (LF), כמו בטבלה המקורית. על עץ עבודה
 ב-Windows עם autocrlf הקובץ המקומי יכול להיות CRLF ולתת hash אחר.
@@ -137,9 +142,26 @@ def src(ref: str, rel: str) -> str:
 ROWS: list[dict] = []
 
 
+UNSRC_ADR1 = "unsourced: ADR 0001"
+UNSRC_CTX = "unsourced: CONTEXT.md (day-14 axis, TEL prices)"
+UNSRC_DOC = "unsourced: docs/refit-day15-diff.md"
+AFTER_ONLY = "after-only"
+
+
+def num(v):
+    """ספירות נשארות int, כל השאר float."""
+    return int(v) if isinstance(v, (int, np.integer)) else float(v)
+
+
 def row(group, quantity, unit, before, after, sb, sa):
+    if sb == AFTER_ONLY:
+        status = "after_only"
+    elif sb.startswith("unsourced"):
+        status = "unsourced"
+    else:
+        status = "tracked"
     ROWS.append(dict(group=group, quantity=quantity, unit=unit,
-                     before=before, after=after,
+                     before=before, after=after, before_status=status,
                      source_before=sb, source_after=sa))
 
 
@@ -212,26 +234,31 @@ def main() -> int:
     scale = float(cm["cost_scale"])
     sa_ra, sa_rs = src(head, ra_rel), src(head, rs_rel)
 
-    row("cost", "beta1", "log/pir", np.nan, float(ra.beta1), "", sa_ra)
-    row("cost", "calib_n", "rows", np.nan, int(ra.n_fit), "", sa_ra)
-    row("cost", "calib_clubs", "clubs", np.nan, int(ra.n_clubs_fit), "", sa_ra)
-    row("cost", "calib_r2", "", np.nan, float(cm["r2"]), "", sa_rs)
-    row("cost", "cost_scale", "pool mean", np.nan, scale, "", sa_rs)
+    row("cost", "beta1", "log/pir", np.nan, float(ra.beta1), UNSRC_ADR1, sa_ra)
+    row("cost", "calib_n", "rows", np.nan, int(ra.n_fit), UNSRC_ADR1, sa_ra)
+    row("cost", "calib_clubs", "clubs", np.nan, int(ra.n_clubs_fit),
+        UNSRC_ADR1, sa_ra)
+    row("cost", "calib_r2", "", np.nan, float(cm["r2"]), UNSRC_ADR1, sa_rs)
+    row("cost", "cost_scale", "pool mean", np.nan, scale, AFTER_ONLY, sa_rs)
     row("cost", "club_budget_median", "normalised axis", np.nan,
-        float(ra.club_budget_median), "", sa_ra)
+        float(ra.club_budget_median), UNSRC_DOC, sa_ra)
 
     row("euro_gate", "fit_eur_a", "normalised axis", np.nan,
-        float(ra.fit_eur_a), "", sa_ra)
+        float(ra.fit_eur_a), UNSRC_CTX, sa_ra)
     row("euro_gate", "fit_eur_a", "euro-level axis (a / cost_scale)", np.nan,
-        float(ra.fit_eur_a) / scale, "", sa_ra + " + " + sa_rs)
-    row("euro_gate", "fit_eur_b", "M EUR", np.nan, float(ra.fit_eur_b), "", sa_ra)
-    row("euro_gate", "fit_eur_mae", "M EUR", np.nan, float(ra.fit_eur_mae), "", sa_ra)
+        float(ra.fit_eur_a) / scale, AFTER_ONLY, sa_ra + " + " + sa_rs)
+    row("euro_gate", "fit_eur_b", "M EUR", np.nan, float(ra.fit_eur_b),
+        UNSRC_CTX, sa_ra)
+    row("euro_gate", "fit_eur_mae", "M EUR", np.nan, float(ra.fit_eur_mae),
+        UNSRC_CTX, sa_ra)
     row("euro_gate", "axis_read_as_euro_mae", "M EUR", np.nan,
-        float(ra.identity_mae), "", sa_ra)
-    row("euro_gate", "player_rho", "Spearman", np.nan, float(ra.player_rho), "", sa_ra)
-    row("euro_gate", "player_mae", "M EUR", np.nan, float(ra.player_mae), "", sa_ra)
+        float(ra.identity_mae), AFTER_ONLY, sa_ra)
+    row("euro_gate", "player_rho", "Spearman", np.nan, float(ra.player_rho),
+        AFTER_ONLY, sa_ra)
+    row("euro_gate", "player_mae", "M EUR", np.nan, float(ra.player_mae),
+        AFTER_ONLY, sa_ra)
     row("euro_gate", "gates_passed", "of 3", np.nan,
-        int(ra.t1) + int(ra.t2) + int(ra.t3), "", sa_ra)
+        int(ra.t1) + int(ra.t2) + int(ra.t3), AFTER_ONLY, sa_ra)
 
     # ---------------- יתרון וקללה ----------------
     sb_c, sa_c = src(head, cr_rel), src(head, mk_rel)
@@ -248,10 +275,12 @@ def main() -> int:
          lambda d: d.bias_w_free.median()),
         ("selection_bias_cap_median", "share of pool ppm",
          lambda d: d.bias_cap.median()),
-        ("curse_cost_free_median", "pp (share)", lambda d: d.curse_pp_free.median()),
-        ("curse_cost_cap_median", "pp (share)", lambda d: d.curse_pp_cap.median()),
+        ("curse_cost_free_median", "share (x100 = pp)",
+         lambda d: d.curse_pp_free.median()),
+        ("curse_cost_cap_median", "share (x100 = pp)",
+         lambda d: d.curse_pp_cap.median()),
     ]:
-        row("advantage", q, unit, float(fn(cr)), float(fn(mk)), sb_c, sa_c)
+        row("advantage", q, unit, num(fn(cr)), num(fn(mk)), sb_c, sa_c)
 
     # ---------------- כותרת ----------------
     wc_rel, nw_rel, wb_rel = (P + "wins_conversion.csv", P + "null_to_wins.csv",
@@ -291,10 +320,11 @@ def main() -> int:
         float(rs_b["meta"]["saturation"]), float(rs_a["meta"]["saturation"]),
         sb_rs, sa_rs)
     row("sweep", "spend_ceiling", "normalised axis", np.nan,
-        float(det["spend_ceiling"]), "", sa_rs)
+        float(det["spend_ceiling"]), AFTER_ONLY, sa_rs)
     row("sweep", "flat_points", f"of {det['n_points']}", np.nan,
-        int(det["n_flat"]), "", sa_rs)
-    row("sweep", "saturation_regime", "", np.nan, det["regime"], "", sa_rs)
+        int(det["n_flat"]), AFTER_ONLY, sa_rs)
+    row("sweep", "saturation_regime", "", np.nan, det["regime"],
+        AFTER_ONLY, sa_rs)
     row("sweep", "utilisation_at_top_of_grid", "spent / budget",
         float(top_b["spent"]) / float(top_b["budget"]),
         float(top_a["spent"]) / float(top_a["budget"]), sb_rs, sa_rs)
@@ -323,10 +353,13 @@ def main() -> int:
     # ---------------- כסף מוצג ----------------
     dm_rel = P + "display_money_check.csv"
     dm = csv_at(AFTER_REF, dm_rel).iloc[0]
-    for q, unit, col in (("display_money_mae", "M EUR", "mae"),
-                         ("display_money_rho", "Spearman", "rho"),
-                         ("display_money_negative", "players", "n_negative")):
-        row("display", q, unit, np.nan, float(dm[col]), "", src(head, dm_rel))
+    for q, unit, col, sb in (
+            ("display_money_mae", "M EUR", "mae", UNSRC_DOC),
+            ("display_money_rho", "Spearman", "rho", UNSRC_DOC),
+            ("display_money_negative", "players", "n_negative", AFTER_ONLY)):
+        v = dm[col]
+        v = int(v) if col == "n_negative" else float(v)
+        row("display", q, unit, np.nan, v, sb, src(head, dm_rel))
 
     # ---------------- פלט ----------------
     out = pd.DataFrame(ROWS)
@@ -346,12 +379,17 @@ def main() -> int:
         print(f"  {r['group']:<12}{r['quantity']:<40}"
               f"{fmt(r['before']):>14}{fmt(r['after']):>14}  {r['unit']}")
 
-    unsourced = [r["quantity"] + (f" [{r['unit']}]" if r["unit"] else "")
-                 for r in ROWS
-                 if not isinstance(r["before"], str)
-                 and pd.isna(r["before"])]
-    print(f"\n  לפני ללא קובץ תוצאות שבמעקב ({len(unsourced)}): "
-          + " · ".join(unsourced))
+    def label(r):
+        return r["quantity"] + (f" [{r['unit']}]" if r["unit"] else "")
+
+    for status, title in (("unsourced", "לפני קיים אבל בלי קובץ תוצאות — חוב"),
+                          ("after_only", "לפני לא קיים — מושג חדש, אין חוב")):
+        rs = [r for r in ROWS if r["before_status"] == status]
+        print(f"\n  {title} ({len(rs)}):")
+        for r in rs:
+            where = (f"  ← {r['source_before'].split(': ', 1)[1]}"
+                     if status == "unsourced" else "")
+            print(f"     {label(r)}{where}")
     print(f"\n  נשמר: {OUT.name} · {len(ROWS)} שורות")
     print(SEP)
     return 0

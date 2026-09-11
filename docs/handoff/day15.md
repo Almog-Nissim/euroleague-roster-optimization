@@ -1,26 +1,32 @@
-> **Provenance note — added after the fact, day 15.**
+> **Provenance note - added after the fact, day 15.**
 > This handoff was written by a sandbox session that ran on a *regenerated*
 > `usage_curve_results_min0.csv`. The original file was later found on the local
-> machine and committed; `COST_SPEC=club_relative python src/usage_constrained.py`
+> machine and committed (8661308); `COST_SPEC=club_relative python src/usage_constrained.py`
 > on it reproduces the day-14 capped baseline (6.5 %, the same 7 negative clubs;
 > the regenerated file gives 7.96 % and 4).
 >
-> Where the numbers below differ from `docs/refit-day15-diff.md` and the committed
-> results files, those win (local run, original file):
+> Where the numbers below differ from the committed results files, those win
+> (local run, original file). Full before/after table: `src/refit_diff.py` ->
+> `data/processed/refit_day15_diff.csv`.
 >
-> | quantity | this handoff (sandbox) | local, original file |
-> |---|---|---|
-> | `adv_cap` median, market | 0.1724 | 0.1414 (`usage_constrained_results.csv`) |
-> | sweep hash | `a3cfd56c9acd` | `f26e57f601b2` |
-> | curse cost, capped roster | old 3.9 pp → new 1.9 pp | old 2.5 pp → new 5.5 pp |
+> | quantity | this handoff (sandbox) | local, original file | source |
+> |---|---|---|---|
+> | `adv_cap` median, market | 0.1724 | 0.1414 | `usage_constrained_results.csv`, `curse_selection_market.csv` |
+> | sweep hash | `a3cfd56c9acd` | `f26e57f601b2` | `data/dashboard/roster_sweep.json` |
+> | curse cost, capped roster | old 3.9 pp -> new 1.9 pp | old 5.5 pp -> new 2.5 pp | `curse_selection_{club_relative,market}.csv` |
+> | curse cost, free roster | - | old 2.9 pp -> new 9.7 pp | same |
 >
-> The "Blocking issue" section is resolved. "Next, in order" item 1 (step 1c) is
-> done — pricing error by player type falsified. Item 2 (fatigue tiers) is
-> superseded by the day-15 grill decisions recorded in ADR 0004: tier ceiling 34
-> (observed max season-average minutes), not 40; δ enters only through a
-> three-outcome rule declared in advance, not "δ ≈ 0 → falsified"; tiers are not
-> claimed to give depth value (the top-k minutes-shape constraint is the deferred
-> alternative).
+> `docs/refit-day15-diff.md` has the two curse-cost rows with before/after swapped
+> as of 8661308; the committed CSVs above are authoritative. Commit cc6bb2c carried
+> an earlier version of this note with the capped row swapped as well.
+>
+> The "Blocking issue" section is resolved. "Next, in order" item 1 (step 1c) was
+> run and falsified; its results files (`price_error_*.csv`) were regenerated and
+> committed in cc6bb2c. Item 2 (fatigue tiers) is superseded by the day-15 grill
+> decisions recorded in ADR 0004: tier ceiling 34 (observed max season-average
+> minutes), not 40; delta enters only through a three-outcome rule declared in
+> advance, not "delta ~ 0 -> falsified"; tiers are not claimed to give depth
+> value (the top-k minutes-shape constraint is the deferred alternative).
 
 # Day 15 handoff — where the refit stands
 
