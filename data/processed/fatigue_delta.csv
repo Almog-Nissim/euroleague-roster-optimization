@@ -1,0 +1,9 @@
+spec,threshold,note,n_player_games,n_tier2_games,n_groups_tier2,n_groups_both_sides,n_players,delta_hat,ci_lo,ci_hi,at_boundary,verdict
+P,30.0,all regulation games,62637,4838,1053,1053,432,-1.155,-1.435125,-0.9298750000000001,False,refuted
+S1,30.0,|margin| <= 10,35769,3247,928,926,393,-1.29,-1.600125,-1.0,False,sensitivity
+S2,30.0,fouls < 5,61156,4747,1050,1050,430,-1.115,-1.375125,-0.88,False,sensitivity
+T28,28.0,threshold sensitivity,62637,8218,1378,1376,534,-1.095,-1.295,-0.91,False,threshold_sensitivity
+T32,32.0,threshold sensitivity,62637,2539,713,713,336,-1.275,-1.685125,-0.91,False,threshold_sensitivity
+pos_G,30.0,diagnostic only (ADR 0004),20874,1999,410,410,152,-1.36,-1.88525,-0.98,False,diagnostic
+pos_F,30.0,diagnostic only (ADR 0004),20563,1920,381,381,135,-1.095,-1.5251249999999998,-0.7398750000000001,False,diagnostic
+pos_C,30.0,diagnostic only (ADR 0004),10099,386,125,125,53,-0.535,-1.00025,-0.11,False,diagnostic

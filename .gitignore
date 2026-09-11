@@ -88,3 +88,7 @@ __pycache__/
 !data/processed/curse_selection_club_relative.csv
 !data/processed/price_error_market.csv
 !data/processed/price_error_club_relative.csv
+
+# --- day 15: fatigue delta (ADR 0004) ---
+!data/processed/fatigue_delta.csv
+!data/processed/fatigue_delta_buckets.csv
