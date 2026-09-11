@@ -54,10 +54,10 @@ __pycache__/
 *.pyo
 .DS_Store
 
-# --- éåí 10: áå÷ñ÷åøéí. äîùéëä òìúä ùéùä ñááéí, ä-API ìà éöéá ---
+# --- ï¿½ï¿½ï¿½ 10: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½-API ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ---
 !data/raw/boxscore_player_*.csv
 
-# --- éåí 11 ---
+# --- ï¿½ï¿½ï¿½ 11 ---
 !data/processed/dilution_test.csv
 !data/processed/price_structure.csv
 !data/processed/scale_sensitivity.csv
@@ -78,3 +78,13 @@ __pycache__/
 
 !data/processed/fair_compare_clubs.csv
 !data/processed/usage_fill_sensitivity.csv
+!data/processed/usage_curve_results_min0.csv
+# --- day 15: results layer ---
+!data/processed/refit_day15_diff.csv
+!data/processed/refit_acceptance.csv
+!data/processed/refit_player_check.csv
+!data/processed/display_money_check.csv
+!data/processed/curse_selection_market.csv
+!data/processed/curse_selection_club_relative.csv
+!data/processed/price_error_market.csv
+!data/processed/price_error_club_relative.csv
