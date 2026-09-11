@@ -76,21 +76,23 @@ SEP = "=" * 76
 # ⚠️ כל מפתח כאן **חייב** לעבור ב-check(). בקרת הכיסוי בסעיף 6
 #    עוצרת אם מפתח לא נבדק. אל תוסיף ערך בלי קריאת check מתאימה.
 # 🔴 יום 15 — עודכן אחרי הריפיט של ADR 0001. הישן והחדש זה לצד
-#    זה נשמרים ב-data/processed/refit_day15_diff.csv ומתועדים
-#    ב-docs/refit-day15-diff.md. **הערכים הישנים נשארים כאן
+#    זה נוצרים ע"י src/refit_diff.py ב-data/processed/refit_day15_diff.csv
+#    ומתועדים ב-docs/refit-day15-diff.md. **הערכים הישנים נשארים כאן
 #    בהערה בכוונה**: הקפאה שמתעדכנת בלי עקבות אינה הקפאה.
 #
 #      מפתח                     לפני     אחרי
-#      headline_capped_wins      2.03     5.10
+#      headline_capped_wins      2.03     4.26
 #      headline_free_wins        5.17     4.90
 #      gap_random_club_wins     -1.65    -1.72
 #      gap_free_random_wins      6.84     6.61
 #      n_club_seasons            38.0     38.0
 #      wasted_budget_share      0.269    0.308
 #
-#    ⚠️ ארבעת הראשונים נגזרים מ-usage_constrained_results.csv,
-#       שתלוי ב-usage_curve_results_min0.csv — קובץ שאינו ברפו.
-#       ראו docs/refit-day15-diff.md, סעיף "מה לא אומת".
+#    ארבעת הראשונים נגזרים מ-usage_constrained_results.csv, שתלוי
+#    ב-usage_curve_results_min0.csv. הקובץ המקורי במעקב מ-8661308,
+#    ו-refit_diff.py מוודא שמפרט club_relative משחזר עליו את יום 14
+#    שורה-שורה. (עד יום 15 כאן היה כתוב 5.10 — ערך מריצת סנדבוקס
+#    על קובץ usage משוחזר.)
 FROZEN = {
     "headline_capped_wins":  4.26,
     "headline_free_wins":    4.90,
@@ -153,6 +155,14 @@ def main() -> int:
     ok &= check("gap_random_club_wins", float(rc.wins))
     ok &= check("gap_free_random_wins", float(fr.wins))
 
+    # ה-caveat שלמטה טוען שתי טענות. שתיהן נבדקות כאן, לא רק נכתבות.
+    if float(cap.lo) <= 0:
+        print("  ❌ ה-caveat טוען שהקצה התחתון של הטווח חיובי — והוא לא.")
+        ok = False
+    if float(rc.wins) >= 0:
+        print("  ❌ ה-caveat טוען שמבנה האילוצים מוריד מהתוצאה — והוא לא.")
+        ok = False
+
     D["headline"] = {
         "primary": {
             "value": round(float(cap.wins), 2),
@@ -164,7 +174,7 @@ def main() -> int:
                       "את הרעש בלבד: ההמרה לניצחונות נלמדה "
                       "מהפרשים קטנים מאלה שהמנוע מייצר, ומנגד "
                       "מבנה האילוצים דווקא מוריד מהתוצאה — "
-                      "כלומר תרומת המודל עצמו גדולה מ-2.03.",
+                      f"כלומר תרומת המודל עצמו גדולה מ-{float(cap.wins):.2f}.",
         },
         "free_engine": {
             "value": round(float(fre.wins), 2),
