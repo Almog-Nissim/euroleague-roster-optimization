@@ -1,0 +1,1460 @@
+diff --git a/docs/refit-day15-diff.md b/docs/refit-day15-diff.md
+new file mode 100644
+index 0000000..a580bee
+--- /dev/null
++++ b/docs/refit-day15-diff.md
+@@ -0,0 +1,113 @@
++# Refit run — old vs new, day 15
++
++Implements ADR 0001, steps 2–5 of `refit-run-spec.md`. Step 1 was already
++committed (`b93e383`) and was not re-run.
++
++Generating scripts: `cost_market.py`, `refit_acceptance.py`,
++`display_money_check.py`. Results file: `data/processed/refit_day15_diff.csv`.
++
++## What changed in the model
++
++The cost model no longer fits `log(salary / squad_mean)` on Maccabi alone. It
++fits `log(salary) = α_club + γ_season + β₁·pir_lag_shrunk + β₂·el_seasons`
++on every `usage='calibrate'` club, and prices the pool at the mean α.
++
++Two parameters had to be decided and are declared in `cost_market.py`:
++
++- **`SALARY_MAX_SEASON = "test"`** — salary observations up to the test season
++  are admissible. Under the old rule (`<= TRAIN_MAX`) the 2024 test season
++  would have been calibrated on TEL 2023 alone, 12 rows and one club, so half
++  of the 38 club-seasons would have kept the single-club specification and the
++  pooled `adv_cap` would have mixed two models. β₁ under the other rule is
++  printed on every run: **0.2060** against 0.1727.
++- **`UNIT`** — see the acceptance test below.
++
++## The euro axis was tested and rejected
++
++Pricing at mean α produces a euro level, so the axis could have been labelled
++in euros directly. Three thresholds were declared before the run
++(`refit_acceptance.py`) and all three failed:
++
++| threshold | required | measured |
++|---|---|---|
++| `fit_eur` slope/intercept | a ∈ [0.85, 1.15], \|b\| ≤ 2.0 | a = 1.087, b = −10.52 |
++| `fit_eur` MAE | ≤ 2.15 M€ | 2.21 M€ |
++| player-level, HTA·OLY·BAS | ρ ≥ 0.60 and MAE ≤ 1.35 M€ | ρ = 0.489, MAE = 0.66 M€ |
++
++Reading the axis as euros gives MAE 8.57 M€ against real club budgets: the
++model prices every club at league-average α, so between-club dispersion is
++compressed by construction. BAS is priced at 23.2 and pays 8.5; ASV at 16.8
++and pays 5.0. The player-level MAE passes comfortably — the level is roughly
++right per player — but the ranking (ρ = 0.489) does not clear the bar.
++
++**Consequence, as agreed in advance:** internal prices are unchanged, the axis
++is divided by the season's pool mean (scale 1.328 for 2025), and one axis unit
++is "one average pool player". `fit_eur` stays a display mapper. The failure is
++itself a finding: the market refit corrects the *shape* of the price curve, not
++its *level* across clubs.
++
++## Side by side
++
++| quantity | before | after |
++|---|---|---|
++| β₁ | 0.2317 | **0.1727** (se 0.0298, t 5.81) |
++| calibration sample | n = 27, 1 club | n = 61, 13 clubs, R² 0.813 |
++| most expensive pool player | 10.24× mean | 4.68× mean |
++| median 2025 club budget | 20.25 | 17.41 |
++| saturation | 25.0 | **22.5** |
++| spend ceiling | — | **23.43 from budget 23.5** |
++| `fit_eur` a, b | 0.7639, −2.1195 | 1.4430, −10.5159 |
++| `fit_eur` MAE | 2.15 M€ | 2.21 M€ |
++| `adv_free` median | +18.26 % | +16.82 % |
++| `adv_cap` median | +6.52 % | **+17.24 %** |
++| clubs the engine loses to | 7 / 38 | 1 / 38 |
++| `q_cap > q_free` on `ppm_true` | 4 / 38 | **18 / 38** |
++| `headline_capped_wins` | 2.03 | 5.10 |
++| `headline_free_wins` | 5.17 | 4.90 |
++| `gap_random_club_wins` | −1.65 | −1.72 |
++| `gap_free_random_wins` | 6.84 | 6.61 |
++| `wasted_budget_share` | 0.269 | 0.308 |
++| displayed money vs real salary | MAE 1.279, ρ 0.610 | MAE 0.893, ρ 0.895 |
++| `roster_sweep.json` md5 | `c285173871cf` | `a3cfd56c9acd` |
++| `dashboard_data.json` md5 | `e5bbe2f8285b` | `f6ea861a2170` |
++
++Roster changes at the median club budget (each specification at its own median
++club budget, i.e. the same real basket): **5 of 12** in, 5 out, 7 unchanged.
++At the same nominal grid point (20.0), 3 of 12 — but that compares different
++baskets, because the axis moved.
++
++## Saturation flipped regime
++
++The old note said the slider flattens because money stops buying improvement
++while the pool is still being spent — "diminishing returns, not exhaustion",
++supported by 99.1 % utilisation above 25.
++
++Under the new prices that is false. `q_LP` stops rising at 22.5 and spending
++freezes at 23.43 from budget 23.5 onward: the engine holds the best 12 players
++the pool allows under the minutes constraint, roster churn is zero, and
++utilisation falls to 58.6 % at the top of the grid. 36 of 65 slider points are
++flat. The guard in `roster_sweep.py` caught this and stopped the build twice
++before the note was rewritten; it now classifies the regime and checks the
++claim that matches it.
++
++**Open product decision, not implemented:** `B_HI = 40.0` now leaves more than
++half the slider dead. It should probably come down to about 24.
++
++## What was not verified
++
++`usage_curve_results_min0.csv` is not in the repo — `.gitignore` whitelists
++`usage_curve_results.csv` but not the `_min0` variant. It was regenerated here
++with `usage_curve.py --min-minutes 0`, and the regenerated file is **not**
++identical to the one used on day 14: re-running the old model with it reproduces
++the free side exactly (`lp_free` to 1e-12, `adv_free` median 0.18259 unchanged)
++but gives `adv_cap` median 0.0796 instead of 0.0652, with 4 negatives instead
++of 7. The weighted usage of an identical roster differs, so the input differs,
++not the solver.
++
++Everything downstream of the capped path therefore carries an offset of roughly
+++1.4 percentage points on `adv_cap` before the refit is counted:
++`adv_cap_median`, `headline_capped_wins`, and `gap_random_club_wins` /
++`gap_free_random_wins`. Measured on one consistent usage file, the refit moves
++`adv_cap` from 0.0796 to 0.1724. **The authoritative numbers must come from a
++local run with the real usage file.** Commit that file, or the pipeline is not
++reproducible.
+diff --git a/src/cost_market.py b/src/cost_market.py
+new file mode 100644
+index 0000000..f2b0bca
+--- /dev/null
++++ b/src/cost_market.py
+@@ -0,0 +1,338 @@
++"""cost_market.py — מודל העלות של השוק. מממש ADR 0001, שלב 2 של
++docs/refit-run-spec.md.
++
++--------------------------------------------------------------------
++מה מוחלף
++--------------------------------------------------------------------
++המפרט הישן:
++
++    log(salary_i / squad_mean_club) ~ pir_lag_shrunk + el_seasons
++
++נאמד על usage='calibrate', שהוא מכבי ת"א בלבד. β₁ = 0.2317 —
++המועדון התלול ביותר מבין החמישה שנמדדו ביום 9.
++
++המפרט כאן:
++
++    log(salary_i) = α_club + γ_season + β₁·pir_lag_shrunk + β₂·el_seasons
++
++אפקטים קבועים למועדון סופגים את **רמת** המחירים; β₁ נאמד בתוך
++מועדון ומשותף לליגה. שחקני המאגר מתומחרים ב-α הממוצע, כלומר
++במועדון ליגה ממוצע.
++
++--------------------------------------------------------------------
++פרמטרים מוצהרים — כל אחד הוא החלטה, לא ברירת מחדל
++--------------------------------------------------------------------
++**SALARY_MAX_SEASON = "test"**
++    אילו תצפיות שכר מותרות לכיול. שתי אפשרויות:
++
++    "train_max"  שכר עד עונת האימון בלבד — הכלל הישן ב-fit_models.
++                 עבור עונת מבחן 2024 זה משאיר את TEL 2023 בלבד:
++                 12 שורות, **מועדון אחד**. כלומר חצי מ-38 עונות-
++                 המועדון היו מתומחרות במפרט חד-מועדוני וחציין
++                 במפרט שוק, ו-adv_cap המאוחד היה מערבב שני מודלים.
++
++    "test"       שכר עד עונת המבחן עצמה (ברירת המחדל כאן).
++                 2025 -> 77 שורות / 14 מועדונים · 2024 -> 38 / 9.
++
++    הנימוק ל-"test": שכר נקבע **לפני** העונה ואינו תוצאה שלה,
++    והרגרסורים הם פיגור (pir_lag_shrunk מהעונה הקודמת). הניקוד
++    (ppm_true, avail_true) אינו נוגע בשכר בשום שלב.
++    ⚠️ מה שכן נכנס: מחירי העונה עצמה מגלמים ציפיות של השוק לגביה.
++    זו הדלפה מדרגה שנייה, דרך שני מקדמים בלבד, ומדווחת.
++    β₁ בשני הכללים מודפס בכל הרצה — ההפרש הוא גודל ההשפעה.
++
++**PRICE_LEVEL = "mean_alpha"** — α ממוצע **לא משוקלל על פני
++    מועדונים**. משוקלל-שורות היה נותן משקל למי שדלף ממנו יותר
++    שכר לעיתונות, וזה לא "מועדון ממוצע".
++
++**UNIT = "eur_millions"** — הפלט הוא מיליוני יורו.
++    ⚠️ שינוי משמעות של ציר התקציב. במפרט הישן cost הוא יחס
++    חסר-יחידות לשכר הממוצע במועדון הכיול (ראו CONTEXT.md).
++    כאן α הוא רמת מחירים אמיתית ביורו, ולכן exp(α̅+βx) הוא מחיר
++    ביורו. חלוקה ב-1e6 היא תצוגה בלבד ואינה משנה שום בחירה של
++    ה-LP (סקלה אחידה על העלויות ועל התקציב).
++    ⇒ הרשת 8–40 בסווייפ נקראת מעתה כ-8–40 מיליון יורו נטו, וזה
++      בדיוק טווח תקציבי היורוליג. fit_eur הופך למבחן של רמת
++      המחירים במקום למיפוי תצוגה (שלב 4 בספק).
++
++**SEASON_DUMMY = True** — הכיול מערב עונות (2023/24/25 בעוגנים,
++    2024/25 בחיצוני). איחוד בלי דמה לעונה מייחס אינפלציית שכר
++    ל-β₁. המאגר מתומחר ברמת **עונת המבחן**.
++
++--------------------------------------------------------------------
++מקורות המדגם
++--------------------------------------------------------------------
++salary_anchors.csv     usage='calibrate' · קוד שחקן מאומת
++salary_external_2025   usage='calibrate' · הצלבת שם מלא
++
++התיוג עצמו נעשה ב-tag_external_usage.py (שלב 1, מקומט). כאן הוא
++נקרא בלבד. ההצלבה, מיפוי המועדונים והכינויים מיובאים מ-
++salary_market.py — מקור אמת אחד. שני מיפויי NAME2CODE כבר הפילו
++כיול ב-13.8% ביום 12.
++
++עונת שורה חיצונית היא `yr` ולא `season` — ADR 0003.
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++import statsmodels.api as sm
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from paths import PROCESSED_DIR  # noqa: E402
++import roster_optimizer as ro  # noqa: E402
++import salary_market as smk  # noqa: E402
++
++# ---------------- פרמטרים מוצהרים ----------------
++SALARY_MAX_SEASON = "test"        # "test" | "train_max"
++PRICE_LEVEL = "mean_alpha"
++UNIT_DIVISOR = 1e6                # יורו -> מיליוני יורו
++SEASON_DUMMY = True
++MIN_ROWS = 25                     # מתחת לזה הכיול אינו מוגדר
++# -------------------------------------------------
++
++LAST_FIT: dict = {}               # פרובננס להדפסה/JSON, נכתב ב-build
++
++
++# ============================ המדגם ============================
++def _anchor_rows(anch: pd.DataFrame, max_season: int) -> pd.DataFrame:
++    a = anch[(anch.usage == "calibrate") & anch.player_code.notna()].copy()
++    a["salary"] = pd.to_numeric(a.salary_mid, errors="coerce")
++    a = a[a.salary.notna() & (a.season <= max_season)]
++    return pd.DataFrame({"player_code": a.player_code.astype(str),
++                         "club": a.club.astype(str),
++                         "season": a.season.astype(int),
++                         "salary": a.salary.astype(float),
++                         "src": "anchor"})
++
++
++def _external_rows(ps: pd.DataFrame, max_season: int) -> tuple[pd.DataFrame, list]:
++    """שורות calibrate מהקובץ החיצוני, עם קוד שחקן מאומת.
++
++    ההצלבה זהה ל-salary_market.load_market, בהבדל אחד: מפת השמות
++    נבנית מכל העונות ולא מ-2025 בלבד, כי כאן יש גם שורות yr=2024.
++    שם שחקן אינו תלוי עונה; המפתח כן צריך להיות ייחודי.
++    """
++    notes = []
++    s = pd.read_csv(PROCESSED_DIR / "salary_external_2025.csv")
++    if "usage" not in s.columns:
++        raise SystemExit(
++            "ל-salary_external_2025.csv אין עמודת usage. שלב 1 של "
++            "docs/refit-run-spec.md לא רץ — אין לכייל לפניו.")
++
++    s = s[(s.usage == "calibrate") & (s.yr <= max_season)].copy()
++    s["lat"] = s.player.astype(str).str.split("/").str[0]
++    s["key"] = s.lat.map(smk.norm)
++
++    p = ps.dropna(subset=["player_name"]).copy()
++    p["key"] = (p.player_name.str.split(",").str[1].fillna("")
++                + p.player_name.str.split(",").str[0]).map(smk.norm)
++    p["pc"] = p.player_code.astype(str)
++    dupe_keys = p.drop_duplicates(["key", "pc"]).key.value_counts()
++    ambiguous = set(dupe_keys[dupe_keys > 1].index)
++    if ambiguous & set(s.key):
++        notes.append(f"⚠️ {len(ambiguous & set(s.key))} שמות מלאים "
++                     "מתאימים ליותר מקוד אחד — נלקח הראשון.")
++    kmap = p.drop_duplicates("key").set_index("key").pc
++
++    s["player_code"] = s.key.map(kmap)
++    s.loc[s.player_code.isna(), "player_code"] = \
++        s.loc[s.player_code.isna(), "key"].map(smk.ALIAS)
++    n_unres = int(s.player_code.isna().sum())
++    if n_unres:
++        notes.append(f"{n_unres} שורות חיצוניות ללא קוד — יורדות "
++                     "(אושר שלא שיחקו ביורוליג).")
++    s = s[s.player_code.notna()].copy()
++
++    s["club_code"] = s.club.map(smk.CLUBMAP)
++    if s.club_code.isna().any():
++        raise SystemExit("מועדונים ללא מיפוי ב-CLUBMAP: "
++                         + ", ".join(sorted(set(s.loc[s.club_code.isna(),
++                                                      "club"]))))
++    return pd.DataFrame({"player_code": s.player_code.astype(str),
++                         "club": s.club_code.astype(str),
++                         "season": s.yr.astype(int),
++                         "salary": pd.to_numeric(s.salary,
++                                                 errors="coerce").astype(float),
++                         "src": "external"}), notes
++
++
++def sample(anch: pd.DataFrame, feat: pd.DataFrame, ps: pd.DataFrame,
++           max_season: int) -> tuple[pd.DataFrame, list]:
++    """מדגם הכיול המלא, מוצלב לפיצ'רים של אותה עונה."""
++    ext, notes = _external_rows(ps, max_season)
++    d = pd.concat([_anchor_rows(anch, max_season), ext], ignore_index=True)
++    d = d[d.salary.notna() & (d.salary > 0)]
++
++    # שחקן שמופיע בשני המקורות באותה עונה: העוגן גובר (קוד מאומת).
++    n_before = len(d)
++    d = (d.sort_values("src")                      # anchor < external
++         .drop_duplicates(["player_code", "season"], keep="first"))
++    if len(d) < n_before:
++        notes.append(f"{n_before - len(d)} כפילויות עוגן/חיצוני — "
++                     "העוגן גבר.")
++
++    F = feat.copy()
++    F["player_code"] = F.player_code.astype(str)
++    F = F.drop_duplicates(["player_code", "season"])
++    d = d.merge(F[["player_code", "season"] + ro.COST_FEATURES],
++                on=["player_code", "season"], how="inner")
++    d = d.dropna(subset=ro.COST_FEATURES)
++    d["log_sal"] = np.log(d.salary)
++    return d.reset_index(drop=True), notes
++
++
++# ============================ האמידה ============================
++def fit(d: pd.DataFrame):
++    """אפקטים קבועים למועדון + דמה לעונה. β₁ נאמד בתוך מועדון."""
++    X = pd.get_dummies(d.club, prefix="c", drop_first=True).astype(float)
++    if SEASON_DUMMY and d.season.nunique() > 1:
++        X = pd.concat([X, pd.get_dummies(d.season, prefix="y",
++                                         drop_first=True).astype(float)],
++                      axis=1)
++    X[ro.COST_FEATURES] = d[ro.COST_FEATURES].astype(float).values
++    return sm.OLS(d.log_sal.astype(float), sm.add_constant(X)).fit()
++
++
++class MarketCostModel:
++    """עוטף את הרגרסיה ומחזיר log(מחיר במיליוני יורו) במועדון ממוצע.
++
++    החתימה תואמת ל-`cm` הישן: `build()` ב-optimizer_backtest קורא
++    `np.exp(cm.predict(X)) * smear * mean_salary`. עם mean_salary=1.0
++    (נתיב הסווייפ) התוצאה היא מיליוני יורו.
++    """
++
++    def __init__(self, res, alpha_bar, season_shift, meta):
++        self._res = res
++        self.alpha_bar = float(alpha_bar)
++        self.season_shift = float(season_shift)
++        self.beta1 = float(res.params[ro.COST_FEATURES[0]])
++        self.beta2 = float(res.params[ro.COST_FEATURES[1]])
++        self.nobs = float(res.nobs)
++        self.rsquared = float(res.rsquared)
++        self.resid = res.resid
++        self.meta = meta
++
++    def predict(self, X):
++        X = pd.DataFrame(X)
++        if ro.COST_FEATURES[0] in X.columns:
++            x1 = X[ro.COST_FEATURES[0]].astype(float).values
++            x2 = X[ro.COST_FEATURES[1]].astype(float).values
++        else:                                   # מערך: [const, pir, el]
++            v = X.values.astype(float)
++            x1, x2 = v[:, -2], v[:, -1]
++        lp = (self.alpha_bar + self.season_shift
++              + self.beta1 * x1 + self.beta2 * x2)
++        return pd.Series(lp - np.log(UNIT_DIVISOR), index=X.index)
++
++
++def build(anch: pd.DataFrame, feat: pd.DataFrame, ps: pd.DataFrame,
++          test: int, train_max: int, verbose: bool = True):
++    """המודל המלא לעונת `test`. מחזיר (cm, smear)."""
++    max_season = test if SALARY_MAX_SEASON == "test" else train_max
++    d, notes = sample(anch, feat, ps, max_season)
++    if len(d) < MIN_ROWS:
++        raise SystemExit(
++            f"מדגם הכיול הוא {len(d)} שורות בלבד (מינימום {MIN_ROWS}). "
++            f"בדוק את usage בקבצי השכר לפני שממשיכים.")
++
++    res = fit(d)
++    clubs = sorted(d.club.unique())
++    # α לכל מועדון: הקבוע הוא מועדון הבסיס, השאר סטייה ממנו.
++    alphas = {c: float(res.params.get(f"c_{c}", 0.0)) + float(res.params["const"])
++              for c in clubs}
++    alpha_bar = float(np.mean(list(alphas.values())))
++
++    # רמת המחירים של עונת המבחן. אם אינה במדגם — האחרונה שיש, ומדווח.
++    seasons = sorted(int(s) for s in d.season.unique())
++    tgt = test if test in seasons else max(seasons)
++    if tgt != test:
++        notes.append(f"⚠️ אין שכר מעונת {test} במדגם; מתומחר ברמת {tgt}.")
++    season_shift = float(res.params.get(f"y_{tgt}", 0.0))
++
++    smear = float(np.mean(np.exp(res.resid)))
++
++    # β₁ תחת הכלל השני — דיאגנוסטיקה, לא בשימוש לתמחור.
++    alt_beta1 = None
++    alt_season = train_max if SALARY_MAX_SEASON == "test" else test
++    try:
++        d_alt, _ = sample(anch, feat, ps, alt_season)
++        if len(d_alt) >= MIN_ROWS:
++            alt_beta1 = float(fit(d_alt).params[ro.COST_FEATURES[0]])
++    except SystemExit:
++        alt_beta1 = None
++
++    cm = MarketCostModel(res, alpha_bar, season_shift, meta=dict(
++        spec="market_fe", salary_max_season=SALARY_MAX_SEASON,
++        max_season=int(max_season), test=int(test), train_max=int(train_max),
++        n=int(res.nobs), n_clubs=len(clubs), seasons=seasons,
++        beta1=round(float(res.params[ro.COST_FEATURES[0]]), 4),
++        beta1_se=round(float(res.bse[ro.COST_FEATURES[0]]), 4),
++        beta1_t=round(float(res.tvalues[ro.COST_FEATURES[0]]), 2),
++        beta2=round(float(res.params[ro.COST_FEATURES[1]]), 4),
++        beta2_t=round(float(res.tvalues[ro.COST_FEATURES[1]]), 2),
++        r2=round(float(res.rsquared), 3),
++        alpha_bar=round(alpha_bar, 4), season_shift=round(season_shift, 4),
++        smear=round(smear, 4), unit="EUR_millions",
++        beta1_alt_rule=(None if alt_beta1 is None else round(alt_beta1, 4)),
++        alt_rule=("train_max" if SALARY_MAX_SEASON == "test" else "test"),
++        clubs={c: int((d.club == c).sum()) for c in clubs},
++        notes=notes))
++    LAST_FIT.clear()
++    LAST_FIT.update(cm.meta)
++
++    if verbose:
++        report(cm)
++    return cm, smear
++
++
++def report(cm: MarketCostModel) -> None:
++    m = cm.meta
++    print(f"  עלות (שוק): β₁={m['beta1']:+.4f} (ר\"ס {m['beta1_se']:.4f}, "
++          f"t={m['beta1_t']:+.2f}) · β₂={m['beta2']:+.4f} "
++          f"(t={m['beta2_t']:+.2f})")
++    print(f"              n={m['n']} · {m['n_clubs']} מועדונים · "
++          f"עונות {m['seasons']} · R²={m['r2']:.3f}")
++    print(f"              α̅={m['alpha_bar']:.4f} · דמת עונה "
++          f"{m['season_shift']:+.4f} · Duan={m['smear']:.4f} · "
++          f"יחידות {m['unit']}")
++    if m["beta1_alt_rule"] is not None:
++        print(f"              β₁ תחת הכלל '{m['alt_rule']}': "
++              f"{m['beta1_alt_rule']:+.4f}")
++    for n in m["notes"]:
++        print(f"              {n}")
++
++
++# ============================ הרצה עצמאית ============================
++def main() -> int:
++    import optimizer_backtest as ob
++    sep = "=" * 76
++    print(sep)
++    print("cost_market — מודל המחיר של השוק (ADR 0001)")
++    print(sep)
++    feat, anch, pos, ps = ob.load_all()
++    for train_max, test in [(2023, 2024), (2024, 2025)]:
++        print(f"\n--- עונת מבחן {test} (אימון <= {train_max}) ---")
++        cm, smear = build(anch, feat, ps, test, train_max)
++        d, _ = sample(anch, feat, ps,
++                      test if SALARY_MAX_SEASON == "test" else train_max)
++        print("  שורות למועדון: " + " · ".join(
++            f"{k}:{v}" for k, v in sorted(cm.meta["clubs"].items())))
++        X = sm.add_constant(d[ro.COST_FEATURES].astype(float),
++                            has_constant="add")
++        pred = np.exp(cm.predict(X)) * smear
++        print(f"  מחיר חזוי במדגם (M€): חציון {np.median(pred):.2f} · "
++              f"טווח {pred.min():.2f}-{pred.max():.2f}")
++        print(f"  שכר בפועל     (M€): חציון {d.salary.median()/1e6:.2f} · "
++              f"טווח {d.salary.min()/1e6:.2f}-{d.salary.max()/1e6:.2f}")
++    print(sep)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/src/curse_selection.py b/src/curse_selection.py
+new file mode 100644
+index 0000000..4aef52d
+--- /dev/null
++++ b/src/curse_selection.py
+@@ -0,0 +1,153 @@
++"""curse_selection.py — הטיית הבחירה על 38 עונות-מועדון, בשני מפרטי
++מודל העלות. שלב 1 של תוכנית יום 15.
++
++--------------------------------------------------------------------
++השאלה
++--------------------------------------------------------------------
++`curse_decomp` (יום 7) מדד את זה על **שני** תרחישים. הקפיצה של
++adv_cap מ-6.5% ל-17.2% אחרי הריפיט מחייבת מדידה על כל המדגם,
++ובשני המפרטים, אחרת אין למה להשוות.
++
++    הטיית_בחירה = ממוצע(ppm_חזוי − ppm_נצפה) על הנבחרים
++                − ממוצע(ppm_חזוי − ppm_נצפה) על כל המאגר
++
++מדווח כאחוז מ-ppm הממוצע במאגר. אפס = המודל לא מדויק אבל אינו
++מוטה בבחירה. חיובי = הוא טועה כלפי מעלה **דווקא** על מי שנבחר.
++
++--------------------------------------------------------------------
++⚠️ מה זה לא מודד
++--------------------------------------------------------------------
++המדד הזה בודק ערוץ אחד: תפוקה שהוערכה ביתר. הוא **אינו** בודק
++את הערוץ השני — שגיאת תמחור לפי סוג שחקן. adv נמדד על ppm_נצפה
++בשני הצדדים, ולכן קללת המנצח מקטינה אותו ולא מנפחת אותו; מה
++שיכול לנפח אותו הוא מחיר כוכבים נמוך מדי, שנותן למנוע ארביטראז'
++שמועדון אמיתי לא יכול לממש. זה נמדד בנפרד.
++
++--------------------------------------------------------------------
++פרמטרים מוצהרים
++--------------------------------------------------------------------
++ממוצע לא משוקלל על הנבחרים (משוקלל-דקות מדווח לצידו).
++המאגר = כל שורה עם ppm_נצפה מוגדר, כלומר מי ששיחק דקה אחת לפחות.
++
++חיזויים שננעלו לפני ההרצה:
++    הטיית בחירה, ישן    קלוד 10-15%   אלמוג 12-16%
++    הטיית בחירה, חדש    קלוד 17-24%   אלמוג 20-25%
++    יחס חדש/ישן         קלוד 1.4-1.9  אלמוג 1.25-2.08
++    נתח הקפיצה שמוסבר   קלוד < 50%    אלמוג >= 40%
++
++הרצה:
++    COST_SPEC=club_relative python src/curse_selection.py
++    COST_SPEC=market        python src/curse_selection.py
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++SRC = Path(__file__).resolve().parent
++if str(SRC) not in sys.path:
++    sys.path.insert(0, str(SRC))
++
++import optimizer_backtest as ob  # noqa: E402
++from paths import PROCESSED_DIR  # noqa: E402
++from league_backtest import build_pool, club_side, REPL, SEASONS  # noqa: E402
++from optimise_consistent import optimise_v2  # noqa: E402
++from usage_constrained import optimise_capped, attach_usage  # noqa: E402
++from roster_membership_audit import score_rows  # noqa: E402
++from final_day7 import MIN_LEGAL_ROSTER  # noqa: E402
++
++SEP = "=" * 80
++USAGE_PATH = PROCESSED_DIR / "usage_curve_results_min0.csv"
++
++
++def h(t):
++    print("\n" + SEP + f"\n{t}\n" + SEP)
++
++
++def main() -> int:
++    print(SEP)
++    print(f"curse_selection — הטיית בחירה על 38 עונות-מועדון · מפרט "
++          f"{ob.COST_SPEC}")
++    print(SEP)
++
++    feat, anch, pos, ps = ob.load_all()
++    posmap = pos.set_index(pos.player_code.astype(str)).position
++    split = pd.read_csv(PROCESSED_DIR / "player_club_season.csv",
++                        dtype={"player_code": str})
++
++    rows = []
++    for train_max, test in SEASONS:
++        cand, _ = build_pool(test, train_max, feat, anch, pos, ps)
++        cand = cand.reset_index(drop=True)
++        cand = attach_usage(cand, USAGE_PATH, test)
++        gmax = float(ps[ps.season == test].games.max())
++
++        ok = cand.ppm_true.notna() & np.isfinite(cand.ppm_true)
++        pool = cand[ok]
++        pool_err = float((pool.ppm - pool.ppm_true).mean())
++        pool_ppm = float(pool.ppm_true.mean())
++
++        for club in sorted(split[split.season == test].club.unique()):
++            keep, _ = club_side(cand, split, club, test, gmax, posmap)
++            if len(keep) < MIN_LEGAL_ROSTER:
++                continue
++            B = float(keep.cost.sum())
++            q_club = float(score_rows(keep, "ppm_true", "avail_true", REPL)[0])
++
++            out = dict(season=test, club=club, budget=B, q_club=q_club,
++                       pool_err=pool_err, pool_ppm=pool_ppm)
++            for tag, fn in [("free", optimise_v2), ("cap", optimise_capped)]:
++                sel, mins = fn(cand, B, MIN_LEGAL_ROSTER)
++                if sel is None:
++                    out[f"sel_err_{tag}"] = np.nan
++                    continue
++                r = cand[sel]
++                r = r[r.ppm_true.notna() & np.isfinite(r.ppm_true)]
++                m = np.asarray(mins)[np.asarray(sel)][
++                    (cand[sel].ppm_true.notna()
++                     & np.isfinite(cand[sel].ppm_true)).values]
++                err = (r.ppm - r.ppm_true)
++                out[f"sel_err_{tag}"] = float(err.mean())
++                out[f"sel_err_w_{tag}"] = (float(np.average(err, weights=m))
++                                           if m.sum() > 0 else np.nan)
++                out[f"q_true_{tag}"] = float(
++                    score_rows(r, "ppm_true", "avail_true", REPL)[0])
++                out[f"q_pred_{tag}"] = float(
++                    score_rows(r, "ppm", "avail_true", REPL)[0])
++            rows.append(out)
++            print(f"  {test} {club:<5} B={B:>6.2f}", end="\r")
++
++    d = pd.DataFrame(rows)
++    for tag in ("free", "cap"):
++        d[f"bias_{tag}"] = (d[f"sel_err_{tag}"] - d.pool_err) / d.pool_ppm
++        d[f"bias_w_{tag}"] = (d[f"sel_err_w_{tag}"] - d.pool_err) / d.pool_ppm
++        d[f"adv_{tag}"] = d[f"q_true_{tag}"] / d.q_club - 1
++        d[f"adv_ideal_{tag}"] = d[f"q_pred_{tag}"] / d.q_club - 1
++        d[f"curse_pp_{tag}"] = d[f"adv_ideal_{tag}"] - d[f"adv_{tag}"]
++
++    h(f"התוצאה — מפרט {ob.COST_SPEC} · n={len(d)}")
++    print(f"  {'':<26}{'חופשי':>12}{'מאולץ':>12}")
++    for lbl, k in [("הטיית בחירה (חציון)", "bias"),
++                   ("הטיית בחירה משוקללת", "bias_w"),
++                   ("יתרון נמדד", "adv"),
++                   ("יתרון לו התחזית התממשה", "adv_ideal"),
++                   ("עלות הקללה (נק' אחוז)", "curse_pp")]:
++        print(f"  {lbl:<26}{d[f'{k}_free'].median():>11.1%}"
++              f"{d[f'{k}_cap'].median():>12.1%}")
++    print(f"\n  שגיאת ppm במאגר: " + " · ".join(
++        f"{int(s)}: {g.pool_err.iloc[0]:+.4f} מתוך ppm {g.pool_ppm.iloc[0]:.4f}"
++        for s, g in d.groupby("season")))
++
++    out = PROCESSED_DIR / f"curse_selection_{ob.COST_SPEC}.csv"
++    d.to_csv(out, index=False)
++    print(f"\n  נשמר: {out.name}")
++    print(SEP)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/src/display_money_check.py b/src/display_money_check.py
+new file mode 100644
+index 0000000..e71323b
+--- /dev/null
++++ b/src/display_money_check.py
+@@ -0,0 +1,172 @@
++"""display_money_check.py — שלב 5 של docs/refit-run-spec.md.
++
++--------------------------------------------------------------------
++למה הקובץ הזה קיים
++--------------------------------------------------------------------
++CONTEXT.md מצטט "MAE €1.35M, Spearman 0.571 על 11 שחקנים" — **בלי
++קובץ מייצר ובלי קובץ תוצאות**. לפי הכלל של הפרויקט זו היפותזה,
++לא ממצא, ואי אפשר להשוות אליה תוצאה חדשה. כאן שני הצדדים נמדדים
++באותו קוד.
++
++מה נבדק: הסכום ש**מוצג למשתמש** ליד שם שחקן, מול שכר אמיתי.
++הנוסחה מועתקת מ-RosterBuilder.jsx:
++
++    מוצג_i = ( a · (cost_i · 12) + b ) / 12 = a · cost_i + b/12
++
++כלומר `fit_eur`, שנאמד ברמת **מועדון**, מוחל על שחקן בודד. זה
++מחוץ לתחום התוקף של הכיול, וזו בדיוק הטענה שנבדקת.
++
++⚠️ הטיית המדגם, מועתקת מהספק: השחקנים המוצגים הם מי שה-LP בחר,
++   ולכן מוטים לכיוון מי שהמודל מתמחר **בחסר**. תקף לשיפוט
++   התצוגה; **לא** תקף לאמידת שיפוע השוק.
++
++נקודת התקציב מוצהרת: תקציב המועדון החציוני של אותה עונה, כלומר
++אותו סל אמיתי בשני המפרטים — נקודת רשת נומינלית זהה הייתה משווה
++סלים שונים, כי הציר עצמו זז.
++
++הרצה:
++    python src/display_money_check.py data/dashboard/roster_sweep.json
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++from scipy import stats as st
++
++SRC = Path(__file__).resolve().parent
++if str(SRC) not in sys.path:
++    sys.path.insert(0, str(SRC))
++
++from paths import PROCESSED_DIR  # noqa: E402
++import salary_market as smk  # noqa: E402
++
++SEASON = 2025
++ROSTER_SLOTS = 12          # המכפיל בממשק
++SEP = "=" * 74
++
++
++def real_salaries() -> pd.DataFrame:
++    """כל שכר 2025 אמיתי, משני המקורות. עוגן גובר על חיצוני."""
++    a = pd.read_csv(PROCESSED_DIR / "salary_anchors.csv",
++                    dtype={"player_code": str})
++    a["salary"] = pd.to_numeric(a.salary_mid, errors="coerce")
++    a = a[(a.season == SEASON) & a.player_code.notna() & a.salary.notna()]
++    rows = [pd.DataFrame({"code": a.player_code.astype(str),
++                          "real": a.salary / 1e6, "src": "anchor"})]
++
++    ps = pd.read_csv(PROCESSED_DIR / "player_season.csv",
++                     dtype={"player_code": str})
++    s = pd.read_csv(PROCESSED_DIR / "salary_external_2025.csv")
++    s = s[s.yr == SEASON].copy()
++    s["key"] = s.player.astype(str).str.split("/").str[0].map(smk.norm)
++    p = ps.dropna(subset=["player_name"]).copy()
++    p["key"] = (p.player_name.str.split(",").str[1].fillna("")
++                + p.player_name.str.split(",").str[0]).map(smk.norm)
++    kmap = p.drop_duplicates("key").set_index("key").player_code.astype(str)
++    s["code"] = s.key.map(kmap)
++    s.loc[s.code.isna(), "code"] = s.loc[s.code.isna(), "key"].map(smk.ALIAS)
++    s = s[s.code.notna()]
++    rows.append(pd.DataFrame({"code": s.code.astype(str),
++                              "real": pd.to_numeric(s.salary,
++                                                    errors="coerce") / 1e6,
++                              "src": "external"}))
++    d = pd.concat(rows, ignore_index=True)
++    return (d[d.real.notna()].sort_values("src")
++            .drop_duplicates("code", keep="first").set_index("code"))
++
++
++def check(path: Path) -> dict:
++    D = json.load(open(path, encoding="utf-8"))
++    eur = D["meta"]["eur"]
++    a, b = float(eur["a"]), float(eur["b"])
++    budgets = sorted(c["budget"] for c in D["clubs"])
++    n = len(budgets)
++    med = (budgets[n // 2 - 1] + budgets[n // 2]) / 2 if n % 2 == 0 \
++        else budgets[n // 2]
++    pt = min(D["free"], key=lambda p: abs(p["budget"] - med))
++
++    real = real_salaries()
++
++    def rows_for(rosters):
++        seen, rows = set(), []
++        for rr in rosters:
++            for r in rr:
++                if r["code"] in seen or r["code"] not in real.index:
++                    continue
++                seen.add(r["code"])
++                rows.append(dict(code=r["code"], name=r["name"],
++                                 cost=r["cost"],
++                                 shown=a * r["cost"] + b / ROSTER_SLOTS,
++                                 real=float(real.loc[r["code"], "real"]),
++                                 src=real.loc[r["code"], "src"]))
++        return pd.DataFrame(rows)
++
++    # ⚠️ המדגם הראשי הוא **כל** שחקן שהסליידר מציג אי-פעם, ולא
++    #    סגל אחד: סגל בודד נותן 4-5 הצלבות, ו-Spearman על n=4 אינו
++    #    מספר. נקודת החציון נשמרת כתת-מדגם לתיעוד.
++    d = rows_for([p["roster"] for p in D["free"]])
++    d_med = rows_for([pt["roster"]])
++    for t in (d, d_med):
++        t["err"] = t.shown - t.real
++    rho, p_rho = st.spearmanr(d.shown, d.real)
++    rho_m, _ = st.spearmanr(d_med.shown, d_med.real) if len(d_med) > 2 \
++        else (np.nan, np.nan)
++    return dict(path=path.name, saturation=D["meta"]["saturation"],
++                regime=D["meta"].get("saturation_regime", "—"),
++                eur_a=a, eur_b=b, eur_mae=eur["mae"],
++                budget=pt["budget"], median_club_budget=round(med, 2),
++                n_roster=pt["n"], n_matched=len(d),
++                mae=round(float(d.err.abs().mean()), 3),
++                bias=round(float(d.err.median()), 3),
++                rho=round(float(rho), 3), p=round(float(p_rho), 4),
++                n_med=len(d_med), mae_med=round(float(d_med.err.abs().mean()), 3),
++                rho_med=round(float(rho_m), 3),
++                n_negative=int((d.shown < 0).sum()),
++                table=d)
++
++
++def main() -> int:
++    paths = [Path(p) for p in sys.argv[1:]] or \
++        [PROCESSED_DIR.parent / "dashboard" / "roster_sweep.json"]
++    print(SEP)
++    print("display_money_check — הכסף שמוצג ליד שחקן מול שכר אמיתי")
++    print(SEP)
++    out = []
++    for p in paths:
++        r = check(p)
++        print(f"\n--- {r['path']}")
++        print(f"  תקציב מועדון חציוני {r['median_club_budget']} -> "
++              f"נקודת רשת {r['budget']} · סגל {r['n_roster']}")
++        print(f"  מדגם: {r['n_matched']} שחקנים מוצגים עם שכר ידוע "
++              f"(בנקודת החציון בלבד: {r['n_med']})")
++        print(f"  fit_eur: a={r['eur_a']:.4f} b={r['eur_b']:+.4f} "
++              f"(MAE מועדון {r['eur_mae']}M€)")
++        t = r.pop("table")
++        print(f"  {'שחקן':<26}{'עלות':>7}{'מוצג':>8}{'אמת':>8}{'שגיאה':>9}")
++        for x in t.sort_values("real", ascending=False).head(12).itertuples():
++            print(f"  {str(x.name)[:25]:<26}{x.cost:>7.2f}{x.shown:>8.2f}"
++                  f"{x.real:>8.2f}{x.err:>+9.2f}")
++        print(f"  MAE {r['mae']}M€ · הטיה חציונית {r['bias']:+.2f}M€ · "
++              f"Spearman {r['rho']:+.3f} (p={r['p']})")
++        print(f"  בנקודת החציון בלבד: n={r['n_med']} · MAE {r['mae_med']} · "
++              f"ρ={r['rho_med']}")
++        if r["n_negative"]:
++            print(f"  🔴 {r['n_negative']} שחקנים מוצגים בסכום **שלילי** — "
++                  f"התצוגה שבורה, לא רק לא מדויקת.")
++        out.append(r)
++
++    res = pd.DataFrame(out)
++    dst = PROCESSED_DIR / "display_money_check.csv"
++    res.to_csv(dst, index=False)
++    print(f"\n  נשמר: {dst.name}")
++    print(SEP)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/src/export_dashboard.py b/src/export_dashboard.py
+index 19cffb8..42e4ca8 100644
+--- a/src/export_dashboard.py
++++ b/src/export_dashboard.py
+@@ -75,13 +75,29 @@ SEP = "=" * 76
+ # ============ ערכים מוקפאים — כל שינוי כאן דורש נימוק בקומיט ============
+ # ⚠️ כל מפתח כאן **חייב** לעבור ב-check(). בקרת הכיסוי בסעיף 6
+ #    עוצרת אם מפתח לא נבדק. אל תוסיף ערך בלי קריאת check מתאימה.
++# 🔴 יום 15 — עודכן אחרי הריפיט של ADR 0001. הישן והחדש זה לצד
++#    זה נשמרים ב-data/processed/refit_day15_diff.csv ומתועדים
++#    ב-docs/refit-day15-diff.md. **הערכים הישנים נשארים כאן
++#    בהערה בכוונה**: הקפאה שמתעדכנת בלי עקבות אינה הקפאה.
++#
++#      מפתח                     לפני     אחרי
++#      headline_capped_wins      2.03     5.10
++#      headline_free_wins        5.17     4.90
++#      gap_random_club_wins     -1.65    -1.72
++#      gap_free_random_wins      6.84     6.61
++#      n_club_seasons            38.0     38.0
++#      wasted_budget_share      0.269    0.308
++#
++#    ⚠️ ארבעת הראשונים נגזרים מ-usage_constrained_results.csv,
++#       שתלוי ב-usage_curve_results_min0.csv — קובץ שאינו ברפו.
++#       ראו docs/refit-day15-diff.md, סעיף "מה לא אומת".
+ FROZEN = {
+-    "headline_capped_wins":  2.03,
+-    "headline_free_wins":    5.17,
+-    "gap_random_club_wins": -1.65,
+-    "gap_free_random_wins":  6.84,
++    "headline_capped_wins":  5.10,
++    "headline_free_wins":    4.90,
++    "gap_random_club_wins": -1.72,
++    "gap_free_random_wins":  6.61,
+     "n_club_seasons":       38.0,
+-    "wasted_budget_share":   0.269,
++    "wasted_budget_share":   0.308,
+ }
+ 
+ CHECKED = set()          # נרשם ע"י check(), נאכף בסעיף 6
+@@ -287,9 +303,13 @@ def main() -> int:
+          "p": "בפועל מועדון בספרד משלם אחרת ממועדון בישראל — מיסים, "
+               "שחקנים מקומיים, שחקני נוער שגדלו במועדון. המנוע מתעלם מזה בכוונה, "
+               "כי השאלה היא 'מה אפשר לקנות בכסף' ולא 'כמה זה עולה "
+-              "לכם'. המחיר: הפרשים בין מועדונים מכווצים פי 3.3.",
+-         "x": "log(שכר/ממוצע_המועדון) כפול salary_mean יחיד — מודל "
+-              "מחיר תוך-מועדוני המשמש כבין-מועדוני. נבדק ולא תוקן."},
++              "לכם'. עקומת המחיר נלמדת עכשיו מ-13 מועדונים במקום "
++              "מאחד, אבל **הרמה** עדיין אחת לכל הליגה.",
++         "x": "יום 15: המפרט הוחלף ל-log(שכר) = α_מועדון + β·x "
++              "(ADR 0001). β₁ ירד מ-0.2317 ל-0.1727. הרמה עדיין "
++              "משותפת: קריאת הציר כיורו נכשלה במבחן קבלה מוצהר "
++              "(refit_acceptance, MAE 8.57M€), ולכן הציר נשאר "
++              "ביחידות מנורמלות."},
+ 
+         {"t": "הסכומים ביורו הם הערכה, לא מדידה",
+          "p": "המרנו יחידות פנימיות ליורו כדי שהמספרים יהיו קריאים. "
+@@ -297,7 +317,7 @@ def main() -> int:
+               "11 מיליון זו מזו, ולכן כל סכום מוצג עם ±.",
+          "x": "ההמרה הרשמית הוקפאה. ציר התקציב ביחידות מנורמלות; "
+               "התצוגה ביורו נאמדת ב-roster_sweep.fit_eur על 20 "
+-              "מועדונים (r=0.87, MAE 2.15M€)."},
++              "מועדונים (r=0.87, MAE 2.21M€ אחרי הריפיט של יום 15)."},
+     ]
+ 
+     # ---------------------------------------------------------- כתיבה
+diff --git a/src/league_backtest.py b/src/league_backtest.py
+index f7555e8..c35599f 100644
+--- a/src/league_backtest.py
++++ b/src/league_backtest.py
+@@ -91,7 +91,7 @@ def h(t):
+ 
+ 
+ def build_pool(test, train_max, feat, anch, pos, ps, with_newcomers=True,
+-               normalise_cost=False):
++               normalise_cost=None):
+     """מאגר המועמדים לעונת test, מתומחר בסקלה 1.0 (מחירים יחסיים).
+ 
+     כל המודלים מאומנים על עונות <= train_max. אין הצצה ל-test.
+@@ -151,6 +151,27 @@ def build_pool(test, train_max, feat, anch, pos, ps, with_newcomers=True,
+     # LP זהה. לכן היחידה החדשה היא "כמה שחקנים ממוצעים אפשר
+     # לקנות" — בעלת משמעות פיזית ובת השוואה בין עונות.
+     # ------------------------------------------------------------------
++    # ------------------------------------------------------------------
++    # 🔴 יום 15 — הנרמול הופך לברירת מחדל תחת המפרט החדש
++    #
++    # `cost_market` מתמחר ב-α הממוצע, וזו **רמת מחירים ביורו**.
++    # מבחן הקבלה (refit_acceptance) בדק אם מותר לרשום יורו על הציר
++    # ונכשל בשלושת הסף: קריאת הציר כיורו נותנת MAE 8.57M€ מול
++    # התקציבים בפועל, כי המודל מתמחר כל מועדון במחיר ליגה ממוצע
++    # ולכן מכווץ את הפיזור **בין** מועדונים — בדיוק מה ש-ADR 0001
++    # לא התיימר לתקן.
++    #
++    # ⇒ הרמה נזרקת, הצורה נשמרת. המחלק הוא ממוצע המאגר של אותה
++    #   עונה, כך שיחידת הציר היא "שחקן מאגר ממוצע" — פיזית,
++    #   בת-השוואה בין עונות, ולא תלוית מועדון. זה בדיוק הנימוק
++    #   שנרשם כאן ביום 11; שם הוא הושאר כבוי כדי לא להזיז מספרים
++    #   קיימים, וכאן המספרים זזים ממילא.
++    #
++    # המפרט הישן נשאר בלי נרמול, אחרת שחזור מספרי יום 14 נשבר.
++    # ------------------------------------------------------------------
++    if normalise_cost is None:
++        normalise_cost = (ob.COST_SPEC == "market")
++    info["normalised"] = bool(normalise_cost)
+     info["cost_mean_raw"] = float(cand.cost.mean())
+     if normalise_cost:
+         cand["cost"] = cand.cost / info["cost_mean_raw"]
+diff --git a/src/null_to_wins.py b/src/null_to_wins.py
+index 1c47a68..4b44c00 100644
+--- a/src/null_to_wins.py
++++ b/src/null_to_wins.py
+@@ -55,7 +55,13 @@ PRED = {
+     "3. corr(שארית q, rand_win)":  ("",          "< −0.60"),
+     "4. בקרה: מאולץ − מועדון":     ("+2.03",     "+2.03"),
+ }
+-BASE_HEADLINE = 2.03
++# 🔴 יום 15 — עוגן השחזור עודכן אחרי הריפיט של ADR 0001.
++# לפני:  2.03  (מודל מחיר יחסי-מועדון, β₁=0.2317)
++# אחרי:  5.10  (מודל שוק, β₁=0.1727)
++# הערך אינו הצהרה על נכונות — הוא בקרת שחזור. עדכונו בלי לרשום
++# את הישן לצידו היה מוחק את העדות לכך שהמספר זז, וזו בדיוק
++# הסיבה שהבקרה קיימת.
++BASE_HEADLINE = 5.10
+ N_BOOT = 4000
+ SEED = 13
+ # ====================================================================
+diff --git a/src/optimizer_backtest.py b/src/optimizer_backtest.py
+index 31a6d2b..85ee1c8 100644
+--- a/src/optimizer_backtest.py
++++ b/src/optimizer_backtest.py
+@@ -42,6 +42,7 @@ optimizer_backtest.py  (Day 6)
+ 
+ import io
+ import contextlib
++import os
+ import sys
+ from pathlib import Path
+ 
+@@ -58,6 +59,18 @@ TEST = 2024
+ TARGET_CLUB = "TEL"
+ SEP = "=" * 74
+ 
++# 🔴 יום 15 — מפרט מודל העלות. ADR 0001, שלב 2 של refit-run-spec.
++#
++#   "market"          log(שכר) = α_מועדון + γ_עונה + β·x, מחיר
++#                     המאגר ב-α הממוצע. **המפרט הפעיל.**
++#   "club_relative"   log(שכר/ממוצע_הסגל) על usage='calibrate',
++#                     שהוא מכבי בלבד. המפרט שקדם ליום 15.
++#
++# הישן נשאר **רק** כדי לשחזר מספרים שלפני הריפיט לצורך ההשוואה
++# זה-לצד-זה. אינו נתיב מוצר. משתנה סביבה COST_SPEC דורס, כדי
++# שאפשר יהיה להריץ את שתי הגרסאות בלי לערוך קוד בין ההרצות.
++COST_SPEC = os.environ.get("COST_SPEC", "market")
++
+ 
+ def h(t):
+     print("\n" + SEP + f"\n{t}\n" + SEP)
+@@ -75,19 +88,32 @@ def fit_models(ps, feat, anch):
+     ⚠️ המפרטים חייבים להיות זהים לאלה של roster_optimizer, אחרת
+     הבקטסט בודק מודל אחר מזה שרץ. נבדק מפורשות למטה.
+     """
++    # agg נדרש להחזרה גם במפרט החדש: קוראים אחרים נשענים עליו
++    # (scale_for, נתיבי דמו). הוא אינו נכנס לתמחור במפרט "market".
+     cal_all = anch[(anch.usage == "calibrate") & (anch.season <= TRAIN_MAX)]
+     agg = cal_all.groupby(["club", "season"]).salary_mid.agg(["sum", "size"])
+     agg.columns = ["payroll", "n"]
+     agg["mean_salary"] = agg.payroll / agg.n
+-    cal = cal_all[cal_all.player_code.notna()].merge(
+-        agg, left_on=["club", "season"], right_index=True)
+-    cal["log_rel"] = np.log(cal.salary_mid / cal.mean_salary)
+-    dc = cal.merge(feat, on=["player_code", "season"], how="inner",
+-                   suffixes=("", "_f")).dropna(
+-        subset=ro.COST_FEATURES + ["log_rel"])
+-    cm = sm.OLS(dc.log_rel,
+-                sm.add_constant(dc[ro.COST_FEATURES].astype(float))).fit()
+-    smear = float(np.mean(np.exp(cm.resid)))
++
++    if COST_SPEC == "market":
++        import cost_market
++        cm, smear = cost_market.build(anch, feat, ps, test=TEST,
++                                      train_max=TRAIN_MAX, verbose=True)
++    elif COST_SPEC == "club_relative":
++        cal = cal_all[cal_all.player_code.notna()].merge(
++            agg, left_on=["club", "season"], right_index=True)
++        cal["log_rel"] = np.log(cal.salary_mid / cal.mean_salary)
++        dc = cal.merge(feat, on=["player_code", "season"], how="inner",
++                       suffixes=("", "_f")).dropna(
++            subset=ro.COST_FEATURES + ["log_rel"])
++        cm = sm.OLS(dc.log_rel,
++                    sm.add_constant(dc[ro.COST_FEATURES].astype(float))).fit()
++        smear = float(np.mean(np.exp(cm.resid)))
++        print(f"  עלות   : n={int(cm.nobs)} R2={cm.rsquared:.3f} "
++              f"(מפרט ישן, יחסי-מועדון)")
++    else:
++        raise SystemExit(f"COST_SPEC לא מוכר: {COST_SPEC!r}. "
++                         "'market' או 'club_relative'.")
+ 
+     gmax = ps.groupby("season").games.max().rename("gmax")
+     p2 = ps.merge(gmax, left_on="season", right_index=True)
+@@ -128,7 +154,6 @@ def fit_models(ps, feat, anch):
+         raise ValueError(
+             f"פיצ'רי זמינות חסרים בבקטסט: {missing}. "
+             "המנוע עודכן והקובץ הזה לא.")
+-    print(f"  עלות   : n={int(cm.nobs)} R2={cm.rsquared:.3f}")
+     print(f"  זמינות : n={int(am.nobs)}")
+     print(f"  תפוקה  : n={int(pm.nobs)} R2={pm.rsquared:.3f}")
+     return cm, smear, agg, am, pm, PF, lagged
+diff --git a/src/refit_acceptance.py b/src/refit_acceptance.py
+new file mode 100644
+index 0000000..3c1c8b1
+--- /dev/null
++++ b/src/refit_acceptance.py
+@@ -0,0 +1,264 @@
++"""refit_acceptance.py — מבחן הקבלה לציר היורו. יום 15.
++
++--------------------------------------------------------------------
++מה נשאל כאן
++--------------------------------------------------------------------
++ADR 0001 מתמחר את המאגר ב-α הממוצע. `cost_market` מפרש את זה
++כפשוטו: α הוא רמת מחירים ביורו, ולכן exp(α̅+βx) הוא מחיר ביורו
++והציר 8–40 נקרא כמיליוני יורו נטו.
++
++זו טענה **חיצונית** — היא נבדקת מול נתון שאינו במודל. אם היא
++נכשלת, אין לרשום יורו על הציר. הסף הוגדר לפני ההרצה:
++
++    1. fit_eur על מועדוני 2025:  a ∈ [0.85, 1.15] ו-|b| ≤ 2.0M€
++       (a≈1, b≈0 פירושו שהציר כבר ביורו ואינו זקוק למיפוי)
++
++    2. MAE של fit_eur ≤ 2.15M€
++       (הבסיס של המיפוי הישן. ציר גרוע ממנו אינו שיפור)
++
++    3. מבחן ברמת **שחקן**, על HTA · OLY · BAS בלבד:
++       Spearman ≥ 0.60 ו-MAE ≤ 1.35M€
++
++שלושת המועדונים בתנאי 3 הם המדגם החוץ-מדגמי היחיד שקיים: אף
++שורת שכר שלהם לא נכנסה לכיול (usage='test', ו-OLY בעוגנים
++'structure_only'). זה חזק יותר מבדיקת התצוגה שבשלב 5 של הספק,
++שרצה על 11 שחקנים ש**ה-LP בחר** — כלומר מוטים לכיוון מי שהמודל
++מתמחר בחסר.
++
++⚠️ הטיה מוצהרת בתנאי 3: המודל מתמחר ב-α ממוצע ובכוונה מתעלם
++   מהמועדון. HTA ו-OLY אינם מועדון ממוצע. שגיאת הרמה שלהם היא
++   בדיוק מה שאפקט קבוע היה סופג, ולכן MAE כאן הוא חסם עליון על
++   שגיאת התמחור — לא אומדן שלה. מדווח גם Spearman, שאינו רגיש
++   לרמה, וגם ההטיה החציונית לכל מועדון בנפרד.
++
++הרצה:
++    COST_SPEC=market python src/refit_acceptance.py
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++import statsmodels.api as sm
++
++SRC = Path(__file__).resolve().parent
++if str(SRC) not in sys.path:
++    sys.path.insert(0, str(SRC))
++
++import optimizer_backtest as ob  # noqa: E402
++import roster_optimizer as ro  # noqa: E402
++import cost_market  # noqa: E402
++from paths import PROCESSED_DIR  # noqa: E402
++from league_backtest import build_pool, club_side  # noqa: E402
++from final_day7 import MIN_LEGAL_ROSTER  # noqa: E402
++from club_codes import NAME2CODE  # noqa: E402
++import salary_market as smk  # noqa: E402
++
++SEASON, TRAIN_MAX = 2025, 2024
++OOS_CLUBS = ["HTA", "OLY", "BAS"]          # לא נגעו בכיול. שלב 1.
++
++# ---------------- סף שהוצהר לפני ההרצה ----------------
++T1_A = (0.85, 1.15)
++T1_B_ABS = 2.0
++T2_MAE = 2.15
++T3_SPEARMAN = 0.60
++T3_MAE = 1.35
++# ------------------------------------------------------
++
++SEP = "=" * 78
++
++
++def h(t: str) -> None:
++    print("\n" + SEP + f"\n{t}\n" + SEP)
++
++
++def oos_salaries(ps: pd.DataFrame) -> pd.DataFrame:
++    """כל תצפית שכר אמיתית של מועדוני המבחן בעונת SEASON."""
++    a = pd.read_csv(PROCESSED_DIR / "salary_anchors.csv",
++                    dtype={"player_code": str})
++    a["salary"] = pd.to_numeric(a.salary_mid, errors="coerce")
++    a = a[(a.season == SEASON) & a.player_code.notna() & a.salary.notna()
++          & a.club.isin(OOS_CLUBS)]
++    rows = [pd.DataFrame({"player_code": a.player_code.astype(str),
++                          "club": a.club, "salary": a.salary.astype(float),
++                          "src": "anchor"})]
++
++    s = pd.read_csv(PROCESSED_DIR / "salary_external_2025.csv")
++    s = s[(s.yr == SEASON)].copy()
++    s["club_code"] = s.club.map(smk.CLUBMAP)
++    s = s[s.club_code.isin(OOS_CLUBS)]
++    s["key"] = s.player.astype(str).str.split("/").str[0].map(smk.norm)
++    p = ps.dropna(subset=["player_name"]).copy()
++    p["key"] = (p.player_name.str.split(",").str[1].fillna("")
++                + p.player_name.str.split(",").str[0]).map(smk.norm)
++    p["pc"] = p.player_code.astype(str)
++    kmap = p.drop_duplicates("key").set_index("key").pc
++    s["player_code"] = s.key.map(kmap)
++    s.loc[s.player_code.isna(), "player_code"] = \
++        s.loc[s.player_code.isna(), "key"].map(smk.ALIAS)
++    s = s[s.player_code.notna()]
++    rows.append(pd.DataFrame({"player_code": s.player_code.astype(str),
++                              "club": s.club_code,
++                              "salary": pd.to_numeric(s.salary,
++                                                      errors="coerce"),
++                              "src": "external"}))
++
++    d = pd.concat(rows, ignore_index=True)
++    d = d[d.salary.notna() & (d.salary > 0)]
++    return (d.sort_values("src")                 # anchor גובר
++            .drop_duplicates("player_code", keep="first")
++            .reset_index(drop=True))
++
++
++def main() -> int:
++    print(SEP)
++    print(f"refit_acceptance — מבחן הקבלה לציר היורו · מפרט "
++          f"{ob.COST_SPEC}")
++    print(f"סף שהוצהר: a∈[{T1_A[0]},{T1_A[1]}] · |b|≤{T1_B_ABS} · "
++          f"MAE≤{T2_MAE} · ρ≥{T3_SPEARMAN} · MAE_שחקן≤{T3_MAE}")
++    print(SEP)
++
++    feat, anch, pos, ps = ob.load_all()
++    cand, info = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
++    cand = cand.reset_index(drop=True)
++    fit_meta = dict(cost_market.LAST_FIT) if cost_market.LAST_FIT else {}
++    if fit_meta:
++        h("מודל העלות שנאמד")
++        cost_market.report(_Shim(fit_meta))
++
++    h("0. המאגר ורמת המחירים")
++    print(f"  {len(cand)} שחקנים · מחיר {cand.cost.min():.2f}–"
++          f"{cand.cost.max():.2f} · חציון {cand.cost.median():.2f} · "
++          f"ממוצע {cand.cost.mean():.2f}")
++
++    # ------------------------------------------------ תקציבי המועדונים
++    split = pd.read_csv(PROCESSED_DIR / "player_club_season.csv",
++                        dtype={"player_code": str})
++    posmap = pos.set_index(pos.player_code.astype(str)).position
++    gmax = float(ps[ps.season == SEASON].games.max())
++    clubs = []
++    for club in sorted(split[split.season == SEASON].club.unique()):
++        keep, _ = club_side(cand, split, club, SEASON, gmax, posmap)
++        if len(keep) < MIN_LEGAL_ROSTER:
++            continue
++        clubs.append(dict(club=club, budget=float(keep.cost.sum()),
++                          n=len(keep)))
++    cb = pd.DataFrame(clubs)
++    print(f"\n  תקציבי {len(cb)} מועדונים: {cb.budget.min():.2f}–"
++          f"{cb.budget.max():.2f} · חציון {cb.budget.median():.2f}")
++    outside = cb[(cb.budget < 8.0) | (cb.budget > 40.0)]
++    print(f"  מחוץ לרשת 8–40: {len(outside)}"
++          + (f"  ({', '.join(outside.club)})" if len(outside) else ""))
++
++    # ------------------------------------------------ תנאי 1 + 2
++    h("1+2. fit_eur — הציר מול תקציבי היורו בפועל")
++    bud = pd.read_csv(PROCESSED_DIR / "club_budgets_gemini.csv")
++    bud["club"] = bud.club.map(NAME2CODE)
++    m = (cb[["club", "budget"]]
++         .merge(bud[bud.season == SEASON][["club", "net_eur"]], on="club")
++         .dropna())
++    x, y = m.budget.values.astype(float), m.net_eur.values.astype(float)
++    a, b = np.polyfit(x, y, 1)
++    pred = a * x + b
++    r = float(np.corrcoef(x, y)[0, 1])
++    mae = float(np.abs(y - pred).mean())
++    ident_mae = float(np.abs(y - x).mean())      # אם הציר כבר יורו
++    print(f"  net_eur = {a:.4f}·ציר {b:+.4f}   n={len(m)} · "
++          f"R²={r*r:.3f} · MAE={mae:.2f}M€")
++    print(f"  MAE אם קוראים את הציר כיורו ישירות (a=1,b=0): "
++          f"{ident_mae:.2f}M€")
++    m2 = m.assign(err=y - x).sort_values("err")
++    print(f"  הסטיות הגדולות: " + " · ".join(
++        f"{r_.club} {r_.budget:.1f}→{r_.net_eur:.1f} ({r_.err:+.1f})"
++        for _, r_ in pd.concat([m2.head(2), m2.tail(2)]).iterrows()))
++
++    t1 = (T1_A[0] <= a <= T1_A[1]) and abs(b) <= T1_B_ABS
++    t2 = mae <= T2_MAE
++    print(f"\n  תנאי 1  a={a:.3f} b={b:+.3f}   "
++          f"{'✅' if t1 else '❌'}")
++    print(f"  תנאי 2  MAE={mae:.2f}          {'✅' if t2 else '❌'}")
++
++    # ------------------------------------------------ תנאי 3
++    h("3. מבחן חוץ-מדגמי ברמת שחקן — HTA · OLY · BAS")
++    real = oos_salaries(ps)
++    F = feat[feat.season == SEASON].drop_duplicates("player_code").copy()
++    F["player_code"] = F.player_code.astype(str)
++    d = real.merge(F[["player_code"] + ro.COST_FEATURES], on="player_code",
++                   how="inner").dropna(subset=ro.COST_FEATURES)
++    # ⚠️ המבחן הזה שואל על **רמת המחירים ביורו**, ולכן הוא מכפיל
++    #    חזרה במחלק הנרמול. אחרת הוא ישווה יחידות מאגר למיליוני
++    #    יורו ו-MAE יהיה חסר משמעות (ρ אינו רגיש לכך).
++    scale = float(info.get("cost_scale", 1.0))
++    cmap = cand.set_index(cand.player_code.astype(str)).cost * scale
++    d["model_m"] = d.player_code.map(cmap)
++    n_nopool = int(d.model_m.isna().sum())
++    d = d[d.model_m.notna()].copy()
++    d["real_m"] = d.salary / 1e6
++    d["err"] = d.model_m - d.real_m
++
++    from scipy import stats as st
++    rho, p_rho = st.spearmanr(d.model_m, d.real_m)
++    mae_p = float(d.err.abs().mean())
++    print(f"  n={len(d)} שחקנים ({n_nopool} נפלו — לא במאגר) · "
++          f"מקורות: " + " · ".join(f"{k}:{v}" for k, v in
++                                   d.src.value_counts().items()))
++    print(f"  {'מועדון':<7}{'n':>4}{'מודל חציון':>13}{'אמת חציון':>12}"
++          f"{'הטיה חציונית':>15}{'MAE':>8}")
++    for club, g in d.groupby("club"):
++        print(f"  {club:<7}{len(g):>4}{g.model_m.median():>13.2f}"
++              f"{g.real_m.median():>12.2f}{g.err.median():>+15.2f}"
++              f"{g.err.abs().mean():>8.2f}")
++    print(f"\n  Spearman ρ = {rho:+.3f} (p={p_rho:.4f}) · MAE = {mae_p:.2f}M€ · "
++          f"הטיה חציונית {d.err.median():+.2f}M€")
++
++    t3 = (rho >= T3_SPEARMAN) and (mae_p <= T3_MAE)
++    print(f"  תנאי 3  ρ={rho:.3f} MAE={mae_p:.2f}   {'✅' if t3 else '❌'}")
++
++    # ------------------------------------------------ פסק
++    h("פסק")
++    for i, (nm, okk) in enumerate([("1 fit_eur a,b", t1),
++                                   ("2 fit_eur MAE", t2),
++                                   ("3 שחקן חוץ-מדגמי", t3)], 1):
++        print(f"  {nm:<22}{'✅ עבר' if okk else '❌ נכשל'}")
++    verdict = t1 and t2 and t3
++    print()
++    if verdict:
++        print("  ✅ שלושת הסף עברו. הציר נרשם ביורו.")
++    else:
++        print("  ❌ לפחות תנאי אחד נכשל. לפי מה שהוסכם מראש: המחירים")
++        print("     הפנימיים נשארים, הציר חוזר לחסר-יחידות (חלוקה")
++        print("     בממוצע המאגר), ו-fit_eur נשאר ממיר. הכישלון עצמו")
++        print("     ממצא: השוק מתומחר נכון בצורה ולא ברמה.")
++
++    out = PROCESSED_DIR / "refit_acceptance.csv"
++    pd.DataFrame([dict(
++        spec=ob.COST_SPEC, season=SEASON,
++        beta1=fit_meta.get("beta1"), n_fit=fit_meta.get("n"),
++        n_clubs_fit=fit_meta.get("n_clubs"),
++        pool_cost_mean=round(float(cand.cost.mean()), 4),
++        club_budget_median=round(float(cb.budget.median()), 3),
++        fit_eur_a=round(float(a), 4), fit_eur_b=round(float(b), 4),
++        fit_eur_r2=round(r * r, 3), fit_eur_mae=round(mae, 3),
++        identity_mae=round(ident_mae, 3),
++        player_n=len(d), player_rho=round(float(rho), 4),
++        player_mae=round(mae_p, 3),
++        player_bias_med=round(float(d.err.median()), 3),
++        t1=t1, t2=t2, t3=t3, verdict=verdict)]).to_csv(out, index=False)
++    d.to_csv(PROCESSED_DIR / "refit_player_check.csv", index=False)
++    print(f"\n  נשמר: {out.name} · refit_player_check.csv")
++    print(SEP)
++    return 0 if verdict else 2
++
++
++class _Shim:
++    """מאפשר ל-cost_market.report להדפיס meta שנשמר ב-LAST_FIT."""
++
++    def __init__(self, meta):
++        self.meta = meta
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/src/roster_sweep.py b/src/roster_sweep.py
+index 82f6aef..d447977 100644
+--- a/src/roster_sweep.py
++++ b/src/roster_sweep.py
+@@ -118,10 +118,21 @@ from roster_membership_audit import score_rows      # noqa: E402
+ from roster_optimizer import PROCESSED_DIR          # noqa: E402
+ from final_day7 import MIN_LEGAL_ROSTER             # noqa: E402
+ from club_codes import NAME2CODE                    # noqa: E402
++import cost_market                                 # noqa: E402
+ 
+ SEASON, TRAIN_MAX = 2025, 2024        # 25/26
+ B_LO, B_HI, B_STEP = 8.0, 40.0, 0.5
+-SATURATION = 25.0
++
++# 🔴 יום 15 — הרוויה נגזרת מהעקומה, לא מוצהרת מראש.
++#
++# 25.0 היה מספר שנמדד על עקומת המחירים הישנה. אחרי הריפיט של
++# ADR 0001 הוא אינו תקף, ו**קבוע מוקפא שנשאר אחרי שהמודל שמתחתיו
++# הוחלף הוא בדיוק "סעיף 8א"** — מספר ששרד כי איש לא בדק אותו מול
++# הקובץ המייצר. לכן הוא מחושב כאן מהעקומה עצמה, וההצהרה היחידה
++# שנשארת היא **הסף** שמגדיר "שטוח".
++SATURATION_PREV = 25.0        # לתיעוד ההשוואה בלבד
++FLAT_EPS = 0.01               # q_LP נשמר בעיגול לשתי ספרות
++SPEND_EPS = 0.02              # הוצאה זהה = תקרת הוצאה, לא רעש
+ 
+ # ⚠️ שני יעדים. ROOT = PROCESSED_DIR.parent.parent (data/processed → הפרויקט)
+ ROOT = PROCESSED_DIR.parent.parent
+@@ -232,6 +243,51 @@ def fit_eur(clubs, season):
+                      "מנורמל יכולים לשלם סכומים שונים מאוד.")
+ 
+ 
++def derive_saturation(pts):
++    """מאיפה הכסף מפסיק לקנות, ו**מאיזה סוג** העצירה.
++
++    שני משטרים שונים לגמרי, שהמספר לבדו אינו מבחין ביניהם:
++
++      diminishing  המנוע ממשיך להוציא כמעט את כל התקציב, אבל מה
++                   שהוא קונה כבר לא משפר. תשואה פוחתת.
++      exhausted    ההוצאה עצמה נעצרת. המנוע מחזיק את הסגל הטוב
++                   ביותר שהמאגר מאפשר תחת אילוץ הדקות, וכסף נוסף
++                   **אינו ניתן להוצאה**. מיצוי.
++
++    ההבחנה אינה סמנטית: הניסוח בממשק ("המאגר אינו נגמר") נכון
++    באחד ושקרי בשני. ביום 14 תוקן הניסוח לכיוון הראשון על סמך
++    ניצול 99.1% — מדידה שהייתה נכונה לעקומת המחירים **ההיא**.
++
++    ⚠️ שתי נקודות שונות, ואיחודן היה הבאג בגרסה הראשונה כאן:
++    q מפסיק לעלות (רוויה) לפני שההוצאה מפסיקה לזוז (תקרה).
++    """
++    q_max = max(p["q"] for p in pts)
++    sat = next(p["budget"] for p in pts
++               if all(x["q"] >= q_max - FLAT_EPS
++                      for x in pts if x["budget"] >= p["budget"]))
++    above = [p for p in pts if p["budget"] >= sat]
++
++    ceil_b = None
++    for p in pts:
++        tail = [x["spent"] for x in pts if x["budget"] >= p["budget"]]
++        if len(tail) > 1 and (max(tail) - min(tail)) <= SPEND_EPS:
++            ceil_b = p["budget"]
++            break
++    frozen = [p for p in pts if ceil_b is not None and p["budget"] >= ceil_b]
++    return dict(
++        saturation=float(sat), q_max=round(q_max, 2),
++        n_flat=len(above), n_points=len(pts),
++        spend_ceiling=(None if ceil_b is None
++                       else round(float(frozen[0]["spent"]), 2)),
++        ceiling_budget=(None if ceil_b is None else float(ceil_b)),
++        n_frozen=len(frozen),
++        used_median=round(float(np.median([p["used_pct"] for p in above])), 4),
++        used_median_frozen=(None if not frozen else round(float(
++            np.median([p["used_pct"] for p in frozen])), 4)),
++        regime="exhausted" if ceil_b is not None else "diminishing",
++        prev_saturation=SATURATION_PREV)
++
++
+ def clean(o):
+     """מנקה NaN/inf רקורסיבית לפני הכתיבה. שכבת הגנה שנייה על fnum."""
+     if isinstance(o, dict):
+@@ -260,8 +316,18 @@ def main() -> int:
+             s["k"] = s.player_code.astype(str)
+             names.update(s.drop_duplicates("k").set_index("k")
+                          .player_name.to_dict())
+-    cand, _ = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
++    cand, pool_info = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
+     cand = cand.reset_index(drop=True)          # ⚠️ באג היישור, יום 12
++    # build_pool בולע את הפלט של fit_models, ולכן מודל העלות
++    # שמייצר את כל הציר לא היה מודפס בשום מקום. יום 15.
++    cost_meta = dict(cost_market.LAST_FIT) if cost_market.LAST_FIT else \
++        dict(spec=ob.COST_SPEC)
++    cost_meta["cost_scale"] = round(float(pool_info.get("cost_scale", 1.0)), 4)
++    cost_meta["normalised"] = bool(pool_info.get("normalised", False))
++    if cost_market.LAST_FIT:
++        cost_market.report(type("M", (), {"meta": cost_meta})())
++    print(f"  מחלק הנרמול: {cost_meta['cost_scale']} "
++          f"(יחידת הציר = שחקן מאגר ממוצע)")
+     print(f"\n  מאגר: {len(cand)} שחקנים · "
+           f"עלות {cand.cost.min():.2f}–{cand.cost.max():.2f} · "
+           f"שמות ידועים {sum(str(c) in names for c in cand.player_code)}/{len(cand)}")
+@@ -371,34 +437,62 @@ def main() -> int:
+     print("  ⚠️ זו אינה שגיאה — זו ההטיה שיום 8 מדד. היא מוצגת בממשק.")
+ 
+     h("סיכום")
+-    sat = [p for p in pts if p["budget"] >= SATURATION]
+-    used_sat = 0.0
+-    if sat:
+-        used_sat = float(np.median([p['used_pct'] for p in sat]))
+-        print(f"  מעל {SATURATION}: ניצול חציוני {used_sat:.1%} · "
+-              f"לא מנוצל חציוני "
+-              f"{np.median([p['unspent'] for p in sat]):.2f}")
+-        # ⚠️ הבקרה שהייתה חסרה: הטענה "המאגר אינו נגמר" נשענת על
+-        #    ניצול גבוה מעל הרוויה. אם הוא יצנח, המחרוזת בממשק
+-        #    הופכת שקרית — וזה בדיוק איך ש"סעיף 8א" שרד חמישה ימים.
+-        if used_sat < 0.95:
+-            print(f"  ❌ הניצול מעל הרוויה צנח ל-{used_sat:.1%}. "
+-                  f"saturation_note טוען 'המאגר אינו נגמר' — עוצרים.")
++    S = derive_saturation(pts)
++    sat = [p for p in pts if p["budget"] >= S["saturation"]]
++    n_sat = sorted({p["n"] for p in sat})
++    print(f"  רוויה נגזרת: {S['saturation']:.1f}  "
++          f"(לפני הריפיט: {S['prev_saturation']:.1f})")
++    print(f"  מעל הרוויה: {S['n_flat']}/{S['n_points']} נקודות · "
++          f"q_LP קפוא על {S['q_max']:.2f} · ניצול חציוני "
++          f"{S['used_median']:.1%} · תקרת הוצאה {S['spend_ceiling']:.2f}")
++    print(f"  גודל סגל מעל הרוויה: {n_sat}")
++
++    # ⚠️ הבקרה. הניסוח בממשק **חייב** להתאים למשטר שנמדד; זה מה
++    #    שנשבר כאן: הטקסט המוקפא נכתב למשטר diminishing ורץ על
++    #    נתונים שהם exhausted. כל משטר נבדק מול מה שמאפיין אותו.
++    if S["regime"] == "diminishing":
++        if S["used_median"] < 0.95:
++            print(f"  ❌ ניצול {S['used_median']:.1%} אינו תואם משטר "
++                  f"'תשואה פוחתת' — עוצרים.")
++            return 1
++        sat_note = ("מעל נקודה זו התשואה השולית אינה תורמת עוד. "
++                    f"הניצול נשאר {S['used_median']:.1%} והמנוע בוחר "
++                    f"{n_sat[0]} שחקנים, המאגר אינו נגמר, הכסף מפסיק "
++                    "לקנות שיפור. תשואה פוחתת, לא מיצוי.")
++        print("  ✅ משטר 'תשואה פוחתת' — הניצול תומך בניסוח.")
++    else:
++        frozen = [p for p in pts if p["budget"] >= S["ceiling_budget"]]
++        churn = sum(len(p["entered"]) + len(p["left"]) for p in frozen[1:])
++        if churn:
++            print(f"  ❌ 'מיצוי' מחייב סגל קפוא מעל תקרת ההוצאה, "
++                  f"ונמדדו {churn} חילופים — עוצרים.")
+             return 1
+-        n_sat = {p["n"] for p in sat}
+-        print(f"  ✅ ניצול {used_sat:.1%} · גודל סגל מעל הרוויה: "
+-              f"{sorted(n_sat)}")
++        sat_note = (f"מעל {S['ceiling_budget']:.1f} הכסף אינו ניתן "
++                    f"להוצאה. המנוע מחזיק {n_sat[0]} שחקנים — הטובים "
++                    f"במאגר תחת אילוץ הדקות — ומוציא "
++                    f"{S['spend_ceiling']:.1f} ולא יותר, בכל תקציב עד "
++                    f"{pts[-1]['budget']:.0f}. הניצול יורד ל-"
++                    f"{S['used_median_frozen']:.1%}. **מיצוי, לא תשואה "
++                    "פוחתת** — הפוך מהניסוח שקדם לריפיט של יום 15. "
++                    f"התשואה השולית מתאפסת כבר ב-{S['saturation']:.1f}.")
++        print(f"  ✅ משטר 'מיצוי' — תקרת הוצאה {S['spend_ceiling']:.2f} "
++              f"מ-{S['ceiling_budget']:.1f}, {S['n_frozen']} נקודות קפואות, "
++              f"אפס חילופים.")
++        print(f"  ⚠️ {S['n_flat']} מתוך {S['n_points']} נקודות הסליידר "
++              f"שטוחות. B_HI={B_HI} אינו מתאים עוד לציר הזה — "
++              f"החלטת מוצר, לא באג.")
+ 
+     D = dict(
+         meta=dict(season=SEASON, label=f"{SEASON}/{(SEASON + 1) % 100:02d}",
+                   units="יחידות מנורמלות",
+                   b_lo=B_LO, b_hi=B_HI, step=B_STEP,
+-                  saturation=SATURATION,
+-                  saturation_note="מעל נקודה זו התשואה השולית אינה תורמת עוד. "
+-                                  "הניצול נשאר 99.1% והמנוע בוחר 12 "
+-                                  "שחקנים, המאגר אינו נגמר, הכסף "
+-                                  "מפסיק לקנות שיפור. תשואה פוחתת, "
+-                                  "לא מיצוי.",
++                  saturation=S["saturation"],
++                  saturation_regime=S["regime"],
++                  saturation_detail=S,
++                  saturation_note=sat_note,
++                  # 🔴 פרובננס מודל העלות. הציר תלוי בו לחלוטין,
++                  #    ובלי זה אי אפשר לדעת מאיזו הרצה ה-JSON הזה.
++                  cost_model=cost_meta,
+                   shape_caveat="צורת העקומה לפני הרוויה אינה יציבה: "
+                                "ב-budget_curve (20.8) התשואה השולית "
+                                "שלילית בנקודות מפוזרות לאורך הטווח "

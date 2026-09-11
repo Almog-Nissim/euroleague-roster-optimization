@@ -42,6 +42,7 @@ optimizer_backtest.py  (Day 6)
 
 import io
 import contextlib
+import os
 import sys
 from pathlib import Path
 
@@ -57,6 +58,18 @@ TRAIN_MAX = 2023
 TEST = 2024
 TARGET_CLUB = "TEL"
 SEP = "=" * 74
+
+# 🔴 יום 15 — מפרט מודל העלות. ADR 0001, שלב 2 של refit-run-spec.
+#
+#   "market"          log(שכר) = α_מועדון + γ_עונה + β·x, מחיר
+#                     המאגר ב-α הממוצע. **המפרט הפעיל.**
+#   "club_relative"   log(שכר/ממוצע_הסגל) על usage='calibrate',
+#                     שהוא מכבי בלבד. המפרט שקדם ליום 15.
+#
+# הישן נשאר **רק** כדי לשחזר מספרים שלפני הריפיט לצורך ההשוואה
+# זה-לצד-זה. אינו נתיב מוצר. משתנה סביבה COST_SPEC דורס, כדי
+# שאפשר יהיה להריץ את שתי הגרסאות בלי לערוך קוד בין ההרצות.
+COST_SPEC = os.environ.get("COST_SPEC", "market")
 
 
 def h(t):
@@ -75,19 +88,32 @@ def fit_models(ps, feat, anch):
     ⚠️ המפרטים חייבים להיות זהים לאלה של roster_optimizer, אחרת
     הבקטסט בודק מודל אחר מזה שרץ. נבדק מפורשות למטה.
     """
+    # agg נדרש להחזרה גם במפרט החדש: קוראים אחרים נשענים עליו
+    # (scale_for, נתיבי דמו). הוא אינו נכנס לתמחור במפרט "market".
     cal_all = anch[(anch.usage == "calibrate") & (anch.season <= TRAIN_MAX)]
     agg = cal_all.groupby(["club", "season"]).salary_mid.agg(["sum", "size"])
     agg.columns = ["payroll", "n"]
     agg["mean_salary"] = agg.payroll / agg.n
-    cal = cal_all[cal_all.player_code.notna()].merge(
-        agg, left_on=["club", "season"], right_index=True)
-    cal["log_rel"] = np.log(cal.salary_mid / cal.mean_salary)
-    dc = cal.merge(feat, on=["player_code", "season"], how="inner",
-                   suffixes=("", "_f")).dropna(
-        subset=ro.COST_FEATURES + ["log_rel"])
-    cm = sm.OLS(dc.log_rel,
-                sm.add_constant(dc[ro.COST_FEATURES].astype(float))).fit()
-    smear = float(np.mean(np.exp(cm.resid)))
+
+    if COST_SPEC == "market":
+        import cost_market
+        cm, smear = cost_market.build(anch, feat, ps, test=TEST,
+                                      train_max=TRAIN_MAX, verbose=True)
+    elif COST_SPEC == "club_relative":
+        cal = cal_all[cal_all.player_code.notna()].merge(
+            agg, left_on=["club", "season"], right_index=True)
+        cal["log_rel"] = np.log(cal.salary_mid / cal.mean_salary)
+        dc = cal.merge(feat, on=["player_code", "season"], how="inner",
+                       suffixes=("", "_f")).dropna(
+            subset=ro.COST_FEATURES + ["log_rel"])
+        cm = sm.OLS(dc.log_rel,
+                    sm.add_constant(dc[ro.COST_FEATURES].astype(float))).fit()
+        smear = float(np.mean(np.exp(cm.resid)))
+        print(f"  עלות   : n={int(cm.nobs)} R2={cm.rsquared:.3f} "
+              f"(מפרט ישן, יחסי-מועדון)")
+    else:
+        raise SystemExit(f"COST_SPEC לא מוכר: {COST_SPEC!r}. "
+                         "'market' או 'club_relative'.")
 
     gmax = ps.groupby("season").games.max().rename("gmax")
     p2 = ps.merge(gmax, left_on="season", right_index=True)
@@ -128,7 +154,6 @@ def fit_models(ps, feat, anch):
         raise ValueError(
             f"פיצ'רי זמינות חסרים בבקטסט: {missing}. "
             "המנוע עודכן והקובץ הזה לא.")
-    print(f"  עלות   : n={int(cm.nobs)} R2={cm.rsquared:.3f}")
     print(f"  זמינות : n={int(am.nobs)}")
     print(f"  תפוקה  : n={int(pm.nobs)} R2={pm.rsquared:.3f}")
     return cm, smear, agg, am, pm, PF, lagged

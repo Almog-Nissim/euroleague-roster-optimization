@@ -118,21 +118,10 @@ from roster_membership_audit import score_rows      # noqa: E402
 from roster_optimizer import PROCESSED_DIR          # noqa: E402
 from final_day7 import MIN_LEGAL_ROSTER             # noqa: E402
 from club_codes import NAME2CODE                    # noqa: E402
-import cost_market                                 # noqa: E402
 
 SEASON, TRAIN_MAX = 2025, 2024        # 25/26
 B_LO, B_HI, B_STEP = 8.0, 40.0, 0.5
-
-# 🔴 יום 15 — הרוויה נגזרת מהעקומה, לא מוצהרת מראש.
-#
-# 25.0 היה מספר שנמדד על עקומת המחירים הישנה. אחרי הריפיט של
-# ADR 0001 הוא אינו תקף, ו**קבוע מוקפא שנשאר אחרי שהמודל שמתחתיו
-# הוחלף הוא בדיוק "סעיף 8א"** — מספר ששרד כי איש לא בדק אותו מול
-# הקובץ המייצר. לכן הוא מחושב כאן מהעקומה עצמה, וההצהרה היחידה
-# שנשארת היא **הסף** שמגדיר "שטוח".
-SATURATION_PREV = 25.0        # לתיעוד ההשוואה בלבד
-FLAT_EPS = 0.01               # q_LP נשמר בעיגול לשתי ספרות
-SPEND_EPS = 0.02              # הוצאה זהה = תקרת הוצאה, לא רעש
+SATURATION = 25.0
 
 # ⚠️ שני יעדים. ROOT = PROCESSED_DIR.parent.parent (data/processed → הפרויקט)
 ROOT = PROCESSED_DIR.parent.parent
@@ -243,51 +232,6 @@ def fit_eur(clubs, season):
                      "מנורמל יכולים לשלם סכומים שונים מאוד.")
 
 
-def derive_saturation(pts):
-    """מאיפה הכסף מפסיק לקנות, ו**מאיזה סוג** העצירה.
-
-    שני משטרים שונים לגמרי, שהמספר לבדו אינו מבחין ביניהם:
-
-      diminishing  המנוע ממשיך להוציא כמעט את כל התקציב, אבל מה
-                   שהוא קונה כבר לא משפר. תשואה פוחתת.
-      exhausted    ההוצאה עצמה נעצרת. המנוע מחזיק את הסגל הטוב
-                   ביותר שהמאגר מאפשר תחת אילוץ הדקות, וכסף נוסף
-                   **אינו ניתן להוצאה**. מיצוי.
-
-    ההבחנה אינה סמנטית: הניסוח בממשק ("המאגר אינו נגמר") נכון
-    באחד ושקרי בשני. ביום 14 תוקן הניסוח לכיוון הראשון על סמך
-    ניצול 99.1% — מדידה שהייתה נכונה לעקומת המחירים **ההיא**.
-
-    ⚠️ שתי נקודות שונות, ואיחודן היה הבאג בגרסה הראשונה כאן:
-    q מפסיק לעלות (רוויה) לפני שההוצאה מפסיקה לזוז (תקרה).
-    """
-    q_max = max(p["q"] for p in pts)
-    sat = next(p["budget"] for p in pts
-               if all(x["q"] >= q_max - FLAT_EPS
-                      for x in pts if x["budget"] >= p["budget"]))
-    above = [p for p in pts if p["budget"] >= sat]
-
-    ceil_b = None
-    for p in pts:
-        tail = [x["spent"] for x in pts if x["budget"] >= p["budget"]]
-        if len(tail) > 1 and (max(tail) - min(tail)) <= SPEND_EPS:
-            ceil_b = p["budget"]
-            break
-    frozen = [p for p in pts if ceil_b is not None and p["budget"] >= ceil_b]
-    return dict(
-        saturation=float(sat), q_max=round(q_max, 2),
-        n_flat=len(above), n_points=len(pts),
-        spend_ceiling=(None if ceil_b is None
-                       else round(float(frozen[0]["spent"]), 2)),
-        ceiling_budget=(None if ceil_b is None else float(ceil_b)),
-        n_frozen=len(frozen),
-        used_median=round(float(np.median([p["used_pct"] for p in above])), 4),
-        used_median_frozen=(None if not frozen else round(float(
-            np.median([p["used_pct"] for p in frozen])), 4)),
-        regime="exhausted" if ceil_b is not None else "diminishing",
-        prev_saturation=SATURATION_PREV)
-
-
 def clean(o):
     """מנקה NaN/inf רקורסיבית לפני הכתיבה. שכבת הגנה שנייה על fnum."""
     if isinstance(o, dict):
@@ -316,18 +260,8 @@ def main() -> int:
             s["k"] = s.player_code.astype(str)
             names.update(s.drop_duplicates("k").set_index("k")
                          .player_name.to_dict())
-    cand, pool_info = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
+    cand, _ = build_pool(SEASON, TRAIN_MAX, feat, anch, pos, ps)
     cand = cand.reset_index(drop=True)          # ⚠️ באג היישור, יום 12
-    # build_pool בולע את הפלט של fit_models, ולכן מודל העלות
-    # שמייצר את כל הציר לא היה מודפס בשום מקום. יום 15.
-    cost_meta = dict(cost_market.LAST_FIT) if cost_market.LAST_FIT else \
-        dict(spec=ob.COST_SPEC)
-    cost_meta["cost_scale"] = round(float(pool_info.get("cost_scale", 1.0)), 4)
-    cost_meta["normalised"] = bool(pool_info.get("normalised", False))
-    if cost_market.LAST_FIT:
-        cost_market.report(type("M", (), {"meta": cost_meta})())
-    print(f"  מחלק הנרמול: {cost_meta['cost_scale']} "
-          f"(יחידת הציר = שחקן מאגר ממוצע)")
     print(f"\n  מאגר: {len(cand)} שחקנים · "
           f"עלות {cand.cost.min():.2f}–{cand.cost.max():.2f} · "
           f"שמות ידועים {sum(str(c) in names for c in cand.player_code)}/{len(cand)}")
@@ -437,62 +371,34 @@ def main() -> int:
     print("  ⚠️ זו אינה שגיאה — זו ההטיה שיום 8 מדד. היא מוצגת בממשק.")
 
     h("סיכום")
-    S = derive_saturation(pts)
-    sat = [p for p in pts if p["budget"] >= S["saturation"]]
-    n_sat = sorted({p["n"] for p in sat})
-    print(f"  רוויה נגזרת: {S['saturation']:.1f}  "
-          f"(לפני הריפיט: {S['prev_saturation']:.1f})")
-    print(f"  מעל הרוויה: {S['n_flat']}/{S['n_points']} נקודות · "
-          f"q_LP קפוא על {S['q_max']:.2f} · ניצול חציוני "
-          f"{S['used_median']:.1%} · תקרת הוצאה {S['spend_ceiling']:.2f}")
-    print(f"  גודל סגל מעל הרוויה: {n_sat}")
-
-    # ⚠️ הבקרה. הניסוח בממשק **חייב** להתאים למשטר שנמדד; זה מה
-    #    שנשבר כאן: הטקסט המוקפא נכתב למשטר diminishing ורץ על
-    #    נתונים שהם exhausted. כל משטר נבדק מול מה שמאפיין אותו.
-    if S["regime"] == "diminishing":
-        if S["used_median"] < 0.95:
-            print(f"  ❌ ניצול {S['used_median']:.1%} אינו תואם משטר "
-                  f"'תשואה פוחתת' — עוצרים.")
+    sat = [p for p in pts if p["budget"] >= SATURATION]
+    used_sat = 0.0
+    if sat:
+        used_sat = float(np.median([p['used_pct'] for p in sat]))
+        print(f"  מעל {SATURATION}: ניצול חציוני {used_sat:.1%} · "
+              f"לא מנוצל חציוני "
+              f"{np.median([p['unspent'] for p in sat]):.2f}")
+        # ⚠️ הבקרה שהייתה חסרה: הטענה "המאגר אינו נגמר" נשענת על
+        #    ניצול גבוה מעל הרוויה. אם הוא יצנח, המחרוזת בממשק
+        #    הופכת שקרית — וזה בדיוק איך ש"סעיף 8א" שרד חמישה ימים.
+        if used_sat < 0.95:
+            print(f"  ❌ הניצול מעל הרוויה צנח ל-{used_sat:.1%}. "
+                  f"saturation_note טוען 'המאגר אינו נגמר' — עוצרים.")
             return 1
-        sat_note = ("מעל נקודה זו התשואה השולית אינה תורמת עוד. "
-                    f"הניצול נשאר {S['used_median']:.1%} והמנוע בוחר "
-                    f"{n_sat[0]} שחקנים, המאגר אינו נגמר, הכסף מפסיק "
-                    "לקנות שיפור. תשואה פוחתת, לא מיצוי.")
-        print("  ✅ משטר 'תשואה פוחתת' — הניצול תומך בניסוח.")
-    else:
-        frozen = [p for p in pts if p["budget"] >= S["ceiling_budget"]]
-        churn = sum(len(p["entered"]) + len(p["left"]) for p in frozen[1:])
-        if churn:
-            print(f"  ❌ 'מיצוי' מחייב סגל קפוא מעל תקרת ההוצאה, "
-                  f"ונמדדו {churn} חילופים — עוצרים.")
-            return 1
-        sat_note = (f"מעל {S['ceiling_budget']:.1f} הכסף אינו ניתן "
-                    f"להוצאה. המנוע מחזיק {n_sat[0]} שחקנים — הטובים "
-                    f"במאגר תחת אילוץ הדקות — ומוציא "
-                    f"{S['spend_ceiling']:.1f} ולא יותר, בכל תקציב עד "
-                    f"{pts[-1]['budget']:.0f}. הניצול יורד ל-"
-                    f"{S['used_median_frozen']:.1%}. **מיצוי, לא תשואה "
-                    "פוחתת** — הפוך מהניסוח שקדם לריפיט של יום 15. "
-                    f"התשואה השולית מתאפסת כבר ב-{S['saturation']:.1f}.")
-        print(f"  ✅ משטר 'מיצוי' — תקרת הוצאה {S['spend_ceiling']:.2f} "
-              f"מ-{S['ceiling_budget']:.1f}, {S['n_frozen']} נקודות קפואות, "
-              f"אפס חילופים.")
-        print(f"  ⚠️ {S['n_flat']} מתוך {S['n_points']} נקודות הסליידר "
-              f"שטוחות. B_HI={B_HI} אינו מתאים עוד לציר הזה — "
-              f"החלטת מוצר, לא באג.")
+        n_sat = {p["n"] for p in sat}
+        print(f"  ✅ ניצול {used_sat:.1%} · גודל סגל מעל הרוויה: "
+              f"{sorted(n_sat)}")
 
     D = dict(
         meta=dict(season=SEASON, label=f"{SEASON}/{(SEASON + 1) % 100:02d}",
                   units="יחידות מנורמלות",
                   b_lo=B_LO, b_hi=B_HI, step=B_STEP,
-                  saturation=S["saturation"],
-                  saturation_regime=S["regime"],
-                  saturation_detail=S,
-                  saturation_note=sat_note,
-                  # 🔴 פרובננס מודל העלות. הציר תלוי בו לחלוטין,
-                  #    ובלי זה אי אפשר לדעת מאיזו הרצה ה-JSON הזה.
-                  cost_model=cost_meta,
+                  saturation=SATURATION,
+                  saturation_note="מעל נקודה זו התשואה השולית אינה תורמת עוד. "
+                                  "הניצול נשאר 99.1% והמנוע בוחר 12 "
+                                  "שחקנים, המאגר אינו נגמר, הכסף "
+                                  "מפסיק לקנות שיפור. תשואה פוחתת, "
+                                  "לא מיצוי.",
                   shape_caveat="צורת העקומה לפני הרוויה אינה יציבה: "
                                "ב-budget_curve (20.8) התשואה השולית "
                                "שלילית בנקודות מפוזרות לאורך הטווח "
