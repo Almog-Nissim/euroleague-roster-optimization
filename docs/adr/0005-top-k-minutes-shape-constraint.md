@@ -252,4 +252,163 @@ specification cell, a rise of +17% to +77%. **The top of his own range crosses t
 
 ## Result — appended after the run
 
-Pending.
+Status of this ADR is now: **the constraint is adopted; the denominator change is
+STOPPED by the declared rule.** `src/shape_run.py` → `usage_constrained_shape.csv`,
+`shape_binding.csv`. 38 club-seasons, 12.8 hours.
+
+### The 2×2
+
+```
+                         q_club greedy       q_club as played
+  LP without shape       0.1414  (A)         0.3232  (B)
+  LP with shape          0.1205  (C)         0.2807  (D)
+
+  relative to A:         B +128.5%   C −14.8%   D +98.4%
+```
+
+**The baseline guard passed exactly.** Cell A reproduces `0.1414`, and per club-season
+`adv_cap`, `q_cap`, `q_club` and `n_cap` all reproduce the tracked
+`usage_constrained_results.csv` with `diff = 0.000e+00`. The 2×2 is one run, not a new
+result spliced onto an old file.
+
+### What the decomposition says, and it is not one thing
+
+```
+  the constraint alone     A -> C   −2.09 pp   −14.8%   "falls < 20%"  -> headline stands
+  the denominator alone    A -> B  +18.18 pp  +128.5%   "rises > 50%"  -> STOP
+  both, the specification  A -> D  +13.92 pp   +98.4%   "rises > 50%"  -> STOP
+```
+
+Under the declared rule the specification cell triggers **STOP: that is not a fix, it is
+a measurement of something else. Back to the grill before anything is written.** The label
+stands as the rule produced it.
+
+The rule fires on the denominator, not on the constraint. Had only the constraint gone in —
+the Q1 sensitivity, cell C — the verdict would have been "falls < 20%, headline stands,
+CV and LinkedIn unchanged".
+
+### Why the denominator is not defensible, found only after the run
+
+`score_rows` and `score_shape` allocate minutes in descending order of **`ppm_true`** —
+the production that actually happened. Both sides being scored that way was symmetric:
+each got hindsight. `score_actual` gives the club the minutes its coach chose **in real
+time**, while the engine keeps a hindsight allocation, and since `score_shape` is now an
+exact LP the engine's allocation is not merely hindsight but optimal.
+
+So cell D adds two advantages to the numerator that the denominator does not have:
+knowing who turned out good, and allocating minutes perfectly. The +18.18 pp therefore
+conflates the project's claim — better roster selection on the same budget — with a claim
+the project does not make and cannot defend: better minute management than real coaches,
+with hindsight. **The flattery in the greedy denominator was the price of symmetry.**
+
+This was not seen during the grill. It is the reason for the STOP, and it is a better
+reason than "the number went up".
+
+### What the constraint itself did
+
+```
+  engine top six, no shape            164.5
+  engine top six, with shape          145.3     pinned to the cap
+  the club's top six, as played       126.9
+  q_club, greedy -> as played         −12.54%
+  roster size                         12 -> 12   in all 38, min 12 max 12
+  win rate (adv > 0)                  A 100%  ·  C 92.1%  ·  D 100%
+```
+
+- **The constraint binds and it binds hard.** The engine's top six drops from 164.5 to
+  exactly 145.3 in nearly every club-season. It did what it was built to do.
+- **The roster did not widen. At all.** 12 players before, 12 after, in 38 of 38. Minutes
+  spread across the same twelve. Every prediction on this row was wrong, and the
+  consequence in this ADR — that the dashboard depth caveat might become obsolete — does
+  not happen. **The caveat stands unchanged: the engine carries 12, real clubs 15–20.**
+- **`adv_cap` rose in 11 of 38 club-seasons under the constraint** even though the LP
+  objective never rose (T2, 38/38). That is legitimate and already documented in
+  `usage_constrained.py`: `q_cap` is `score_rows` on `ppm_true`, it measures outcome and
+  not the optimum, and it is allowed to invert.
+
+### Which k bind
+
+```
+  k=1   0/38    0%        k=5  28/38   74%
+  k=2   0/38    0%        k=6  29/38   76%
+  k=3   0/38    0%        k=7  23/38   61%
+  k=4  20/38   53%        k=8  37/38   97%
+```
+
+`K_USED = (1,2,3,4,6,8)` was wrong in both directions. k=5 and k=7 bind in 74% and 61% of
+solves — dropping them would have removed active constraints — while k=1, k=2 and k=3 never
+bind once. The subset was a guess, and running all eight replaced it with a measurement.
+**K_USED is not narrowed. k=1..3 are candidates for removal on cost grounds only.**
+
+### Predictions
+
+```
+                                      predicted        got
+  Claude adv_cap shape + greedy        [0.09, 0.13]     0.1205   ✅
+  Almog  adv_cap shape + greedy        [0.085, 0.113]   0.1205   ❌
+  Claude adv_cap shape + as played     [0.15, 0.21]     0.2807   ❌
+  Claude q_club falls                  4%–9%            12.54%   ❌
+  Almog  q_club falls                  7%–11%           12.54%   ❌
+  Claude roster size                   13–15            12       ❌
+  Almog  roster size                   14–16            12       ❌
+  Claude k=6 binding                   > 90%            76%      ❌
+  Claude k=1 binding                   < 20%            0%       ✅
+  Claude k=5 or k=7 bind at all        yes, ~30%        74% / 61% ✅ direction
+  Claude T8 and T9 fail today          yes              yes      ✅
+```
+
+One prediction of eleven landed on the headline row, and it is the cell that is *not* the
+specification. Both sides were wrong about the roster widening, and wrong in the same
+direction — the shared intuition that spreading minutes needs more players is what failed.
+
+### Deviations from the declared procedure
+
+1. **`score_rows` was not moved.** It is defined once in `roster_membership_audit.py` and
+   imported by 22 files; `optimizer_backtest.score` is a second function with the same
+   algorithm under another name. ADR 0004 called them "two copies of `score_rows`", which
+   was imprecise. Moving it would touch 22 files in the week of the freeze. `src/scoring.py`
+   took only what is new, and `minute_profile.score_realistic` became a re-export keeping
+   the `(q, used)` contract.
+2. **T1 only tests nesting at `gap=0`.** With caps the solver switches to `gapRel=0.005`,
+   and the first version of T1 measured that gap, not the nesting: a 0.015% difference on
+   the synthetic pool. T1b was added to record what the gap costs on its own.
+3. **`score_shape` became an exact LP.** T7 failed on 1 of 3 real club-seasons while the
+   scorer was greedy: under cumulative top-k caps combined with position caps, greedy by
+   `ppm` is not optimal. The roster is fixed, so the allocation is a small continuous LP.
+   T7 then passes. This deviation is also what sharpened the numerator advantage described
+   above.
+4. **The slack subsample is 2 seasons × 6 clubs, not 4 × 3.** `SEASONS` has two test
+   seasons. The declared rule named four.
+5. **The baseline was recomputed rather than reused**, 152 solves instead of 76, to make
+   the `diff = 0.000e+00` guard possible instead of splicing a new run onto an old CSV.
+6. **All k from 1 to 8 ran**, replacing `K_USED`. Declared in the Decision above, and the
+   binding table is the payoff.
+7. **T12 was added**, measuring that `optimise_v2(caps=...)` and
+   `optimise_v3(caps, repl=0.0)` agree: 127.389061 both, to the last digit. Two paths reach
+   the free-with-shape side and an assumed equivalence between two implementations is what
+   broke the calibration through two `NAME2CODE` maps.
+8. **One solve took 11.2 of the 12.8 hours.** 2024 TEL. Every other club-season together
+   took 97 minutes, median 166 seconds. Both shape solves are capped at 120s and returned
+   `Optimal`, so the time went into one of the two **no-shape** solves, which carry no time
+   limit — pre-existing code, the same calls that produced the tracked baseline. The run
+   timed per club-season and not per solve, so this is inferred by elimination rather than
+   measured. No time limit was added: cell A's only job is to reproduce `0.1414` exactly,
+   and truncating a solve can break that.
+
+### What this licenses
+
+- **It licenses:** the top-k shape constraint enters the LP. It is measured, it binds, and
+  it lowers the headline by 14.8% — inside "falls < 20%".
+- **It does not license:** cell D, or any headline above `0.1414`, until the numerator and
+  the denominator are on the same information footing. Nothing goes to the dashboard, the
+  README, the CV or LinkedIn from cell B or D.
+- **It does not license:** "the engine beats real coaches at minute management". That is
+  what part of cell B measures, with hindsight, and it is not the project's claim.
+- **Open, for the grill:** whether the denominator should be the club's own roster
+  allocated by the same exact LP under the same caps (symmetric, both with hindsight), or
+  the engine should be scored on the minutes its LP chose ex ante on predicted `ppm`
+  (symmetric, neither with hindsight). The greedy denominator was the first of these in
+  crude form.
+- **Still unrun:** the `SLACK` 0.95/1.05 sensitivity and the sweep curve. Both were held
+  because the specification is now in question, and running a curve under a specification
+  that may change would produce a dashboard nobody can defend.

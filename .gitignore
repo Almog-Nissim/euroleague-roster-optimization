@@ -101,3 +101,5 @@ __pycache__/
 
 # --- day 16: shape constraint (ADR 0005) ---
 !data/processed/shape_caps.csv
+!data/processed/usage_constrained_shape.csv
+!data/processed/shape_binding.csv
