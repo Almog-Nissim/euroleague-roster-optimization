@@ -92,3 +92,9 @@ __pycache__/
 # --- day 15: fatigue delta (ADR 0004) ---
 !data/processed/fatigue_delta.csv
 !data/processed/fatigue_delta_buckets.csv
+
+# --- tooling: skills are committed in .agents/; .claude/ is generated ---
+# 37 symlinks with ABSOLUTE paths into this working copy. Tracking them would
+# hand anyone who clones the repo 37 broken links. Regenerate with
+# /setup-matt-pocock-skills. The manifest is skills-lock.json.
+.claude/
