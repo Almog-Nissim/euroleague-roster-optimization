@@ -96,12 +96,24 @@ SEP = "=" * 78
 LAST: dict = {}
 
 
-def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
+def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0,
+                caps=None, gap=0.005, time_limit=120):
     """זהה ל-ro.optimise פרט להגדרת משתנה הדקות.
 
     e(i) הן דקות צפויות לעונה: e(i) <= 32·avail(i)·x(i),
     והמטרה היא Σ ppm(i)·e(i) — בלי הכפלה נוספת בזמינות, כי היא
     כבר בתוך התקרה. זהה בדיוק ל-score_rows.
+
+    caps: {k: C_k} — אילוץ צורת הדקות (ADR 0005). None = כבוי, וההתנהגות
+    זהה בדיוק למה שהייתה. אותו `scoring.add_shape_constraint` שקורא לו
+    `optimise_capped`.
+
+    ⚠️ `optimise_v2(caps=...)` ו-`optimise_v3(caps, repl=0.0)` הם אותה
+    בעיה: המטרה של v3 היא Σ(ppm−repl)·e, ועם repl=0 זו בדיוק המטרה של
+    v2. T12 בודק שהן מחזירות את אותו ערך, כדי שהשקילות תהיה נמדדת ולא
+    מונחת.
+
+    gap/time_limit חלים **רק** כשיש caps, אחרת T1 היה מודד שני דברים.
     """
     n = len(pool)
     pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
@@ -130,10 +142,18 @@ def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0):
         p += pulp.lpSum(e[i] for i in idx) >= \
             ro.POS_MIN_SHARE[ps_] * ro.MINUTES_PER_GAME
 
-    p.solve(pulp.PULP_CBC_CMD(msg=0))
+    # 🔴 אילוץ הצורה (ADR 0005). מימוש אחד, ב-scoring.
+    n_shape = 0
+    if caps:
+        import scoring
+        n_shape = scoring.add_shape_constraint(p, e, caps, n)
+        p.solve(pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit, gapRel=gap))
+    else:
+        p.solve(pulp.PULP_CBC_CMD(msg=0))
     LAST.clear()
     LAST.update(status=pulp.LpStatus[p.status],
-                obj=pulp.value(p.objective), fn="v2")
+                obj=pulp.value(p.objective), fn="v2",
+                n_shape=n_shape, gap=(gap if caps else 0.0))
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
     sel = np.array([x[i].value() > 0.5 for i in range(n)])

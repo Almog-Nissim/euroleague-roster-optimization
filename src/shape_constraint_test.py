@@ -197,6 +197,23 @@ def synthetic(caps):
     check("T11", "הפער האופטימלי מדווח",
           "gap" in lastc or "obj" in lastc,
           f"LAST = {sorted(lastc)}")
+
+    # --- T12: שני המסלולים לצד החופשי-עם-צורה חייבים להסכים ---
+    # shape_run משתמש ב-optimise_v3(repl=0.0); roster_sweep ב-
+    # optimise_v2(caps=...). המטרה של v3 היא Σ(ppm−repl)·e, ועם repl=0
+    # זו בדיוק המטרה של v2. שקילות מונחת היא בדיוק מה שהפיל את
+    # NAME2CODE, אז היא נמדדת.
+    import optimise_consistent as oc
+    import minute_profile as mp
+    with contextlib.redirect_stdout(io.StringIO()):
+        oc.optimise_v2(pool, B, MR, caps=caps)
+        o_v2 = oc.LAST.get("obj")
+        mp.optimise_v3(pool, B, MR, caps, repl=0.0)
+        o_v3 = oc.LAST.get("obj")
+    same = o_v3 is not None and o_v2 is not None \
+        and abs(o_v2 - o_v3) / max(abs(o_v2), 1e-9) <= 0.005
+    check("T12", "optimise_v2(caps) == optimise_v3(caps, repl=0)", same,
+          f"v2 {o_v2:.6f} מול v3 {o_v3:.6f}")
     return pool, selc, minc
 
 

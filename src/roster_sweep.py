@@ -97,6 +97,7 @@
 `q_club` להשוואה ובלי המרה לניצחונות, כי אין תוצאה לאמת מולה.
 """
 
+import argparse
 import hashlib
 import json
 import shutil
@@ -138,6 +139,10 @@ SPEND_EPS = 0.02              # הוצאה זהה = תקרת הוצאה, לא ר
 ROOT = PROCESSED_DIR.parent.parent
 OUT = PROCESSED_DIR.parent / "dashboard" / "roster_sweep.json"
 PUB = ROOT / "dashboard" / "public" / "roster_sweep.json"
+# 🔴 ADR 0005. וריאנט הצורה כותב לקובץ נפרד ו**אינו** מסונכרן ל-public
+#    בלי --publish: PUB מקומט, וההחלטה לפרסם באה אחרי שנקבע B_HI מהעקומה
+#    החדשה (שלב 6 בתוכנית הסגירה), לא כתופעת לוואי של הרצה.
+OUT_SHAPE = PROCESSED_DIR.parent / "dashboard" / "roster_sweep_shape.json"
 SEP = "=" * 76
 
 
@@ -300,9 +305,36 @@ def clean(o):
 
 
 def main() -> int:
+    global B_STEP
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--caps", action="store_true",
+                    help="אילוץ צורת הדקות, ADR 0005")
+    ap.add_argument("--step", type=float, default=None,
+                    help="צעד הגריד. ADR 0005 מריץ 1.0 לשתי העקומות")
+    ap.add_argument("--publish", action="store_true",
+                    help="לסנכרן ל-dashboard/public. אחרת רק לקובץ המקומי")
+    a = ap.parse_args()
+
+    caps = None
+    if a.caps:
+        import scoring
+        caps = scoring.load_caps()
+    if a.step is not None:
+        B_STEP = a.step
+    out_path = OUT_SHAPE if a.caps else OUT
+    # 🔴 שתי העקומות על גריד אחד כשיש caps. היום החופשי בצעד 0.5
+    #    והמאולץ בצעד 1.0 — שתי רשתות שונות על אותו גרף.
+    one_grid = bool(a.caps)
+
     print(SEP)
     print(f"roster_sweep — פרה-חישוב לעונת {SEASON}/{(SEASON + 1) % 100:02d}")
     print(f"טווח {B_LO}–{B_HI} בצעדי {B_STEP} · בלי אזור אפור")
+    if caps:
+        print("  🔴 ADR 0005 — אילוץ צורת הדקות פעיל:")
+        print("     " + " ".join(f"{k}:{v:.1f}" for k, v in sorted(caps.items())))
+        print("     שתי העקומות על גריד אחד · B_HI ייקבע מהעקומה, לא מראש")
+        print(f"     יעד: {out_path.name}"
+              + ("  + סינכרון ל-public" if a.publish else "  · ללא פרסום"))
     print(SEP)
 
     feat, anch, pos, ps = ob.load_all()
@@ -337,7 +369,8 @@ def main() -> int:
     print(f"\n  {'תקציב':>7}{'n':>4}{'הוצא':>8}{'ניצול':>8}"
           f"{'q_LP':>9}{'scoreRows':>9}{'נכנס':>6}{'יצא':>5}")
     for b in grid:
-        sel, mins = optimise_v2(cand, float(b), MIN_LEGAL_ROSTER)
+        sel, mins = optimise_v2(cand, float(b), MIN_LEGAL_ROSTER,
+                               caps=caps)
         if sel is None:
             continue
         rp = roster_payload(cand, sel, mins, names)
@@ -373,8 +406,10 @@ def main() -> int:
     cand_u = attach_usage(cand, PROCESSED_DIR / "usage_curve_results_min0.csv",
                           SEASON)
     capped = []
-    for b in grid[::2]:                        # רזולוציה חצי, יקר יותר
-        sel, mins = optimise_capped(cand_u, float(b), MIN_LEGAL_ROSTER)
+    cap_grid = grid if one_grid else grid[::2]   # grid[::2] = רזולוציה חצי
+    for b in cap_grid:
+        sel, mins = optimise_capped(cand_u, float(b), MIN_LEGAL_ROSTER,
+                                    caps=caps)
         if sel is None:
             continue
         capped.append(dict(
@@ -486,6 +521,7 @@ def main() -> int:
         meta=dict(season=SEASON, label=f"{SEASON}/{(SEASON + 1) % 100:02d}",
                   units="יחידות מנורמלות",
                   b_lo=B_LO, b_hi=B_HI, step=B_STEP,
+                  shape_caps=(dict(sorted(caps.items())) if caps else None),
                   saturation=S["saturation"],
                   saturation_regime=S["regime"],
                   saturation_detail=S,
@@ -527,18 +563,22 @@ def main() -> int:
         print("     NaN חשוף מפיל את JSON.parse בדפדפן — לא נכתב דבר.")
         return 1
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(txt, encoding="utf-8")
-    PUB.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(OUT, PUB)
-
-    ha = hashlib.md5(OUT.read_bytes()).hexdigest()[:12]
-    hb = hashlib.md5(PUB.read_bytes()).hexdigest()[:12]
-    print(f"\n  נכתב:   {OUT}  ({OUT.stat().st_size/1024:.0f} KB)")
-    print(f"  סונכרן: {PUB}")
-    print(f"  hash:   {ha} · {hb}  {'✅' if ha == hb else '❌ לא זהים'}")
-    if ha != hb:
-        return 1
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(txt, encoding="utf-8")
+    ha = hashlib.md5(out_path.read_bytes()).hexdigest()[:12]
+    print(f"\n  נכתב:   {out_path}  ({out_path.stat().st_size/1024:.0f} KB)")
+    if a.publish:
+        PUB.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(out_path, PUB)
+        hb = hashlib.md5(PUB.read_bytes()).hexdigest()[:12]
+        print(f"  סונכרן: {PUB}")
+        print(f"  hash:   {ha} · {hb}  {'✅' if ha == hb else '❌ לא זהים'}")
+        if ha != hb:
+            return 1
+    else:
+        print(f"  hash:   {ha}")
+        print(f"  ⚠️ לא סונכרן ל-{PUB.name} — הקובץ המקומט לא נגע.")
+        print("     פרסום עם --publish, אחרי שנקבע B_HI מהעקומה החדשה.")
     print(f"  {len(pts)} נקודות חופשי · {len(capped)} מאולץ · "
           f"{len(clubs)} מועדונים")
     print(SEP)
