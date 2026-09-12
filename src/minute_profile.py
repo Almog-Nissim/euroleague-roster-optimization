@@ -68,6 +68,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import PROCESSED_DIR
 import roster_optimizer as ro
+import scoring
 
 K_USED = (1, 2, 3, 4, 6, 8)   # תת-קבוצה: k סמוכים כמעט מיותרים
 KMAX = 8            # מעבר לזה האילוץ אינו כובל מול 200
@@ -134,22 +135,20 @@ def optimise_v3(pool, budget, min_roster, caps, locked=None,
             ro.POS_MIN_SHARE[ps_] * ro.MINUTES_PER_GAME
 
     # --- אילוץ הצורה ---
-    for k, C in caps.items():
-        if k not in K_USED or k >= n:
-            continue
-        q = pulp.LpVariable(f"q{k}")
-        s = [pulp.LpVariable(f"s{k}_{i}", lowBound=0) for i in range(n)]
-        p += k * q + pulp.lpSum(s) <= C
-        for i in range(n):
-            p += s[i] >= e[i] - q
+    # 🔴 ADR 0005: המימוש עבר ל-scoring.add_shape_constraint, שאותו קורא
+    #    גם optimise_capped. K_USED לא מסנן יותר — ADR 0005 מריץ כל k
+    #    מ-1 עד 8 ורושם איזה k היה binding, במקום להניח ש-k סמוכים
+    #    מיותרים. הסינון היה השערה שלא נמדדה.
+    scoring.add_shape_constraint(p, e, caps, n)
 
     # ⚠️ אילוץ הצורה מוסיף ~8n משתני עזר וה-MIP נעשה כבד (115 שניות
     #    בהרצת ניסיון). לכן פער אופטימליות מותר של 0.5% ותקרת זמן.
     #    הפער מדווח — הוא **קטן בסדר גודל** מההפרשים שאנחנו מודדים
     #    (5%-20%), ולכן אינו יכול להפוך מסקנה.
     p.solve(pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit, gapRel=gap))
-    if pulp.LpStatus[p.status] not in ("Optimal", "Not Solved"):
-        return None, None
+    # 🔴 T9. הגרסה הקודמת קיבלה "Not Solved" — כלומר time limit — כהצלחה,
+    #    והחזירה פתרון שעלול להיות לא-אופטימלי או לא קיים, בשקט.
+    scoring.solver_guard(p, "optimise_v3")
     sel = np.array([x[i].value() is not None and x[i].value() > 0.5
                     for i in range(n)])
     mins = np.array([e[i].value() or 0.0 for i in range(n)])
@@ -157,28 +156,19 @@ def optimise_v3(pool, budget, min_roster, caps, locked=None,
 
 
 def score_realistic(df, ppm_col, avail_col, repl, caps):
-    """אותו ניקוד, תחת אותה תקרת צורה. חייב להתאים ל-optimise_v3.
+    """🔴 ADR 0005 — re-export של `scoring.score_shape`, עם באג מתוקן.
 
-    השחקן בדירוג k מקבל את המינימום מבין: תקרת השחקן, מה שנשאר
-    בתקרה המצטברת של k, יתרת הדקות, ותקרת העמדה.
+    הגרסה שהייתה כאן חיפשה `caps.get(rank)` לפי **דירוג ppm**. האילוץ
+    מוגדר על k הערכים הגדולים של **e**, ותקרות העמדה שוברות את
+    המונוטוניות בין השניים: שחקן עם ppm נמוך יכול לקבל יותר דקות
+    משחקן מעליו אם העמדה של העליון נסגרה. אז התקרה הוחלה על הסדר
+    הלא-נכון, והצורה יכלה להיות מופרת בלי שאיש ירגיש. זה T8.
+
+    החתימה ומבנה ההחזרה `(q, used)` נשמרים בדיוק, כדי ש-`final_fix.py`
+    ו-`why_100.py` ימשיכו לרוץ בלי לגעת בהם.
     """
-    ppm, av, pos = df[ppm_col].values, df[avail_col].values, df.position.values
-    order = np.argsort(-ppm)
-    poscap = {g: ro.POS_MAX_SHARE[g] * ro.MINUTES_PER_GAME
-              for g in ro.POS_MAX_SHARE}
-    left, cum, q = ro.MINUTES_PER_GAME, 0.0, 0.0
-    for rank, j in enumerate(order, start=1):
-        cap_k = caps.get(rank, np.inf)
-        take = min(ro.MAX_MIN_PLAYER * av[j], left, poscap[pos[j]],
-                   max(cap_k - cum, 0.0))
-        take = max(take, 0.0)
-        q += take * ppm[j]
-        left -= take
-        cum += take
-        poscap[pos[j]] -= take
-    if repl is not None and left > 0:
-        q += left * repl
-    return q, ro.MINUTES_PER_GAME - left
+    q, used, _ = scoring.score_shape(df, ppm_col, avail_col, repl, caps)
+    return q, used
 
 
 if __name__ == "__main__":

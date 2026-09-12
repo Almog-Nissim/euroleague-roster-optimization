@@ -98,3 +98,6 @@ __pycache__/
 # hand anyone who clones the repo 37 broken links. Regenerate with
 # /setup-matt-pocock-skills. The manifest is skills-lock.json.
 .claude/
+
+# --- day 16: shape constraint (ADR 0005) ---
+!data/processed/shape_caps.csv

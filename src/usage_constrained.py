@@ -61,6 +61,7 @@ import optimizer_backtest as ob  # noqa: E402
 from paths import PROCESSED_DIR  # noqa: E402
 from roster_membership_audit import score_rows  # noqa: E402
 import optimise_consistent as oc  # noqa: E402
+import scoring  # noqa: E402
 from optimise_consistent import optimise_v2  # noqa: E402
 from final_day7 import MIN_LEGAL_ROSTER  # noqa: E402
 from league_backtest import build_pool, club_side, REPL, SEASONS  # noqa: E402
@@ -74,10 +75,20 @@ def hdr(t: str) -> None:
     print("\n" + SEP + f"\n{t}\n" + SEP)
 
 
-def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE):
+def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE, caps=None,
+                    gap=0.005, time_limit=120):
     """
     `optimise_v2` בתוספת אילוץ אחד. כל השאר זהה — אם משהו כאן שונה
     מהמקור פרט לאילוץ, ההשוואה אינה תקפה.
+
+    caps: {k: C_k} — אילוץ צורת הדקות (ADR 0005). None = כבוי, וההתנהגות
+    זהה בדיוק למה שהייתה. המימוש הוא `scoring.add_shape_constraint`,
+    אותו אחד שקורא לו `optimise_v3` — שני מימושים לאילוץ אחד זו הדרך
+    שבה score_rows ו-score() נהיו שתי פונקציות לאותו דבר.
+
+    gap/time_limit חלים **רק** כשיש caps: האילוץ מוסיף ~8n משתני עזר
+    וה-MIP נעשה כבד. בלי caps הסולבר נקרא בדיוק כמו קודם, אחרת T1
+    היה מודד שני דברים.
     """
     n = len(pool)
     pool = pool.reset_index(drop=True)   # אינדקס מיקומי — locked ו-POS_FLOOR נשענים עליו
@@ -105,10 +116,20 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE):
     # 🔴 האילוץ. Σ eᵢ·usageᵢ ≤ cap·Σ eᵢ
     p += pulp.lpSum((usage[i] - cap) * e[i] for i in range(n)) <= 0
 
-    p.solve(pulp.PULP_CBC_CMD(msg=0))
+    # 🔴 אילוץ הצורה (ADR 0005). מימוש אחד, ב-scoring.
+    n_shape = 0
+    if caps:
+        n_shape = scoring.add_shape_constraint(p, e, caps, n)
+
+    if caps:
+        p.solve(pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit, gapRel=gap))
+    else:
+        p.solve(pulp.PULP_CBC_CMD(msg=0))
     oc.LAST.clear()
     oc.LAST.update(status=pulp.LpStatus[p.status],
-                   obj=pulp.value(p.objective), fn="capped")
+                   obj=pulp.value(p.objective), fn="capped",
+                   n_shape=n_shape,
+                   gap=(gap if caps else 0.0))
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
     sel = np.array([x[i].value() > 0.5 for i in range(n)])
