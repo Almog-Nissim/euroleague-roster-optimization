@@ -43,40 +43,17 @@ from final_day7 import MIN_LEGAL_ROSTER  # noqa: E402
 from league_backtest import build_pool, club_side, REPL, SEASONS  # noqa: E402
 
 OUT = PROCESSED_DIR / "engine_rosters.csv"
-_reported = {"done": False}
-
-
-def extract_minutes(extra, n: int, label: str):
-    """
-    מחלץ דקות משני הערכים הנוספים של score_rows — רק אם נמצא מערך
-    באורך הסגל. מדווח פעם אחת מה נמצא בפועל.
-    """
-    found = None
-    for i, v in enumerate(extra):
-        kind = type(v).__name__
-        length = len(v) if hasattr(v, "__len__") else None
-        if not _reported["done"]:
-            print(f"    score_rows[{i + 1}]: {kind}"
-                  + (f" באורך {length}" if length is not None else "")
-                  + (f"  דוגמה: {np.asarray(v).ravel()[:3]}"
-                     if length not in (None, 0) else ""))
-        if found is None and length == n:
-            try:
-                arr = np.asarray(v, dtype=float).ravel()
-                if arr.shape[0] == n:
-                    found = arr
-            except (TypeError, ValueError):
-                pass
-
-    if not _reported["done"]:
-        if found is None:
-            print(f"    ⚠️ לא נמצא מערך דקות באורך {n} ({label}). "
-                  f"ה-usage יחושב לא-משוקלל.")
-        else:
-            print(f"    ✅ נמצא מערך באורך {n} — סכום {found.sum():.1f}")
-            print("       (אם הסכום ~200, אלה הדקות)")
-        _reported["done"] = True
-    return found
+# 🔴 ADR 0006. כאן הייתה `extract_minutes`, שסרקה את ערך ההחזרה של
+# `score_rows` בחיפוש מערך באורך הסגל. `score_rows` מחזירה
+# `(q, used, filled)` — שלושה סקלרים. לא היה שם מערך ולא יכול היה
+# להיות, ולכן `minutes_alloc` יצא ריק ב-456 מתוך 456 השורות, ובמקביל
+# וקטור הדקות של ה-LP נזרק ל-`_`.
+#
+# הקונבנציה עכשיו מוצהרת, והיא זו של ADR 0006:
+#     side="engine"  ->  תוכנית ה-LP, שנקבעה על ppm ו-avail חזויים
+#     side="club"    ->  הדקות ששוחקו, min_per_game · avail_true
+# זה בדיוק מה ש-`shape_minutes.csv` מחזיק, ומה ש-ADR 0006 נאלץ לחשב
+# מחדש ב-152 פתרונות רק כי הקובץ הזה לא החזיק אותו.
 
 
 def collect(df: pd.DataFrame, minutes, season, club, side) -> list[dict]:
@@ -117,15 +94,16 @@ def main() -> int:
                 continue
             B = float(keep.cost.sum())
 
-            q_club, *extra_c = score_rows(keep, "ppm_true", "avail_true", REPL)
-            min_club = extract_minutes(extra_c, len(keep), "מועדון")
+            q_club, *_ = score_rows(keep, "ppm_true", "avail_true", REPL)
+            min_club = (keep.min_per_game.values.astype(float)
+                        * keep.avail_true.values.astype(float))
 
-            sel, _ = optimise_v2(cand, B, MIN_LEGAL_ROSTER)
+            sel, mins = optimise_v2(cand, B, MIN_LEGAL_ROSTER)
             if sel is None:
                 continue
             eng = cand[sel]
-            q_eng, *extra_e = score_rows(eng, "ppm_true", "avail_true", REPL)
-            min_eng = extract_minutes(extra_e, len(eng), "מנוע")
+            q_eng, *_ = score_rows(eng, "ppm_true", "avail_true", REPL)
+            min_eng = np.asarray(mins)[np.asarray(sel)]
 
             rows += collect(keep, min_club, test, club, "club")
             rows += collect(eng, min_eng, test, club, "engine")

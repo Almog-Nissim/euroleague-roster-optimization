@@ -18,6 +18,27 @@ last. Estimate: 3–4 sessions.
 
 **Done when:** there is a final headline number with a CI, tagged in git.
 
+## 1b. Queued behind the running solve — code fixed, regeneration owed
+
+Three fixes are committed as code but **not verified by a run**, because each needs
+`build_pool` and two of them overwrite tracked result files. They are owed a run once the
+ADR 0006 solve finishes and the CPU is free.
+
+- **`engine_rosters.csv` → fills `minutes_alloc`.** The column was empty in 456 of 456 rows
+  because `extract_minutes` searched the return value of `score_rows` for an array, and
+  `score_rows` returns three scalars. `dump_rosters.py` now takes the LP's own minute
+  vector for the engine side and the minutes played for the club side, the ADR 0006
+  convention. Five scripts read this file. Re-run `src/dump_rosters.py`.
+- **`refit_acceptance.py` condition 1.** Now gated on the euro-level axis instead of the
+  normalised one. The verdict does not change — `b` fails on both axes — but the printed
+  `a` and the tracked `refit_acceptance.csv` will. Re-run and commit the new CSV.
+- **`score_to_wins.py` budget control.** Switched from `gross_eur`, empty for all 20 clubs
+  of 2025, to `net_eur`, complete at 56/56. This changes one of the three refutations, so
+  **lock a prediction before re-running it.** It writes no CSV.
+
+**Done when:** all three have run, their outputs are committed, and no document quotes a
+number from before the fix.
+
 ## 2. Dashboard
 
 - Cut `B_HI` from 40 to about 24, at the saturation point.
