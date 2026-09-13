@@ -68,6 +68,7 @@ USAGE_CSV = PROCESSED_DIR / "usage_curve_results_min0.csv"
 OUT_MAIN = PROCESSED_DIR / "usage_constrained_shape.csv"
 OUT_BIND = PROCESSED_DIR / "shape_binding.csv"
 OUT_SLACK = PROCESSED_DIR / "shape_slack_sensitivity.csv"
+OUT_MINS = PROCESSED_DIR / "shape_minutes.csv"
 
 # תת-המדגם שהוצהר ב-ADR 0005 לפני ההרצה, בשמות
 SUBSAMPLE_12 = [
@@ -128,13 +129,46 @@ def one_club(cand, keep, caps, B):
     r["bind_free"] = ",".join(map(str, binding_ks(min_fs, caps)))
     r["bind_cap"] = ",".join(map(str, binding_ks(min_cs, caps)))
 
-    # --- ארבעת התאים ---
+    # --- ADR 0006: המנוע על הדקות שהוא תכנן, בלי הקצאה מחדש ---
+    r["q_cap_plan"], r["plan_used"], e_pl, r["clipped"] = scoring.score_planned(
+        cand[sel_c], "ppm_true", "avail_true", min_c[sel_c], REPL)
+    r["q_cap_shape_plan"], r["plan_used_shape"], e_pls, r["clipped_shape"] = \
+        scoring.score_planned(cand[sel_cs], "ppm_true", "avail_true",
+                              min_cs[sel_cs], REPL)
+    r["top6_plan_shape"] = float(scoring.top_k_sums(e_pls, 6)[5])
+
+    # --- ארבעת התאים של ADR 0005 ---
     r["adv_cap_A"] = r["q_cap"] / r["q_club_greedy"] - 1
     r["adv_cap_B"] = r["q_cap"] / r["q_club_actual"] - 1
     r["adv_cap_C"] = r["q_cap_shape"] / r["q_club_greedy"] - 1
     r["adv_cap_D"] = r["q_cap_shape"] / r["q_club_actual"] - 1
     r["adv_free_A"] = r["q_free"] / r["q_club_greedy"] - 1
     r["adv_free_D"] = r["q_free_shape"] / r["q_club_actual"] - 1
+
+    # --- ADR 0006: E = מכנה חמדני · F = הספציפיקציה ---
+    r["adv_cap_E"] = r["q_cap_plan"] / r["q_club_greedy"] - 1
+    r["adv_cap_F"] = r["q_cap_plan"] / r["q_club_actual"] - 1
+    r["adv_cap_E_shape"] = r["q_cap_shape_plan"] / r["q_club_greedy"] - 1
+    r["adv_cap_F_shape"] = r["q_cap_shape_plan"] / r["q_club_actual"] - 1
+
+    # 🔴 וקטורי הדקות נשמרים הפעם. ADR 0006 נאלץ להריץ 152 פתרונות
+    #    מחדש רק כי הם לא נשמרו בהרצה של ADR 0005. לא פעמיים.
+    r["_mins"] = [
+        dict(side="cap_noshape", pc=str(pc), e_lp=float(a), e_scored=float(b),
+             ppm_true=float(c), avail_true=float(d))
+        for pc, a, b, c, d in zip(cand[sel_c].pc, min_c[sel_c], e_pl,
+                                  cand[sel_c].ppm_true, cand[sel_c].avail_true)
+    ] + [
+        dict(side="cap_shape", pc=str(pc), e_lp=float(a), e_scored=float(b),
+             ppm_true=float(c), avail_true=float(d))
+        for pc, a, b, c, d in zip(cand[sel_cs].pc, min_cs[sel_cs], e_pls,
+                                  cand[sel_cs].ppm_true, cand[sel_cs].avail_true)
+    ] + [
+        dict(side="club", pc=str(pc), e_lp=float(a), e_scored=float(a),
+             ppm_true=float(c), avail_true=float(d))
+        for pc, a, c, d in zip(keep.pc, keep.min_actual,
+                               keep.ppm_true, keep.avail_true)
+    ]
     return r
 
 
@@ -144,7 +178,7 @@ def run(caps, n_clubs, only=None, label="spec"):
     split = pd.read_csv(PROCESSED_DIR / "player_club_season.csv",
                         dtype={"player_code": str})
 
-    rows, t0 = [], time.time()
+    rows, mins_rows, t0 = [], [], time.time()
     for train_max, test in SEASONS:
         clubs = sorted(split[split.season == test].club.unique())
         if only is not None:
@@ -157,8 +191,8 @@ def run(caps, n_clubs, only=None, label="spec"):
         gmax = float(ps[ps.season == test].games.max())
         print(f"\n  עונה {test} — {len(clubs)} מועדונים, מאגר {len(cand)}",
               flush=True)
-        print(f"  {'מועדון':<7}{'A':>9}{'B':>9}{'C':>9}{'D':>9}"
-              f"{'n':>5}{'top6':>8}{'binding':>12}{'שנ':>6}", flush=True)
+        print(f"  {'מועדון':<7}{'A':>9}{'B':>9}{'C':>9}{'D':>9}{'F':>9}"
+              f"{'n':>5}{'קוצץ':>7}{'binding':>11}{'שנ':>6}", flush=True)
 
         for club in clubs:
             if len(rows) >= n_clubs:
@@ -179,11 +213,18 @@ def run(caps, n_clubs, only=None, label="spec"):
                 print(f"  {club:<7} אין פתרון", flush=True)
                 continue
             r.update(season=test, club=club, budget=B, secs=time.time() - t1)
+            for m in r.pop("_mins", []):
+                mins_rows.append(dict(season=test, club=club, **m))
             rows.append(r)
+            # 🔴 כתיבה מצטברת. ההרצה של ADR 0005 לקחה 12.8 שעות, ולו
+            #    קרסה בשעה ה-12 לא היה נשאר דבר.
+            pd.DataFrame(rows).to_csv(OUT_MAIN, index=False)
+            pd.DataFrame(mins_rows).to_csv(OUT_MINS, index=False)
             print(f"  {club:<7}{r['adv_cap_A']:>+9.2%}{r['adv_cap_B']:>+9.2%}"
                   f"{r['adv_cap_C']:>+9.2%}{r['adv_cap_D']:>+9.2%}"
-                  f"{r['n_cap_shape']:>5}{r['top6_cap_shape']:>8.1f}"
-                  f"{r['bind_cap']:>12}{r['secs']:>6.0f}", flush=True)
+                  f"{r['adv_cap_F_shape']:>+9.2%}"
+                  f"{r['n_cap_shape']:>5}{r['clipped_shape']:>7.1f}"
+                  f"{r['bind_cap']:>11}{r['secs']:>6.0f}", flush=True)
 
     print(f"\n  זמן כולל: {(time.time()-t0)/60:.1f} דקות", flush=True)
     return pd.DataFrame(rows)
@@ -203,12 +244,30 @@ def report(d):
     if not ok_base:
         print("     🔴 בלי זה אין ל-2x2 provenance. עצור והסבר לפני כל מסקנה.")
 
+    hdr("ADR 0006 — המנוע על הדקות שתכנן")
+    E = float(d.adv_cap_E.median())
+    F = float(d.adv_cap_F.median())
+    Es = float(d.adv_cap_E_shape.median())
+    Fs = float(d.adv_cap_F_shape.median())
+    print(f"  {'':<20}{'המנוע מחולק מחדש':>20}{'המנוע על תוכניתו':>20}")
+    print(f"  {'מכנה חמדני':<20}{cells['A']:>+20.2%}{E:>+20.2%}")
+    print(f"  {'מכנה בפועל':<20}{cells['B']:>+20.2%}{F:>+20.2%}")
+    print(f"\n  ואותו דבר עם אילוץ הצורה:")
+    print(f"  {'מכנה חמדני':<20}{cells['C']:>+20.2%}{Es:>+20.2%}")
+    print(f"  {'מכנה בפועל':<20}{cells['D']:>+20.2%}{Fs:>+20.2%}   <- הספציפיקציה")
+    print(f"\n  עלות הקציצה: חציון {d.clipped_shape.median():.1f} דקות מ-200 "
+          f"({d.clipped_shape.median()/2:.1f}%) · מקסימום {d.clipped_shape.max():.1f}")
+    qdrop_num = 1 - float((d.q_cap_shape_plan / d.q_cap_shape).median())
+    print(f"  q_cap יורד במעבר להקצאה-לפי-תוכנית: {qdrop_num:.2%}")
+
     hdr("הפירוק שנדרש בכלל ההחלטה")
-    print(f"  מהמכנה בלבד   A -> B : {cells['B']-cells['A']:>+8.2%}")
-    print(f"  מהאילוץ בלבד  A -> C : {cells['C']-cells['A']:>+8.2%}")
-    print(f"  שניהם         A -> D : {cells['D']-cells['A']:>+8.2%}")
-    move = cells["D"] / cells["A"] - 1 if cells["A"] else np.nan
-    print(f"\n  הספציפיקציה מול קו הבסיס: {move:+.1%}")
+    print(f"  מהמכנה בלבד      A -> B  : {cells['B']-cells['A']:>+8.2%}")
+    print(f"  מהאילוץ בלבד     A -> C  : {cells['C']-cells['A']:>+8.2%}")
+    print(f"  ADR 0005 spec    A -> D  : {cells['D']-cells['A']:>+8.2%}  (נעצר)")
+    print(f"  מהורדת הבדיעבד   A -> E  : {E-cells['A']:>+8.2%}")
+    print(f"  ADR 0006 spec    A -> Fs : {Fs-cells['A']:>+8.2%}")
+    move = Fs / cells["A"] - 1 if cells["A"] else np.nan
+    print(f"\n  הספציפיקציה (Fs) מול קו הבסיס: {move:+.1%}")
     if move > 0.50:
         v = "🔴 עולה מעל 50% -> STOP. חוזרים לגריל לפני שמשהו נכתב."
     elif move > 0:
@@ -219,21 +278,29 @@ def report(d):
         v = "יורד 20%-60% -> הכותרת עומדת, ומצוינת עם אילוץ הצורה בכל מקום."
     else:
         v = "יורד מעל 60% -> הכותרת הקודמת בטלה. המספר החדש הוא הכותרת."
-    neg = float((d.adv_cap_D <= 0).mean())
+    neg = float((d.adv_cap_F_shape <= 0).mean())
     if neg > 0.5:
         v = f"🔴 adv_cap<=0 ב-{neg:.0%} -> אין טענה. סעיפים 4 ו-5 נכתבים מחדש."
     print(f"  לפי הכלל המוצהר: {v}")
+    if move > 0.50:
+        print("  ⚠️ זו העצירה ה**שנייה** על אותה מטריקה (ADR 0005 עצר על D).")
+        print("     לפי השורה האחרונה בכלל של ADR 0006: הבעיה במטריקה ולא")
+        print("     בקונבנציה. מדווחים 0.1414 עם הקונבנציה שלו, השאר ל-v2.")
+    print("\n  ⚠️ תאי B ו-D נעצרו ב-ADR 0005 ואינם מדווחים כתוצאה.")
 
     hdr("מול התחזיות שננעלו")
     qdrop = 1 - float((d.q_club_actual / d.q_club_greedy).median())
     preds = [
-        ("adv_cap · צורה + חמדני", cells["C"], 0.09, 0.13, "קלוד"),
-        ("adv_cap · צורה + חמדני", cells["C"], 0.085, 0.113, "אלמוג"),
-        ("adv_cap · צורה + בפועל", cells["D"], 0.15, 0.21, "קלוד"),
-        ("q_club יורד", qdrop, 0.04, 0.09, "קלוד"),
-        ("q_club יורד", qdrop, 0.07, 0.11, "אלמוג"),
-        ("גודל הסגל", float(d.n_cap_shape.median()), 13, 15, "קלוד"),
-        ("גודל הסגל", float(d.n_cap_shape.median()), 14, 16, "אלמוג"),
+        ("0005 adv_cap צורה+חמדני", cells["C"], 0.09, 0.13, "קלוד"),
+        ("0005 adv_cap צורה+בפועל", cells["D"], 0.15, 0.21, "קלוד"),
+        ("0005 q_club יורד", qdrop, 0.04, 0.09, "קלוד"),
+        ("0005 גודל הסגל", float(d.n_cap_shape.median()), 13, 15, "קלוד"),
+        ("0006 q_cap יורד", qdrop_num, 0.11, 0.18, "קלוד"),
+        ("0006 adv_cap תא F+צורה", Fs, 0.09, 0.17, "קלוד"),
+        ("0006 adv_cap תא E", E, 0.02, 0.09, "קלוד"),
+        ("0006 דקות שנקצצו", float(d.clipped_shape.median()), 20, 32, "קלוד"),
+        ("0006 שיעור ניצחון F", float((d.adv_cap_F_shape > 0).mean()),
+         0.75, 0.95, "קלוד"),
     ]
     for name, got, lo, hi, who in preds:
         ok = lo <= got <= hi

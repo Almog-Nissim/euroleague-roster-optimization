@@ -290,6 +290,47 @@ def score_shape_greedy(df, ppm_col, avail_col, repl, caps, kmax=KMAX,
     return q, used, e
 
 
+def score_planned(df, ppm_col, avail_col, minutes, repl=None, tol=1e-9):
+    """🔴 ADR 0006. המנוע על הדקות ש**הוא תכנן**, בלי הקצאה מחדש.
+
+        e_i = min(e_LP_i, 32·avail_true_i)
+        q   = Σ e_i·ppm_true_i  +  REPL·(200 − Σe_i)
+
+    `e_LP` נקבע ב-LP על `ppm` **חזוי** ועל `avail` **חזוי**, ולכן התוכנית
+    יכולה להיות בלתי אפשרית מול מה שקרה: נמדד `EVANS, KEENAN` עם 27.3
+    דקות מתוכננות ו-`avail_true = 0.026`, כלומר משחק אחד מ-38.
+
+    **שני דברים שהפונקציה הזאת לא עושה, וזו כל הנקודה:**
+
+    1. **לא מחלקת מחדש.** `score_rows` ו-`score_shape` מסדרות דקות לפי
+       `ppm_true` יורד — כלומר בדיעבד. זה היה סימטרי כל זמן ששני הצדדים
+       קיבלו את זה. ADR 0005 מדד מה קורה כשרק המנוע מקבל: +98.4%, ו-STOP.
+    2. **לא מעבירה את הדקות שהתפנו לשאר הסגל.** העברה כזאת דורשת לדעת מי
+       נפצע. הן נופלות ל-`REPL`, וזה מחיר הסיכון של לתכנן סביב מי שלא היה
+       שם. המועדון לא משלם אותו כי הוא שיחק 200 דקות אמיתיות עם 16
+       שחקנים מול 12 של המנוע.
+
+    הקציצה ראשונה, ורק מה ששורד תורם ב-`ppm_true` שלו — כולל שלילי, בלי
+    רצפה. הסדר הזה הוא מה ששומר על הזנב השלילי קטן (8% מהסגלים), כי
+    שחקני `avail≈0` נקצצים לפני שהשאלה בכלל מתעוררת.
+
+    מחזיר (q, used, e, clipped).
+    """
+    ppm = df[ppm_col].values
+    av = df[avail_col].values
+    e_lp = np.asarray(minutes, dtype=float)
+    cap = ro.MAX_MIN_PLAYER * av
+    e = np.minimum(e_lp, cap)
+    e = np.maximum(e, 0.0)
+    clipped = float(np.maximum(e_lp - cap, 0.0).sum())
+    q = float((e * ppm).sum())
+    used = float(e.sum())
+    left = ro.MINUTES_PER_GAME - used
+    if repl is not None and left > tol:
+        q += left * repl
+    return q, used, e, clipped
+
+
 def score_actual(df, ppm_col, minutes_col, repl=None):
     """המועדון על הדקות שבאמת שוחקו. זו ספציפיקציית המכנה.
 

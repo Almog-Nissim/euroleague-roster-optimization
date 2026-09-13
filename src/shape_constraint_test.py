@@ -214,6 +214,65 @@ def synthetic(caps):
         and abs(o_v2 - o_v3) / max(abs(o_v2), 1e-9) <= 0.005
     check("T12", "optimise_v2(caps) == optimise_v3(caps, repl=0)", same,
           f"v2 {o_v2:.6f} מול v3 {o_v3:.6f}")
+
+    # =================================================================
+    # ADR 0006 — המנוע על הדקות שתכנן
+    # =================================================================
+    ppool = pool[selc].copy()
+    ppool["ppm_true"] = ppool.ppm * np.linspace(0.7, 1.15, len(ppool))
+    ppool["avail_true"] = np.linspace(0.05, 1.0, len(ppool))
+    e_lp = minc[selc]
+    q, used, e_sc, clip = scoring.score_planned(
+        ppool, "ppm_true", "avail_true", e_lp, 0.127)
+
+    cap_true = ro.MAX_MIN_PLAYER * ppool.avail_true.values
+    check("T13", "אף דקה מנוקדת אינה חורגת מ-32·avail_true",
+          bool((e_sc <= cap_true + 1e-9).all()),
+          f"מקסימום e/(32·avail_true) = {(e_sc/cap_true).max():.6f}")
+
+    check("T14", "אין הקצאה מחדש — e = min(e_LP, 32·avail_true) איבר-איבר",
+          bool(np.allclose(e_sc, np.minimum(e_lp, cap_true))),
+          f"מקסימום סטייה {np.abs(e_sc-np.minimum(e_lp,cap_true)).max():.2e}"
+          f" · נקצצו {clip:.1f} דקות")
+
+    q_re = float((e_sc * ppool.ppm_true.values).sum())
+    fill = ro.MINUTES_PER_GAME - used
+    check("T15", "דקות מנוקדות + מילוי REPL = 200",
+          abs(used + fill - ro.MINUTES_PER_GAME) < 1e-9
+          and abs(q - (q_re + fill * 0.127)) < 1e-9,
+          f"used {used:.2f} + fill {fill:.2f} = 200 · q מכיל את המילוי")
+
+    # T16 — צד המועדון: הדקות המנוקדות הן e_actual בדיוק
+    club = pd.DataFrame(dict(
+        pc=list("abcde"), ppm_true=[0.6, 0.5, 0.4, 0.3, 0.2],
+        min_actual=[28.0, 26.0, 24.0, 20.0, 18.0],
+        position=["G", "G", "F", "F", "C"]))
+    qc, uc, ec = scoring.score_actual(club, "ppm_true", "min_actual", 0.127)
+    check("T16", "המועדון מנוקד על e_actual בדיוק, בלי שינוי",
+          bool(np.allclose(ec, club.min_actual.values)),
+          f"Σe = {uc:.1f} · מילוי {ro.MINUTES_PER_GAME-uc:.1f} ב-REPL")
+
+    # T17 — ppm_true שלילי ששרד את הקציצה מוריד את הניקוד
+    neg = pd.DataFrame(dict(
+        pc=["good", "bad"], ppm=[0.6, 0.5],
+        ppm_true=[0.60, -0.40], avail_true=[1.0, 1.0],
+        position=["G", "F"]))
+    q_with, _, e_n, _ = scoring.score_planned(
+        neg, "ppm_true", "avail_true", np.array([30.0, 20.0]), None)
+    q_without, _, _, _ = scoring.score_planned(
+        neg, "ppm_true", "avail_true", np.array([30.0, 0.0]), None)
+    check("T17", "ppm_true שלילי ששרד את הקציצה מחסר",
+          q_with < q_without and e_n[1] > 0,
+          f"עם 20 דקות {q_with:.2f} < בלי {q_without:.2f} "
+          f"(הפרש {q_with-q_without:+.2f})")
+
+    # T7' — המונה הוא לא ערך המטרה, וזו הנקודה
+    q_pred = float((e_lp * pool[selc].ppm.values).sum())
+    check("T7'", "המונה אינו ערך המטרה: ppm חזוי משחזר, ppm_true לא",
+          abs(q_pred - lastc["obj"]) / abs(lastc["obj"]) <= 0.005
+          and abs(q - lastc["obj"]) / abs(lastc["obj"]) > 0.005,
+          f"Σe·ppm חזוי {q_pred:.3f} ≈ LP {lastc['obj']:.3f} · "
+          f"הניקוד המדווח {q:.3f}")
     return pool, selc, minc
 
 
