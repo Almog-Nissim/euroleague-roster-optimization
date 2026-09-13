@@ -45,3 +45,23 @@ agreement.
 - `/tdd` — any change to the LP or the scorer.
 - `/code-review` — before every commit.
 - `/handoff` — at session end. Save the result under `docs/handoff/`.
+
+## Agent skills
+
+Where the engineering skills read their per-repo configuration. Not the same as
+`## Skills` above, which says when to invoke each one.
+
+### Issue tracker
+
+Local markdown under `.scratch/<feature>/`, not GitHub Issues — even though `origin`
+points at GitHub. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, each label string equal to its name. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
