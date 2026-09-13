@@ -101,9 +101,15 @@ def one_club(cand, keep, caps, B):
     r["club_top6"] = float(scoring.top_k_sums(e_act, 6)[5])
 
     # --- LP בלי צורה ---
+    # 🔴 זמן לכל פתרון בנפרד. בהרצת ADR 0005 היה מד זמן אחד לארבעה
+    #    פתרונות, ולכן ש-2024 TEL אכל 11.2 מ-12.8 השעות אפשר היה לייחס
+    #    רק בדרך השלילה. לא שוב.
+    _t = time.time()
     sel_f, min_f = optimise_v2(cand, B, MIN_LEGAL_ROSTER)
+    r["secs_free"], _t = time.time() - _t, time.time()
     r["lp_free"] = oc.LAST.get("obj", np.nan)
     sel_c, min_c = optimise_capped(cand, B, MIN_LEGAL_ROSTER)
+    r["secs_cap"], _t = time.time() - _t, time.time()
     r["lp_cap"] = oc.LAST.get("obj", np.nan)
     if sel_f is None or sel_c is None:
         return None
@@ -114,9 +120,12 @@ def one_club(cand, keep, caps, B):
 
     # --- LP עם צורה ---
     # optimise_v3 עם repl=0.0 הוא בדיוק v2 + צורה: המטרה Σ(ppm−0)·e.
+    _t = time.time()
     sel_fs, min_fs = optimise_v3(cand, B, MIN_LEGAL_ROSTER, caps, repl=0.0)
+    r["secs_free_shape"], _t = time.time() - _t, time.time()
     r["lp_free_shape"] = oc.LAST.get("obj", np.nan)
     sel_cs, min_cs = optimise_capped(cand, B, MIN_LEGAL_ROSTER, caps=caps)
+    r["secs_cap_shape"] = time.time() - _t
     r["lp_cap_shape"] = oc.LAST.get("obj", np.nan)
     if sel_fs is None or sel_cs is None:
         return None

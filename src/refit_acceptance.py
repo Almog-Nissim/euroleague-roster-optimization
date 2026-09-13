@@ -160,14 +160,26 @@ def main() -> int:
     m = (cb[["club", "budget"]]
          .merge(bud[bud.season == SEASON][["club", "net_eur"]], on="club")
          .dropna())
-    x, y = m.budget.values.astype(float), m.net_eur.values.astype(float)
+    # 🔴 תוקן. השאלה שהסף שואל היא **האם הציר ברמת היורו נקרא כיורו**,
+    #    ולכן הוא צריך להיבחן על הציר ברמת היורו — כלומר אחרי הכפלה
+    #    חזרה במחלק הנרמול. זה בדיוק מה שתנאי 3 עושה כבר, עם אותו
+    #    נימוק. תנאי 1 שאל את אותה שאלה ובחן את הציר המנורמל, ולכן
+    #    השווה a=1.443 מול סף שנוסח ל-a=1.087.
+    #    b ו-MAE אינם מושפעים: הציר מוכפל בקבוע, הערכים המותאמים זהים.
+    scale1 = float(info.get("cost_scale", 1.0))
+    x_norm = m.budget.values.astype(float)
+    x = x_norm * scale1                          # ציר ברמת היורו
+    y = m.net_eur.values.astype(float)
     a, b = np.polyfit(x, y, 1)
+    a_norm = float(np.polyfit(x_norm, y, 1)[0])
     pred = a * x + b
     r = float(np.corrcoef(x, y)[0, 1])
     mae = float(np.abs(y - pred).mean())
     ident_mae = float(np.abs(y - x).mean())      # אם הציר כבר יורו
-    print(f"  net_eur = {a:.4f}·ציר {b:+.4f}   n={len(m)} · "
+    print(f"  net_eur = {a:.4f}·ציר_יורו {b:+.4f}   n={len(m)} · "
           f"R²={r*r:.3f} · MAE={mae:.2f}M€")
+    print(f"  cost_scale={scale1:.4f} · a על הציר המנורמל {a_norm:.4f} "
+          f"(לדיווח, לא לסף)")
     print(f"  MAE אם קוראים את הציר כיורו ישירות (a=1,b=0): "
           f"{ident_mae:.2f}M€")
     m2 = m.assign(err=y - x).sort_values("err")

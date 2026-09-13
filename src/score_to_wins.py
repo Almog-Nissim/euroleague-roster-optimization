@@ -202,10 +202,16 @@ def main():
            "מונקו": "MCO", "פרטיזן": "PAR", "וירטוס": "VIR",
            "פריז": "PRS", 'הפועל ת"א': "HTA", "דובאי": "DUB"}
     bud["team"] = bud.club.map(MAP)
-    m = d.merge(bud[["season", "team", "gross_eur"]].dropna(),
+    # 🔴 תוקן. הבקרה רצה על gross_eur, ש-CONTEXT מסמן deprecated והוא
+    #    ריק לכל 20 מועדוני 2025. ה-merge הוא how="inner" על dropna,
+    #    ולכן **כל עונת 2025 נשרה בשקט** מבקרת התקציב — אחת משלוש
+    #    ההפרכות. נמדד: gross_eur 36/56 שורות (2025: 0/20) מול
+    #    net_eur 56/56. net_eur הוא גם מה ש-CONTEXT מגדיר כתקציב
+    #    השחקנים השנתי האמיתי של מועדון.
+    m = d.merge(bud[["season", "team", "net_eur"]].dropna(),
                 on=["season", "team"], how="inner")
     if len(m) >= 10:
-        m["lb"] = np.log(m.gross_eur)
+        m["lb"] = np.log(m.net_eur)
         for c in ("q_club", "lb", "wins"):
             m[c + "_d"] = m[c] - m.groupby("season")[c].transform("mean")
         m1 = sm.OLS(m.wins_d, sm.add_constant(m[["q_club_d"]])).fit()
