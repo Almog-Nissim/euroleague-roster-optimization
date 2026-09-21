@@ -107,3 +107,4 @@ __pycache__/
 !data/processed/score_to_wins_budget_control.csv
 !data/processed/pool_restriction_check.csv
 !data/processed/headline_exact.csv
+!data/processed/shape_slack_sensitivity.csv

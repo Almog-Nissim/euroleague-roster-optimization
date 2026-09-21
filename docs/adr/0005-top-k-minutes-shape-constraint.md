@@ -428,3 +428,25 @@ direction — the shared intuition that spreading minutes needs more players is 
 - **Still unrun:** the `SLACK` 0.95/1.05 sensitivity and the sweep curve. Both were held
   because the specification is now in question, and running a curve under a specification
   that may change would produce a dashboard nobody can defend.
+
+
+## Run matrix b — the SLACK sensitivity, run after v1.0 (2026-09-21)
+
+Declared deviation: run through `src/slack_sensitivity.py`, not `shape_run --slack` — only
+the capped+shape LP, at `gap = 0`, scored as ADR 0006 cell F, on the 12 declared
+club-seasons. The reasons are in the script's docstring and in ADR 0006's corrections.
+
+```
+  SLACK 1.00   median F 0.1385   (headline_exact, not re-solved)
+  SLACK 0.95   median F 0.0982   Δ -0.0403    12/12 proven · 12/12 positive
+  SLACK 1.05   median F 0.1339   Δ -0.0046    12/12 proven · 12/12 positive
+  LP objective monotone in the multiplier: 24/24
+```
+
+**Rule, declared before the run: sensitive** (|Δ| > 0.02 at 0.95). Reported in the caveats
+of the README and the dashboard; SLACK 1.00 remains the specification. Loosening does not
+raise F although the LP objective rises — F is scored on `ppm_true`, the objective on
+predicted `ppm`, and at 1.00 the extra freedom buys predicted production that does not
+materialise. All four locked predictions missed: Claude expected robust (both within 0.02),
+Almog expected sensitive in both directions (−0.02 to −0.03 and +0.02 to +0.03). The
+direction at 0.95 was Almog's; the size was larger than either.

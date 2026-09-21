@@ -93,7 +93,7 @@ them, are in ADR 0005 and ADR 0006.
 
 ---
 
-## Three caveats
+## Four caveats
 
 1. **Depth.** The engine carries 12 players; real clubs carry 15–20. The shape constraint
    spreads minutes across the same twelve, and does not buy more players. The cost of that
@@ -109,6 +109,12 @@ them, are in ADR 0005 and ADR 0006.
    the ones the engine produces. The budget axis is in normalised units and is valid to
    about 19.5; greying out the range beyond that on the dashboard is still to do. Nothing
    here is in euros per player: that mapping was tested and rejected.
+4. **The shape caps matter.** The rotation-shape caps are the observed maxima (SLACK 1.00).
+   Tightening them by 5% cuts the median advantage on the declared 12-club-season subsample
+   from 13.9% to 9.8%; loosening them by 5% does not raise it (13.4%). All 24 solves proven
+   optimal, 12/12 still positive at both settings. The rule declared in advance classes
+   this as *sensitive*: it is reported here, and SLACK 1.00 stays the specification — the
+   sensitivity is never used to choose it (`slack_sensitivity.py`).
 
 **What this is not.** It is not a claim that the engine manages minutes better than
 coaches. The hindsight convention that implied that was stopped (ADR 0005). It is not a
