@@ -18,6 +18,11 @@ last. Estimate: 3–4 sessions.
 
 **Done when:** there is a final headline number with a CI, tagged in git.
 
+**Status, 2026-09-21:** headline final — `adv_cap = 0.1892` proven optimal 38/38
+(`headline_exact.py`), **+5.01 wins per season, CI95 [+1.39, +8.69]**
+(`wins_conversion.py`, which also reproduces the day-15 4.26 as a guard). `FROZEN` updated,
+dashboard regenerated. Remaining: `git tag v1.0`. `SLACK` and the sweep run after the tag.
+
 ## 1b. Queued behind the running solve — code fixed, regeneration owed
 
 Three fixes are committed as code but **not verified by a run**, because each needs
@@ -37,7 +42,8 @@ ADR 0006 solve finishes and the CPU is free.
   **lock a prediction before re-running it.** It writes no CSV.
 
 **Status:** `dump_rosters` done (`engine_rosters.csv` regenerated) · `refit_acceptance` done
-(`e4a670b`, `46abf3d`) · `score_to_wins` waiting on a prediction from both sides.
+(`e4a670b`, `46abf3d`) · `score_to_wins` done (`99943b2`): the refutation holds and is
+stronger, now on both seasons instead of one.
 
 **Found while regenerating:** `engine_rosters.csv` was committed on day 10 and never
 regenerated after the market refit (ADR 0001, day 15), so it held engine rosters from the

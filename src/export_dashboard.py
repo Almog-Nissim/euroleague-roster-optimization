@@ -88,14 +88,23 @@ SEP = "=" * 76
 #      n_club_seasons            38.0     38.0
 #      wasted_budget_share      0.269    0.308
 #
+# 🔴 v1.0, 2026-09-21 — ADR 0006. הכותרת עברה לקונבנציה שבה אף צד לא
+#    מחולק מחדש בדיעבד: המנוע על התוכנית של ה-LP המאולץ עם אילוץ הצורה
+#    (gap=0, הוכח 38/38), המועדון על הדקות ששיחק. wins_conversion.py
+#    מריץ את שתי הקונבנציות ומוודא שהישנה משחזרת את 4.26.
+#
+#      מפתח                     יום 15    v1.0
+#      headline_capped_wins      4.26     5.01   CI95 [1.39, 8.69]
+#      headline_free_wins        4.90     —      הוסר: ל-ADR 0006 אין ניקוד
+#                                                לפי תוכנית למנוע החופשי
+#
 #    ארבעת הראשונים נגזרים מ-usage_constrained_results.csv, שתלוי
 #    ב-usage_curve_results_min0.csv. הקובץ המקורי במעקב מ-8661308,
 #    ו-refit_diff.py מוודא שמפרט club_relative משחזר עליו את יום 14
 #    שורה-שורה. (עד יום 15 כאן היה כתוב 5.10 — ערך מריצת סנדבוקס
 #    על קובץ usage משוחזר.)
 FROZEN = {
-    "headline_capped_wins":  4.26,
-    "headline_free_wins":    4.90,
+    "headline_capped_wins":  5.01,
     "gap_random_club_wins": -1.72,
     "gap_free_random_wins":  6.61,
     "n_club_seasons":       38.0,
@@ -145,9 +154,7 @@ def main() -> int:
         return 1
 
     cap = wc[wc.engine.str.contains("מאולץ")].iloc[0]
-    fre = wc[wc.engine.str.contains("חופשי")].iloc[0]
     ok &= check("headline_capped_wins", float(cap.wins))
-    ok &= check("headline_free_wins", float(fre.wins))
 
     g = {r.gap: r for _, r in nw.iterrows()}
     rc = next(v for k, v in g.items() if "אקראי − מועדון" in k)
@@ -168,17 +175,16 @@ def main() -> int:
             "value": round(float(cap.wins), 2),
             "ci": [round(float(cap.lo), 2), round(float(cap.hi), 2)],
             "label": "ניצחונות נוספים בעונה מאופטימיזציה של התקציב הקיים",
-            "engine": "מאולץ (זהות הכדור)",
+            "engine": "מאולץ: זהות הכדור + צורת הדקות · ADR 0006",
             "caveat": "גם בקצה הזהיר של הטווח התוצאה חיובית — "
                       "אותו תקציב, הקצאה טובה יותר. הטווח מודד "
                       "את הרעש בלבד: ההמרה לניצחונות נלמדה "
                       "מהפרשים קטנים מאלה שהמנוע מייצר, ומנגד "
                       "מבנה האילוצים דווקא מוריד מהתוצאה — "
-                      f"כלומר תרומת המודל עצמו גדולה מ-{float(cap.wins):.2f}.",
-        },
-        "free_engine": {
-            "value": round(float(fre.wins), 2),
-            "ci": [round(float(fre.lo), 2), round(float(fre.hi), 2)],
+                      f"כלומר תרומת המודל עצמו גדולה מ-{float(cap.wins):.2f}. "
+                      "המספר מדווח רק עם הפירוק שלו (ADR 0006): המנוע "
+                      "נמדד על התוכנית שהתחייב אליה והמועדון על הסבב "
+                      "ששיחק — אף צד לא מחולק מחדש בדיעבד.",
         },
         "decomposition": [
             {"step": "מבנה האילוצים לבדו (סגל אקראי)",
