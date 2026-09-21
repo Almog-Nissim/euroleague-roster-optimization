@@ -207,7 +207,9 @@ export default function Headline({ onOpenBuilder }) {
 
       <footer>
         נוצר {d.meta.generated} · {d.meta.units} ·
-        אזור אקסטרפולציה מ־{d.meta.extrapolation_from} יחידות.
+        {d.meta.observed_budget && <>תקציבים שנצפו בפועל:{" "}
+          <span dir="ltr">{d.meta.observed_budget[0]}–{d.meta.observed_budget[1]}</span>
+          {" "}יחידות; מחוץ להם — אקסטרפולציה.</>}
         כל מספר כאן עבר בקרת הקפאה: שינוי בכל אחד מהם שובר את הבנייה.
       </footer>
     </div>

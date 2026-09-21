@@ -25,9 +25,10 @@ const SPOTS = [
 ];
 
 /* 🔴 v1.0: כל התצוגה ביורו הוסרה. ציר היורו נבדק ונדחה — refit_acceptance
-   נכשל בשלושת השערים — ו-fit_eur נבנה ברמת מועדון. מ-meta.eur נשאר רק
-   הטווח הנצפה (lo/hi) ביחידות מנורמלות, לאזהרת "מחוץ לטווח שנצפה". */
-const EUR_FALLBACK = { a: 0.7639, b: -2.119, mae: 2.15, lo: 12.9, hi: 36.9 };
+   נכשל בשלושת השערים — ו-fit_eur נבנה ברמת מועדון.
+   שלב 2, Q6: גם הגבולות lo/hi שישבו ב-meta.eur הוסרו. האזור האפור הוא
+   הטווח שמועדונים אמיתיים הוציאו בפועל, נגזר בזמן ריצה מ-data.clubs —
+   לא 19.5, שהיה גבול כיול היורו, ולא ערך מוקלד. */
 
 const tc = (s) => s.split(/[\s,]+/).filter(Boolean)
   .map((w) => w[0] + w.slice(1).toLowerCase()).join(" ");
@@ -62,7 +63,8 @@ export default function RosterBuilder() {
       .catch(() => {});
   }, []);
 
-  const EUR = data?.meta?.eur ?? EUR_FALLBACK;
+  const obsB = (data?.clubs ?? []).map((c) => c.budget);
+  const OBS = obsB.length ? { lo: Math.min(...obsB), hi: Math.max(...obsB) } : null;
   const pts = data?.free ?? [];
   const p = pts[i];
   const prev = pts[i - 1];
@@ -153,7 +155,7 @@ export default function RosterBuilder() {
               aria-label="תקציב" />
             <span className="bunit">
               יחידות
-              {(p.budget < EUR.lo || p.budget > EUR.hi) && (
+              {OBS && (p.budget < OBS.lo || p.budget > OBS.hi) && (
                 <em className="oob">מחוץ לטווח שנצפה בליגה</em>
               )}
             </span>
@@ -256,6 +258,17 @@ export default function RosterBuilder() {
             <pattern id="hx" width="7" height="7" patternTransform="rotate(45)"
               patternUnits="userSpaceOnUse"><line y2="7" className="hxl" /></pattern>
           </defs>
+          {/* Q6: מחוץ לטווח התקציבים שנצפה — אקסטרפולציה. טקסטורה, לא רק צבע. */}
+          {OBS && pts.length > 1 &&
+            [[pts[0].budget, OBS.lo], [OBS.hi, pts[pts.length - 1].budget]]
+              .filter(([a, b]) => b > a)
+              .map(([a, b]) => (
+                <g key={a}>
+                  <rect x={X(a)} y={T} width={X(b) - X(a)} height={H - B - T}
+                    fill="url(#hx)" className="xtra" />
+                  <text x={(X(a) + X(b)) / 2} y={T + 12} className="ax"
+                    textAnchor="middle">מחוץ לטווח שנצפה</text>
+                </g>))}
           {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
             <g key={v}>
               <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} className="grid" />

@@ -106,9 +106,9 @@ them, are in ADR 0005 and ADR 0006.
    separate fatigue from a coach riding a hot hand. This does **not** show that fatigue is
    absent.
 3. **Extrapolation.** The wins conversion was learned from score differences smaller than
-   the ones the engine produces. The budget axis is in normalised units and is valid to
-   about 19.5; greying out the range beyond that on the dashboard is still to do. Nothing
-   here is in euros per player: that mapping was tested and rejected.
+   the ones the engine produces. The budget axis is in normalised units, and the dashboard
+   greys out every budget outside the range real clubs actually spent (12.46–25.26). Nothing
+   here is in euros: that mapping was tested and rejected, and all euro display removed.
 4. **The shape caps matter.** The rotation-shape caps are the observed maxima (SLACK 1.00).
    Tightening them by 5% cuts the median advantage on the declared 12-club-season subsample
    from 13.9% to 9.8%; loosening them by 5% does not raise it (13.4%). All 24 solves proven
