@@ -136,6 +136,9 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE, caps=None,
                    sol_status=int(getattr(p, "sol_status", -1)))
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
+    # 🔴 guard על עצירה בתקרת זמן (sol_status=2). לא-אפשרי ממשיך להחזיר
+    #    None כמו קודם — ה-sweep נשען על זה בתקציבים בלי פתרון.
+    scoring.solver_guard(p, "optimise_capped")
     sel = np.array([x[i].value() > 0.5 for i in range(n)])
     mins = np.array([e[i].value() or 0.0 for i in range(n)])
     return sel, mins

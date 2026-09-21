@@ -194,6 +194,39 @@ def synthetic(caps):
     check("T9", "סטטוס שאינו Optimal זורק ולא חוזר בשקט", raised,
           f"סטטוס {pulp.LpStatus[p.status]} · נזרק: {raised}")
 
+    # --- T9b: עצירה על תקרת זמן עם פתרון אפשרי ---
+    # 🔴 נוסף אחרי code review. T9 בדק LP *לא אפשרי*, לא תקרת זמן. CBC
+    #    שנעצר על timeLimit עם פתרון אפשרי מדווח status "Optimal" ו-
+    #    sol_status 2 — וזה בדיוק המקרה ש-guard על status לבד מפספס.
+    #    קשה לייצר עצירה כזאת באופן דטרמיניסטי, ולכן הלוגיקה נבדקת על
+    #    אובייקט שמדמה את מה ש-PuLP מחזיר במקרה הזה.
+    class _TimedOut:
+        status, sol_status = 1, 2          # Optimal · IntegerFeasible
+    raised_tl = False
+    try:
+        scoring.solver_guard(_TimedOut(), "T9b")
+    except RuntimeError:
+        raised_tl = True
+    check("T9b", "Optimal + sol_status=2 (תקרת זמן) זורק", raised_tl,
+          f"נזרק: {raised_tl}")
+
+    # --- T18: נפילה של score_shape לגיבוי נספרת ולא שקטה ---
+    # 🔴 נוסף אחרי code review. סנטר יחיד בזמינות 0.05: התקרה שלו
+    #    32·0.05 = 1.6 דקות, מתחת לרצפת C של 8.6 — הרצפה בלתי אפשרית, ו-
+    #    score_shape מוריד אותה. זה היה שקט. (סגל בלי סנטר בכלל אינו
+    #    מקרה בדיקה: _solve מדלג על רצפה של עמדה ריקה.)
+    guards = pd.DataFrame(dict(
+        pc=list("abcdefgh"), ppm_true=np.linspace(0.7, 0.3, 8),
+        avail_true=[1.0] * 7 + [0.05],
+        position=["G", "G", "G", "F", "F", "F", "F", "C"]))
+    before = dict(getattr(scoring, "FALLBACKS", {}))
+    with contextlib.redirect_stdout(io.StringIO()):
+        scoring.score_shape(guards, "ppm_true", "avail_true", 0.127, caps)
+    after = dict(getattr(scoring, "FALLBACKS", {}))
+    counted = after.get("no_pos_min", 0) > before.get("no_pos_min", 0)
+    check("T18", "score_shape שמוריד רצפות עמדה סופר את זה ב-FALLBACKS",
+          counted, f"לפני {before} · אחרי {after}")
+
     check("T11", "הפער האופטימלי מדווח",
           "gap" in lastc or "obj" in lastc,
           f"LAST = {sorted(lastc)}")
@@ -205,15 +238,19 @@ def synthetic(caps):
     # NAME2CODE, אז היא נמדדת.
     import optimise_consistent as oc
     import minute_profile as mp
+    # 🔴 תוקן אחרי code review. הגרסה הקודמת קראה את oc.LAST אחרי v3,
+    #    אבל v3 לא כתב אותו — כלומר o_v3 היה הערך של v2, והטסט השווה
+    #    מספר לעצמו. עכשיו LAST מנוקה לפני v3, ו-fn חייב להיות "v3".
     with contextlib.redirect_stdout(io.StringIO()):
         oc.optimise_v2(pool, B, MR, caps=caps)
         o_v2 = oc.LAST.get("obj")
+        oc.LAST.clear()
         mp.optimise_v3(pool, B, MR, caps, repl=0.0)
-        o_v3 = oc.LAST.get("obj")
-    same = o_v3 is not None and o_v2 is not None \
+        fn_v3, o_v3 = oc.LAST.get("fn"), oc.LAST.get("obj")
+    same = fn_v3 == "v3" and o_v3 is not None and o_v2 is not None \
         and abs(o_v2 - o_v3) / max(abs(o_v2), 1e-9) <= 0.005
-    check("T12", "optimise_v2(caps) == optimise_v3(caps, repl=0)", same,
-          f"v2 {o_v2:.6f} מול v3 {o_v3:.6f}")
+    check("T12", "optimise_v2(caps) == optimise_v3(caps, repl=0), v3 כותב LAST",
+          same, f"fn={fn_v3!r} · v2 {o_v2} מול v3 {o_v3}")
 
     # =================================================================
     # ADR 0006 — המנוע על הדקות שתכנן

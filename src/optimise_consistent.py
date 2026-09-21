@@ -156,6 +156,10 @@ def optimise_v2(pool, budget, min_roster, locked=None, budget_offset=0.0,
                 n_shape=n_shape, gap=(gap if caps else 0.0))
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
+    # 🔴 guard על עצירה בתקרת זמן (sol_status=2). לא-אפשרי ממשיך להחזיר
+    #    None כמו קודם — ה-sweep נשען על זה בתקציבים בלי פתרון.
+    import scoring
+    scoring.solver_guard(p, "optimise_v2")
     sel = np.array([x[i].value() > 0.5 for i in range(n)])
     mins = np.array([e[i].value() or 0.0 for i in range(n)])
     return sel, mins

@@ -56,6 +56,9 @@ KMAX = 8          # מעבר לזה האילוץ אינו כובל מול 200 (k
 SLACK = 1.00      # 1.00 = המקסימום הנצפה בדיוק
 CAPS_CSV = PROCESSED_DIR / "shape_caps.csv"
 
+# כמה פעמים score_shape נפל לגיבוי. קורא שמדווח תוצאה מדפיס את זה כ-guard.
+FALLBACKS = {"no_pos_min": 0, "greedy": 0}
+
 
 # =====================================================================
 # התקרות
@@ -138,8 +141,17 @@ def solver_guard(p, fn, allow_gap=None):
     עלול להיות לא-אופטימלי או לא קיים. "No silent success".
     """
     st = pulp.LpStatus[p.status]
-    if st == "Optimal":
+    ss = getattr(p, "sol_status", None)
+    # 🔴 תוקן אחרי code review. status "Optimal" לבד אינו מספיק: CBC שנעצר
+    #    על timeLimit עם פתרון אפשרי מדווח גם הוא "Optimal", ורק sol_status
+    #    מבדיל — 1 הוכח (בתוך הפער המוצהר), 2 אפשרי בלבד. הגרסה הקודמת
+    #    בדקה status, כלומר עברה בדיוק במקרה שהיא נכתבה לתפוס. T9b.
+    if st == "Optimal" and ss in (None, 1):
         return st
+    if st == "Optimal" and ss == 2:
+        raise RuntimeError(
+            f"❌ {fn}: CBC נעצר על time limit עם פתרון אפשרי שלא הוכח "
+            f"אופטימלי (sol_status=2). הארך את timeLimit — אל תתעלם.")
     raise RuntimeError(
         f"❌ {fn}: הסולבר החזיר '{st}' ולא 'Optimal'. "
         f"אם זה time limit — הארך אותו או הרחב את הפער, אל תתעלם.")
@@ -225,10 +237,19 @@ def score_shape(df, ppm_col, avail_col, repl, caps, kmax=KMAX, tol=1e-9,
             return None
         return np.array([e[i].value() or 0.0 for i in range(n)])
 
+    # 🔴 תוקן אחרי code review. שתי הנפילות למטה היו שקטות, בניגוד
+    #    ל-"Scripts print their guards". עכשיו כל נפילה מודפסת עם ❌
+    #    ונספרת ב-FALLBACKS, והקורא מדווח את הספירה כ-guard. T18.
     out = _solve(pos_min)
+    if out is None and pos_min:
+        FALLBACKS["no_pos_min"] += 1
+        print(f"    ❌ score_shape: רצפות העמדה בלתי אפשריות לסגל של {n} "
+              f"שחקנים — מוסרות. FALLBACKS={FALLBACKS}")
+        out = _solve(False)
     if out is None:
-        out = _solve(False)          # רצפות העמדה בלתי אפשריות לסגל הזה
-    if out is None:
+        FALLBACKS["greedy"] += 1
+        print(f"    ❌ score_shape: אין פתרון LP גם בלי רצפות — נופל לחמדן. "
+              f"FALLBACKS={FALLBACKS}")
         return score_shape_greedy(df, ppm_col, avail_col, repl, caps,
                                   kmax, tol)
     q = float((out * ppm).sum())

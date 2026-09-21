@@ -219,7 +219,8 @@ def run(caps, n_clubs, only=None, label="spec"):
                 print(f"  {club:<7} ❌ {exc}", flush=True)
                 continue
             if r is None:
-                print(f"  {club:<7} אין פתרון", flush=True)
+                print(f"  {club:<7} ❌ אין פתרון — עונת-המועדון לא נספרת",
+                      flush=True)
                 continue
             r.update(season=test, club=club, budget=B, secs=time.time() - t1)
             for m in r.pop("_mins", []):
@@ -296,6 +297,12 @@ def report(d):
         print("     לפי השורה האחרונה בכלל של ADR 0006: הבעיה במטריקה ולא")
         print("     בקונבנציה. מדווחים 0.1414 עם הקונבנציה שלו, השאר ל-v2.")
     print("\n  ⚠️ תאי B ו-D נעצרו ב-ADR 0005 ואינם מדווחים כתוצאה.")
+
+    # 🔴 נוסף אחרי code review. score_shape נפל לגיבוי בשקט (בלי רצפות
+    #    עמדה, או לחמדן). עכשיו הנפילות נספרות, וזה guard של ההרצה.
+    fb = dict(scoring.FALLBACKS)
+    print(f"  {'✅' if fb['greedy'] == 0 else '❌'} score_shape: "
+          f"נפילות לחמדן {fb['greedy']} · רצפות עמדה שהוסרו {fb['no_pos_min']}")
 
     hdr("מול התחזיות שננעלו")
     qdrop = 1 - float((d.q_club_actual / d.q_club_greedy).median())

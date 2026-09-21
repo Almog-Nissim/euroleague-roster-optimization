@@ -146,6 +146,15 @@ def optimise_v3(pool, budget, min_roster, caps, locked=None,
     #    הפער מדווח — הוא **קטן בסדר גודל** מההפרשים שאנחנו מודדים
     #    (5%-20%), ולכן אינו יכול להפוך מסקנה.
     p.solve(pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit, gapRel=gap))
+    # 🔴 תוקן אחרי code review. v3 לא כתב ל-oc.LAST, ולכן כל קורא שקרא
+    #    LAST אחרי v3 קיבל את הערך של הפתרון *הקודם*. כך T12 השווה מספר
+    #    לעצמו, ועמודת lp_free_shape ב-usage_constrained_shape.csv החזיקה
+    #    את lp_cap ב-38/38. נכתב לפני ה-guard, כדי שגם כישלון יירשם.
+    import optimise_consistent as oc
+    oc.LAST.clear()
+    oc.LAST.update(status=pulp.LpStatus[p.status],
+                   obj=pulp.value(p.objective), fn="v3",
+                   gap=gap, sol_status=int(getattr(p, "sol_status", -1)))
     # 🔴 T9. הגרסה הקודמת קיבלה "Not Solved" — כלומר time limit — כהצלחה,
     #    והחזירה פתרון שעלול להיות לא-אופטימלי או לא קיים, בשקט.
     scoring.solver_guard(p, "optimise_v3")
