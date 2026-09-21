@@ -330,3 +330,35 @@ the old code, then green (22/22).
 no floors, no fallback — on the plan of the capped+shape LP. Defect 2 means the *gap-run*
 value of F (0.1892) rests on solves that were not proven within the gap; that is exactly what
 the exact re-run replaces. The v1.0 number is the exact re-run's, not 0.1892.
+
+### Follow-up result — the exact re-run
+
+`src/headline_exact.py` → `data/processed/headline_exact.csv`. 38 solves at `gap = 0`,
+46 minutes, median 56 s, max 261 s.
+
+```
+  adv_cap · F_shape, exact     0.1892    identical to the 0.5%-gap run   Δ +0.0000
+  adv_cap · E_shape, exact     0.0478
+  win rate                     38/38
+  proven optimal               38/38   (sol_status == 1, none near the 1,800 s limit)
+```
+
+All four locked predictions hit: F in [0.184, 0.194], no solve at the limit, 38/38, and
+|Δ| ≤ 0.005.
+
+**The median did not move, but six club-seasons did:**
+
+```
+  PAR   +14.16% -> +0.22%   Δ -13.93      VIR   +27.66% -> +37.30%   Δ +9.64
+  BER   +39.82% -> +33.21%  Δ  -6.62      ULK   +25.51% -> +29.81%   Δ +4.30
+  PAM   +12.98% -> +12.37%  Δ  -0.61      PRS    +4.99% ->  +9.17%   Δ +4.18
+```
+
+A 0.5% gap on an objective computed on *predicted* `ppm` can select a different roster, and
+scored on `ppm_true` the difference per club-season is far larger than 0.5%. It cancels at
+the median here, which is why the gap run's 0.1892 happened to be right. The run-to-run
+swing seen earlier lived in cells C and D, not F.
+
+**This is the v1.0 headline: `adv_cap = 0.1892`, proven, with the decomposition that must
+accompany it.** It supersedes the gap-run value, which rested on shape solves that could not
+be shown to be within the gap (corrections, defect 2).
