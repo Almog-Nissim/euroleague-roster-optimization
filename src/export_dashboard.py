@@ -105,6 +105,7 @@ SEP = "=" * 76
 #    על קובץ usage משוחזר.)
 FROZEN = {
     "headline_capped_wins":  5.01,
+    "headline_adv_cap":      0.1892,     # v1.0, headline_exact.csv
     "gap_random_club_wins": -1.72,
     "gap_free_random_wins":  6.61,
     "n_club_seasons":       38.0,
@@ -213,7 +214,6 @@ def main() -> int:
         #    המספר, לא מחליש אותו — מספר בלי הגדרה הוא סיסמה.
         D["wasted"] = {
             "share": round(share, 3),
-            "eur_m": 3.44,
             "n_scoring_median": int(w1.n_scoring.median()),
             "roster_median": 16,
             "label": "מועדון יורוליג ממוצע משלם על שחקנים שאינם "
@@ -228,18 +228,21 @@ def main() -> int:
     # ---------------------------------------------------- הבנצ'מרק
     h("3. הבנצ'מרק")
     uc = read("usage_constrained_results.csv")
-    if uc is not None:
+    hx = read("headline_exact.csv")
+    if uc is not None and hx is not None:
         ok &= check("n_club_seasons", float(len(uc)))
         m = uc.merge(w1[["season", "club", "q_rand", "rand_win"]],
                      on=["season", "club"], how="left") if w1 is not None else uc
         D["benchmark"] = {
             "n": int(len(uc)),
             "seasons": sorted(int(s) for s in uc.season.unique()),
-            "adv_free_pct": round(float((uc.q_free / uc.q_club - 1).median()), 4),
-            "adv_cap_pct": round(float((uc.q_cap / uc.q_club - 1).median()), 4),
-            "constraint_cost_lp": round(
-                float((uc.q_free - uc.q_cap).median()), 2),
+            # 🔴 v1.0: היתרון מ-headline_exact.csv, הקונבנציה של ADR 0006 — אותו
+            #    מקור כמו הכותרת. קודם: usage_constrained_results (0.1414), כלומר
+            #    אריח ישן מתחת לכותרת חדשה. המנוע החופשי הוסר עם הכותרת שלו.
+            "adv_cap_pct": round(float(hx.adv_F_exact.median()), 4),
+            "n_win": int((hx.adv_F_exact > 0).sum()),
         }
+        ok &= check("headline_adv_cap", float(hx.adv_F_exact.median()))
         D["clubs"] = [
             {k: (round(float(v), 2) if isinstance(v, (int, float, np.floating))
                  else v)

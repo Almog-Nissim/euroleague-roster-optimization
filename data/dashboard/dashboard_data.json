@@ -39,7 +39,6 @@
   },
   "wasted": {
     "share": 0.308,
-    "eur_m": 3.44,
     "n_scoring_median": 10,
     "roster_median": 16,
     "label": "מועדון יורוליג ממוצע משלם על שחקנים שאינם חלק מהרוטציה",
@@ -52,9 +51,8 @@
       2024,
       2025
     ],
-    "adv_free_pct": 0.1682,
-    "adv_cap_pct": 0.1414,
-    "constraint_cost_lp": 1.3
+    "adv_cap_pct": 0.1892,
+    "n_win": 38
   },
   "clubs": [
     {

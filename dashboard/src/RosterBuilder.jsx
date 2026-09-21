@@ -203,7 +203,9 @@ export default function RosterBuilder() {
                 <text y="6" className="pnum">{f(r.minutes, 0)}</text>
                 <text y="41" className="pname">{nice(r.name)}</text>
                 <text y="55" className="pcost" direction="ltr">
-                  {`${f(toEur(r.cost * 12) / 12, 2)}M EUR · ${r.pos}`}
+                  {/* 🔴 v1.0: הוסר יורו לשחקן. fit_eur נבנה ברמת מועדון, ואצל
+                      שחקן אחד הוא הציג סכום שלילי. תוכנית הסגירה, סעיף 2. */}
+                  {r.pos}
                 </text>
               </g>
             ))}
