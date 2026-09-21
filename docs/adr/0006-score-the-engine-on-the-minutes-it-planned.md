@@ -193,4 +193,117 @@ happened: one prediction, not two dressed as two.
 
 ## Result — appended after the run
 
-Pending.
+Status of this ADR is now: **adopted. The declared rule fired "rises, ≤ 50%" — reportable
+only together with the decomposition. Not a second stop.** `src/shape_run.py` →
+`usage_constrained_shape.csv`, `shape_binding.csv`, `shape_minutes.csv`. 38 club-seasons,
+10.7 hours, exit 0.
+
+### The grid
+
+```
+                          engine reallocated      engine on its plan
+  club greedy             0.1414  (A)             0.0423  (E)
+  club as played          0.3232  (B, stopped)    0.1906  (F)
+
+  with the shape constraint:
+  club greedy             0.1235  (C)             0.0478  (E_shape)
+  club as played          0.2878  (D, stopped)    0.1892  (F_shape)  <- specification
+```
+
+**Cell A reproduced `0.1414` exactly.** The grid and the baseline come from one run.
+
+### The decomposition the rule requires
+
+```
+  the denominator alone       A -> B    +18.18 pp   the club is no longer flattered
+  removing hindsight          A -> E     -9.91 pp   the engine no longer knows the outcome
+  the shape constraint        A -> C     -1.79 pp
+  the specification           A -> Fs    +4.78 pp   +33.8% relative
+```
+
+`0.1892` is **not** "the engine improved". It is two opposed accounting corrections that
+nearly cancel: the club stopped receiving a minute allocation it never chose, and the engine
+stopped receiving knowledge of the outcome and an unrealistic concentration of minutes.
+Quoting `0.1892` without these three lines misleads by omission.
+
+### What it means
+
+- **The original headline was conservative, not inflated.** The flattery of the club was
+  larger than the engine's unfair advantages. With hindsight removed from both sides the
+  advantage is higher.
+- **But most of the original advantage, as originally measured, was the engine's
+  hindsight.** Remove it from the engine alone and `0.1414` falls to `0.0423`; win rate falls
+  from 100% to 63%. Roughly two thirds of what the old number measured was the engine
+  knowing who to give minutes to, not the engine picking better players.
+- **The shape constraint barely moves the headline** — `−1.79 pp`. The error that looked
+  largest in the model was not the one that mattered most.
+- **The advantage survives paying for its own thin roster.** Median 28.5 of 200 planned
+  minutes (14.2%, max 43.0) went to players who were not available and fell to `REPL`. The
+  engine carries 12 against real clubs' 15–20, pays that price, and still wins 38 of 38.
+
+### Predictions
+
+```
+                                          predicted         got
+  q_cap falls, reallocated -> planned      11%-18%           7.67%    ❌ cost overestimated
+  adv_cap · cell F with shape              [0.09, 0.17]      0.1892   ❌ just above
+  adv_cap · cell E                         [0.02, 0.09]      0.0423   ✅
+  minutes clipped, median of 200           20-32             28.5     ✅
+  win rate in cell F                       75%-95%           100%     ❌
+  verdict fires "rises" again              ~55%              rises    ✅ direction
+  roster size                              12, unchanged     12       ✅
+```
+
+Almog deferred on the numeric rows; one prediction, not two dressed as two.
+
+### Deviations from the declared procedure
+
+1. **The result is not reproducible to the digit, and this blocks `v1.0`.** The same
+   computation on the same data, in two runs:
+
+   ```
+     A   0.1414  ->  0.1414   no caps, no gap: deterministic
+     C   0.1205  ->  0.1235   shape solves at gapRel = 0.005
+     D   0.2807  ->  0.2878
+   ```
+
+   The declared 0.5% per-solve gap, and CBC not being deterministic, propagate into a ~2.5%
+   swing in the median. Not a bug, and inside what was declared — but the closing plan asks
+   for a final number, and a number that moves between identical runs is not final. Resolved
+   by the exact re-run below.
+2. **Runtime is a lottery, not a property of one club-season.** In the ADR 0005 run 2024 TEL
+   took 40,332 s; in this run it took 166 s, and 2025 PAM took 30,894 s instead. The
+   "pathological club" explanation in ADR 0005 is withdrawn. Roughly one in 38 no-shape
+   solves balloons, and which one is chance.
+3. **Per-solve timing was promised for this run and not delivered.** It was added to the
+   code after the run launched. It applies from the exact re-run on.
+4. **Minute vectors are saved.** `shape_minutes.csv`, 1,543 rows — so any future rescoring of
+   these LP solutions costs nothing.
+
+### What remains open, and is not licensed by this result
+
+- **38 of 38 is a reason for suspicion before it is a reason for pride.** One candidate
+  source is known and unchecked: the club side is restricted to players in the pool and
+  newcomers leave both sides. Symmetric on paper; possibly harsher on the club. To be checked
+  before the number reaches a CV.
+- Two test seasons. 38 club-seasons are not 38 independent observations.
+- No wins figure. `wins_conversion.py` has not run on this cell and is not assumed linear.
+
+## Follow-up — the exact re-run, locked before it ran
+
+**Scope.** Only the capped LP with the shape constraint is re-solved, at `gap = 0`. Cells A
+and E need no new solve: the no-shape LP is deterministic (A reproduced exactly) and its
+minute vectors are already in `shape_minutes.csv`. 38 solves, not 152, and none of them the
+un-time-limited no-shape solves where the runtime lottery lives.
+
+**Time limit 1,800 s per solve.** A solve that hits it is reported as not exact, by club,
+and the headline is not claimed exact until none do.
+
+**Predictions, locked:**
+
+```
+  adv_cap · F_shape, exact      [0.184, 0.194]   inside the observed run-to-run spread
+  solves hitting 1,800 s        0                ~75% confident
+  win rate                      38/38
+  exact vs 0.5%-gap run         |Δ median| ≤ 0.005
+```

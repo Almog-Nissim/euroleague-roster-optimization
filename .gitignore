@@ -103,3 +103,4 @@ __pycache__/
 !data/processed/shape_caps.csv
 !data/processed/usage_constrained_shape.csv
 !data/processed/shape_binding.csv
+!data/processed/shape_minutes.csv
