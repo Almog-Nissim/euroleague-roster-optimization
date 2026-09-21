@@ -36,13 +36,13 @@ export default function EngineVsReality() {
       .filter((c) => season === "all" || c.season === season)
       .map((c) => ({
         ...c,
-        gFree: c.q_free - c.q_club,
-        gCap: c.q_cap == null ? null : c.q_cap - c.q_club,
-        gRand: c.q_rand == null ? null : c.q_rand - c.q_club,
+        // v1.0 (ADR 0006): המנוע של הכותרת על התוכנית שלו, מול המועדון
+        // על מה ששיחק. q_free / q_cap / q_rand היו בקונבנציה הישנה.
+        gEng: c.q_engine - c.q_club,
       }))
       .sort((a, b) => sort === "budget" ? b.budget - a.budget
         : sort === "club" ? a.club.localeCompare(b.club)
-        : b.gFree - a.gFree);
+        : b.gEng - a.gEng);
   }, [d, season, sort]);
 
   if (err) return <Shell><p className="fail">dashboard_data.json — {err}</p></Shell>;
@@ -50,20 +50,20 @@ export default function EngineVsReality() {
 
   const seasons = [...new Set(d.clubs.map((c) => c.season))].sort();
   const randBeats = rows.filter((r) => r.gRand > 0).length;
-  const engBeats = rows.filter((r) => r.gFree > 0).length;
+  const engBeats = rows.filter((r) => r.gEng > 0).length;
 
   /* ── גאומטריה: עמודות מתפצלות ── */
   const W = 760, LB = 52, RB = 54, ROW = 30, TOP = 34;
   const HT = TOP + rows.length * ROW + 16;
   const span = Math.max(...rows.flatMap((r) =>
-    [Math.abs(r.gFree), Math.abs(r.gRand ?? 0)])) * 1.06;
+    [Math.abs(r.gEng), Math.abs(r.gRand ?? 0)])) * 1.06;
   const MID = LB + (W - LB - RB) * 0.34;      // אפס לא במרכז: הצד החיובי ארוך
   const sx = (v) => MID + (v / span) * (v >= 0 ? (W - RB - MID) : (MID - LB));
 
   /* ── פיזור: תקציב מול פער ── */
   const SW = 760, SH = 250, SL = 52, SR = 20, ST = 20, SB = 42;
   const bx = rows.map((r) => r.budget);
-  const gy = rows.map((r) => r.gFree);
+  const gy = rows.map((r) => r.gEng);
   const bLo = Math.floor(Math.min(...bx) / 5) * 5, bHi = Math.ceil(Math.max(...bx) / 5) * 5;
   const gLo = Math.floor(Math.min(...gy) / 5) * 5, gHi = Math.ceil(Math.max(...gy) / 5) * 5;
   const px = (v) => SL + ((v - bLo) / (bHi - bLo)) * (SW - SL - SR);
@@ -146,11 +146,11 @@ export default function EngineVsReality() {
                     {r.club}{season === "all" ? ` ${r.season % 100}` : ""}
                   </text>
                   {bar(r.gRand, "brand", 4, 9)}
-                  {bar(r.gFree, "bfree", 16, 9)}
+                  {bar(r.gEng, "bfree", 16, 9)}
                   <text x={W - RB + 8} y={y + ROW / 2 + 4} className="val">
-                    {r.gFree > 0 ? "+" : ""}{f(r.gFree)}
+                    {r.gEng > 0 ? "+" : ""}{f(r.gEng)}
                   </text>
-                  <title>{`${r.club} ${r.season} · אקראי ${f(r.gRand)} · מנוע ${f(r.gFree)}`}</title>
+                  <title>{`${r.club} ${r.season} · אקראי ${f(r.gRand)} · מנוע ${f(r.gEng)}`}</title>
                 </g>
               );
             })}
@@ -195,9 +195,9 @@ export default function EngineVsReality() {
               x2={px(bHi)} y2={py(my + slope * (bHi - mx))} className="trend" />
             {rows.map((r) => (
               <g key={r.club + r.season}>
-                <circle cx={px(r.budget)} cy={py(r.gFree)} r="5" className="pt" />
-                <text x={px(r.budget)} y={py(r.gFree) - 9} className="ptl">{r.club}</text>
-                <title>{`${r.club} · תקציב ${f(r.budget)} · פער ${f(r.gFree)}`}</title>
+                <circle cx={px(r.budget)} cy={py(r.gEng)} r="5" className="pt" />
+                <text x={px(r.budget)} y={py(r.gEng) - 9} className="ptl">{r.club}</text>
+                <title>{`${r.club} · תקציב ${f(r.budget)} · פער ${f(r.gEng)}`}</title>
               </g>
             ))}
             <text x={(SL + SW - SR) / 2} y={SH - 1} className="gt dimx">
@@ -219,7 +219,11 @@ export default function EngineVsReality() {
         </p>
       </section>
 
-      {/* ═══ 3 ═══ */}
+      {/* ═══ 3 — מוסתר ב-v1.0 ═══
+          מודל האפס לכל מועדון (סגל אקראי מול המועדון) נמדד בקונבנציה
+          הקודמת, והטווח "3% עד 88%" היה מוקלד בטקסט. גזירה מחדש תחת
+          ADR 0006 ברשימת v2. מוסתר כמו סעיף 1 ביום 14, לא נמחק. */}
+      {false && (
       <section className="q">
         <div className="qh">
           <span className="qn">02</span>
@@ -255,6 +259,7 @@ export default function EngineVsReality() {
           כאן פרוס.
         </p>
       </section>
+      )}
 
       {/* ═══ נתונים מלאים ═══ */}
       <details className="det">
@@ -264,9 +269,9 @@ export default function EngineVsReality() {
             <thead>
               <tr>
                 <th>מועדון</th><th>עונה</th><th className="n">תקציב</th>
-                <th className="n">אקראי</th><th className="n">המועדון</th>
-                <th className="n">מאולץ</th><th className="n">חופשי</th>
-                <th className="n">פער</th><th className="n">אקראי מנצח</th>
+                <th className="n">המועדון, כפי ששיחק</th>
+                <th className="n">המנוע, התוכנית שלו</th>
+                <th className="n">פער</th><th className="n">יתרון</th>
               </tr>
             </thead>
             <tbody>
@@ -275,14 +280,12 @@ export default function EngineVsReality() {
                   <td><b>{r.club}</b></td>
                   <td className="n">{r.season}</td>
                   <td className="n">{f(r.budget)}</td>
-                  <td className="n dimc">{f(r.q_rand)}</td>
                   <td className="n">{f(r.q_club)}</td>
-                  <td className="n">{f(r.q_cap)}</td>
-                  <td className="n freec">{f(r.q_free)}</td>
-                  <td className={"n " + (r.gFree >= 0 ? "up" : "down")}>
-                    {r.gFree >= 0 ? "+" : ""}{f(r.gFree)}
+                  <td className="n freec">{f(r.q_engine)}</td>
+                  <td className={"n " + (r.gEng >= 0 ? "up" : "down")}>
+                    {r.gEng >= 0 ? "+" : ""}{f(r.gEng)}
                   </td>
-                  <td className="n dimc">{pctf(r.rand_win)}</td>
+                  <td className="n">{pctf(r.adv)}</td>
                 </tr>
               ))}
             </tbody>
@@ -291,10 +294,10 @@ export default function EngineVsReality() {
       </details>
 
       <footer>
-        <b>מאולץ</b> הוא המנוע תחת זהות הכדור: בחמישייה שעל הפרקט סכום
-        צריכת ההתקפות הוא בהכרח 100%, כי יש כדור אחד. אי אפשר לקנות
-        חמישה שחקנים שכל אחד מהם צורך 30%.
-        המספר שמוצג בכותרת הפרויקט הוא של המנוע המאולץ — הנמוך משניהם.
+        <b>המנוע</b> כאן הוא המנוע של הכותרת: זהות הכדור (בחמישייה שעל
+        הפרקט סכום צריכת ההתקפות הוא בהכרח 100%) ואילוץ על צורת הסבב.
+        אף צד לא מחולק מחדש בדיעבד: המנוע נמדד על התוכנית שהתחייב אליה,
+        חתוכה לזמינות שהתממשה, והמועדון על הסבב ששיחק (ADR 0006).
       </footer>
     </Shell>
   );

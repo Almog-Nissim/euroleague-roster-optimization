@@ -132,6 +132,9 @@ B_LO, B_HI, B_STEP = 8.0, 40.0, 0.5
 # הקובץ המייצר. לכן הוא מחושב כאן מהעקומה עצמה, וההצהרה היחידה
 # שנשארת היא **הסף** שמגדיר "שטוח".
 SATURATION_PREV = 25.0        # לתיעוד ההשוואה בלבד
+# 🔴 v1.0 (שלב 2, Q4). B_HI הוא **פלט** של העקומה החדשה: נקודת הרוויה
+#    של המנוע של הכותרת, מעוגלת כלפי מעלה. ננעל לפני ההרצה, משני הצדדים.
+PRED_SAT = dict(claude=(22.0, 27.0), almog=(24.0, 27.0))
 FLAT_EPS = 0.01               # q_LP נשמר בעיגול לשתי ספרות
 SPEND_EPS = 0.02              # הוצאה זהה = תקרת הוצאה, לא רעש
 
@@ -364,20 +367,45 @@ def main() -> int:
           f"עלות {cand.cost.min():.2f}–{cand.cost.max():.2f} · "
           f"שמות ידועים {sum(str(c) in names for c in cand.player_code)}/{len(cand)}")
 
+    # 🔴 v1.0 (שלב 2, Q3). עם --caps העקומה היא **המנוע של הכותרת**:
+    #    optimise_capped — זהות הכדור + צורת הדקות — ב-gap=0, וניקוד לפי
+    #    ADR 0006: התוכנית חתוכה לזמינות שהתממשה (score_planned), והמועדון
+    #    על מה ששיחק (score_actual). בלי --caps: המצב הישן, זהה לקודם.
+    #    gap=0 גם כי בקרת המונוטוניות למטה עוצרת את הכתיבה, ובפער 0.5% ערך
+    #    המטרה יכול לרדת בין נקודות סמוכות.
+    v1 = bool(caps)
+    if v1:
+        cand = attach_usage(cand, PROCESSED_DIR / "usage_curve_results_min0.csv",
+                            SEASON)
+    failed = []
     grid = np.round(np.arange(B_LO, B_HI + 1e-9, B_STEP), 2)
     pts, prev = [], None
     print(f"\n  {'תקציב':>7}{'n':>4}{'הוצא':>8}{'ניצול':>8}"
           f"{'q_LP':>9}{'scoreRows':>9}{'נכנס':>6}{'יצא':>5}")
     for b in grid:
-        sel, mins = optimise_v2(cand, float(b), MIN_LEGAL_ROSTER,
-                               caps=caps)
+        try:
+            if v1:
+                sel, mins = optimise_capped(cand, float(b), MIN_LEGAL_ROSTER,
+                                            caps=caps, gap=0.0,
+                                            time_limit=1800)
+            else:
+                sel, mins = optimise_v2(cand, float(b), MIN_LEGAL_ROSTER)
+        except RuntimeError as exc:          # sol_status == 2, תקרת זמן
+            print(f"  {b:>7.1f}  ❌ {exc}")
+            failed.append(float(b))
+            continue
         if sel is None:
             continue
         rp = roster_payload(cand, sel, mins, names)
         spent = float(cand[sel].cost.sum())
         q = q_lp(cand, sel, mins)                     # ← ערך המטרה
-        q_sr = float(score_rows(cand[sel], "ppm_true",
-                                "avail_true", REPL)[0])   # להשוואה בלבד
+        if v1:          # ADR 0006: התוכנית, חתוכה לזמינות שהתממשה
+            q_sr = float(scoring.score_planned(
+                cand[sel], "ppm_true", "avail_true",
+                np.asarray(mins)[np.asarray(sel)], REPL)[0])
+        else:
+            q_sr = float(score_rows(cand[sel], "ppm_true",
+                                    "avail_true", REPL)[0])   # להשוואה בלבד
         cur = {p["code"] for p in rp}
         inn = sorted(cur - prev) if prev else []
         out = sorted(prev - cur) if prev else []
@@ -406,7 +434,8 @@ def main() -> int:
     cand_u = attach_usage(cand, PROCESSED_DIR / "usage_curve_results_min0.csv",
                           SEASON)
     capped = []
-    cap_grid = grid if one_grid else grid[::2]   # grid[::2] = רזולוציה חצי
+    # v1: מנוע אחד, כמו בכותרת. העקומה הראשית כבר היא המנוע המאולץ.
+    cap_grid = [] if v1 else (grid if one_grid else grid[::2])
     for b in cap_grid:
         sel, mins = optimise_capped(cand_u, float(b), MIN_LEGAL_ROSTER,
                                     caps=caps)
@@ -430,10 +459,15 @@ def main() -> int:
         if len(keep) < MIN_LEGAL_ROSTER:
             continue
         B = float(keep.cost.sum())
+        if v1:          # ADR 0006: המועדון על הדקות ששיחק
+            kk = keep.assign(min_actual=keep.min_per_game * keep.avail_true)
+            q_club = float(scoring.score_actual(kk, "ppm_true",
+                                                "min_actual", REPL)[0])
+        else:
+            q_club = float(score_rows(keep, "ppm_true", "avail_true", REPL)[0])
         clubs.append(dict(
             club=club, budget=round(B, 2), n=len(keep),
-            q=round(float(score_rows(keep, "ppm_true",
-                                     "avail_true", REPL)[0]), 2),
+            q=round(q_club, 2),
             roster=[dict(code=str(r.player_code),
                          name=names.get(str(r.player_code),
                                         f"#{r.player_code}"),
@@ -473,6 +507,19 @@ def main() -> int:
 
     h("סיכום")
     S = derive_saturation(pts)
+    b_hi_out = B_HI
+    if v1:
+        if failed:
+            print(f"\n  ❌ {len(failed)} נקודות לא הוכחו ({failed}) — לא נכתב דבר.")
+            return 1
+        b_hi_out = float(np.ceil(S["saturation"]))
+        h("B_HI — פלט של העקומה (Q4)")
+        print(f"  רוויה {S['saturation']:.1f}  ->  B_HI = {b_hi_out:.0f} "
+              f"(מעוגל כלפי מעלה). נקודות מעל: נחתכות.")
+        for who, (lo, hi) in PRED_SAT.items():
+            ok = lo <= S["saturation"] <= hi
+            print(f"  {'✅' if ok else '❌'} תחזית {who} [{lo}, {hi}] -> "
+                  f"{S['saturation']:.1f}")
     sat = [p for p in pts if p["budget"] >= S["saturation"]]
     n_sat = sorted({p["n"] for p in sat})
     print(f"  רוויה נגזרת: {S['saturation']:.1f}  "
@@ -520,7 +567,9 @@ def main() -> int:
     D = dict(
         meta=dict(season=SEASON, label=f"{SEASON}/{(SEASON + 1) % 100:02d}",
                   units="יחידות מנורמלות",
-                  b_lo=B_LO, b_hi=B_HI, step=B_STEP,
+                  b_lo=B_LO, b_hi=b_hi_out, step=B_STEP,
+                  engine=("מאולץ: זהות הכדור + צורת הדקות · ADR 0006"
+                          if v1 else "חופשי"),
                   shape_caps=(dict(sorted(caps.items())) if caps else None),
                   saturation=S["saturation"],
                   saturation_regime=S["regime"],
@@ -552,7 +601,9 @@ def main() -> int:
                   usage_fill_sensitivity="−0.66 יחידות בלבד (−2.9%) "
                                          "במעבר ממילוי 20 ל-28",
                   eur=eur),
-        free=pts, capped=capped, clubs=clubs)
+        **({"curve": [q for q in pts if q["budget"] <= b_hi_out + 1e-9]}
+           if v1 else {"free": pts, "capped": capped}),
+        clubs=clubs)
 
     # ------------------------------------------------ כתיבה + סנכרון
     D = clean(D)

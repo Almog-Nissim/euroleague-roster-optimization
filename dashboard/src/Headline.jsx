@@ -87,7 +87,10 @@ export default function Headline({ onOpenBuilder }) {
       </header>
 
       {/* ───────── הפירוק ───────── */}
-      {struct && model && (
+      {/* v1.0 (שלב 2, Q2): רק struct נדרש. "חופשי − אקראי" הוסר מהייצוא,
+          והתנאי הקודם (struct && model) היה מעלים את כל הסעיף — כולל
+          ההפרכה ש-v1.0 כן מציג. */}
+      {struct && (
         <section className="card">
           <h2>מאיפה מגיע היתרון</h2>
           <p className="sub">
@@ -108,7 +111,7 @@ export default function Headline({ onOpenBuilder }) {
                 </span>
               </div>
             </li>
-            <li>
+            {model && (<li>
               <span className="stepnum good" dir="ltr">+{f(model.wins)}</span>
               <div>
                 <b>האופטימיזציה עצמה</b>
@@ -117,7 +120,7 @@ export default function Headline({ onOpenBuilder }) {
                   בין {f(model.ci[0])} ל־{f(model.ci[1])}
                 </span>
               </div>
-            </li>
+            </li>)}
           </ol>
 
           <p className="punch">

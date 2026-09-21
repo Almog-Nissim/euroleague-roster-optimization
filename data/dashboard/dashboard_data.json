@@ -24,16 +24,7 @@
           -3.32,
           -0.35
         ],
-        "note": "אקראי גרוע מהמועדון — האילוצים אינם מייצרים את היתרון"
-      },
-      {
-        "step": "האופטימיזציה (מנוע חופשי מול אקראי)",
-        "wins": 6.61,
-        "ci": [
-          1.75,
-          11.51
-        ],
-        "note": "ההשוואה הנקייה — שני הצדדים בלי אילוץ השימוש"
+        "note": "אקראי גרוע מהמועדון — האילוצים אינם מייצרים את היתרון. נמדד בקונבנציה הקודמת; הסימן הוא מה שחשוב, וגזירה מחדש ברשימת v2"
       }
     ]
   },
@@ -56,384 +47,308 @@
   },
   "clubs": [
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "ASV",
       "budget": 15.25,
-      "q_club": 100.75,
-      "q_free": 124.07,
-      "q_cap": 106.03,
-      "q_rand": 97.21,
-      "rand_win": 0.33
+      "q_club": 83.63,
+      "q_engine": 99.55,
+      "adv": 0.1903
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "BAR",
       "budget": 17.79,
-      "q_club": 107.2,
-      "q_free": 124.82,
-      "q_cap": 118.08,
-      "q_rand": 100.29,
-      "rand_win": 0.25
+      "q_club": 97.76,
+      "q_engine": 112.75,
+      "adv": 0.1532
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "BAS",
       "budget": 14.26,
-      "q_club": 105.18,
-      "q_free": 119.32,
-      "q_cap": 113.66,
-      "q_rand": 95.26,
-      "rand_win": 0.19
+      "q_club": 90.03,
+      "q_engine": 96.89,
+      "adv": 0.0762
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "BER",
       "budget": 15.85,
-      "q_club": 91.65,
-      "q_free": 122.72,
-      "q_cap": 123.03,
-      "q_rand": 95.81,
-      "rand_win": 0.71
+      "q_club": 76.65,
+      "q_engine": 102.1,
+      "adv": 0.3321
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "IST",
       "budget": 17.4,
-      "q_club": 112.23,
-      "q_free": 128.62,
-      "q_cap": 122.84,
-      "q_rand": 100.16,
-      "rand_win": 0.1
+      "q_club": 99.26,
+      "q_engine": 108.68,
+      "adv": 0.0949
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "MAD",
       "budget": 19.26,
-      "q_club": 106.34,
-      "q_free": 123.47,
-      "q_cap": 121.88,
-      "q_rand": 101.0,
-      "rand_win": 0.31
+      "q_club": 90.97,
+      "q_engine": 111.34,
+      "adv": 0.2239
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "MCO",
       "budget": 16.33,
-      "q_club": 103.02,
-      "q_free": 127.71,
-      "q_cap": 117.24,
-      "q_rand": 97.15,
-      "rand_win": 0.34
+      "q_club": 90.7,
+      "q_engine": 100.22,
+      "adv": 0.1049
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "MIL",
       "budget": 18.02,
-      "q_club": 105.29,
-      "q_free": 130.77,
-      "q_cap": 114.87,
-      "q_rand": 101.51,
-      "rand_win": 0.37
+      "q_club": 94.0,
+      "q_engine": 112.44,
+      "adv": 0.1962
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "MUN",
       "budget": 13.05,
-      "q_club": 103.44,
-      "q_free": 115.8,
-      "q_cap": 107.05,
-      "q_rand": 91.54,
-      "rand_win": 0.1
+      "q_club": 90.53,
+      "q_engine": 96.44,
+      "adv": 0.0653
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "OLY",
       "budget": 19.93,
-      "q_club": 114.07,
-      "q_free": 120.11,
-      "q_cap": 122.66,
-      "q_rand": 103.35,
-      "rand_win": 0.16
+      "q_club": 100.03,
+      "q_engine": 108.76,
+      "adv": 0.0873
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "PAN",
       "budget": 19.01,
-      "q_club": 116.49,
-      "q_free": 115.32,
-      "q_cap": 120.38,
-      "q_rand": 102.6,
-      "rand_win": 0.08
+      "q_club": 101.82,
+      "q_engine": 109.06,
+      "adv": 0.071
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "PAR",
       "budget": 13.66,
-      "q_club": 100.89,
-      "q_free": 118.25,
-      "q_cap": 115.5,
-      "q_rand": 94.66,
-      "rand_win": 0.25
+      "q_club": 88.53,
+      "q_engine": 88.73,
+      "adv": 0.0022
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "PRS",
       "budget": 13.29,
-      "q_club": 101.08,
-      "q_free": 118.76,
-      "q_cap": 101.84,
-      "q_rand": 92.15,
-      "rand_win": 0.13
+      "q_club": 86.94,
+      "q_engine": 94.91,
+      "adv": 0.0917
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "RED",
       "budget": 14.65,
-      "q_club": 102.7,
-      "q_free": 115.45,
-      "q_cap": 120.68,
-      "q_rand": 94.31,
-      "rand_win": 0.22
+      "q_club": 86.61,
+      "q_engine": 113.51,
+      "adv": 0.3106
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "TEL",
       "budget": 16.01,
-      "q_club": 103.97,
-      "q_free": 131.39,
-      "q_cap": 122.71,
-      "q_rand": 97.65,
-      "rand_win": 0.23
+      "q_club": 92.38,
+      "q_engine": 107.52,
+      "adv": 0.1639
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "ULK",
       "budget": 21.18,
-      "q_club": 96.24,
-      "q_free": 127.31,
-      "q_cap": 122.98,
-      "q_rand": 104.83,
-      "rand_win": 0.8
+      "q_club": 87.28,
+      "q_engine": 113.31,
+      "adv": 0.2981
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "VIR",
       "budget": 14.97,
-      "q_club": 100.33,
-      "q_free": 128.9,
-      "q_cap": 118.6,
-      "q_rand": 95.44,
-      "rand_win": 0.3
+      "q_club": 83.09,
+      "q_engine": 101.1,
+      "adv": 0.2168
     },
     {
-      "season": 2024.0,
+      "season": 2024,
       "club": "ZAL",
       "budget": 14.37,
-      "q_club": 93.63,
-      "q_free": 119.32,
-      "q_cap": 113.98,
-      "q_rand": 95.01,
-      "rand_win": 0.55
+      "q_club": 75.97,
+      "q_engine": 114.99,
+      "adv": 0.5136
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "ASV",
       "budget": 12.65,
-      "q_club": 83.88,
-      "q_free": 112.58,
-      "q_cap": 119.13,
-      "q_rand": 91.76,
-      "rand_win": 0.81
+      "q_club": 72.8,
+      "q_engine": 114.38,
+      "adv": 0.5711
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "BAR",
       "budget": 18.84,
-      "q_club": 101.95,
-      "q_free": 127.93,
-      "q_cap": 135.3,
-      "q_rand": 103.03,
-      "rand_win": 0.55
+      "q_club": 91.08,
+      "q_engine": 120.76,
+      "adv": 0.3259
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "BAS",
       "budget": 17.44,
-      "q_club": 104.36,
-      "q_free": 125.38,
-      "q_cap": 128.47,
-      "q_rand": 103.83,
-      "rand_win": 0.46
+      "q_club": 92.47,
+      "q_engine": 109.87,
+      "adv": 0.1881
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "DUB",
       "budget": 17.37,
-      "q_club": 112.98,
-      "q_free": 125.38,
-      "q_cap": 128.47,
-      "q_rand": 102.83,
-      "rand_win": 0.15
+      "q_club": 94.76,
+      "q_engine": 109.87,
+      "adv": 0.1594
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "HTA",
       "budget": 18.92,
-      "q_club": 110.1,
-      "q_free": 127.92,
-      "q_cap": 126.09,
-      "q_rand": 103.3,
-      "rand_win": 0.25
+      "q_club": 95.66,
+      "q_engine": 120.76,
+      "adv": 0.2625
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "IST",
       "budget": 17.66,
-      "q_club": 91.85,
-      "q_free": 127.39,
-      "q_cap": 124.04,
-      "q_rand": 103.12,
-      "rand_win": 0.87
+      "q_club": 82.82,
+      "q_engine": 105.93,
+      "adv": 0.2791
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "MAD",
       "budget": 17.77,
-      "q_club": 119.08,
-      "q_free": 124.34,
-      "q_cap": 123.1,
-      "q_rand": 101.66,
-      "rand_win": 0.05
+      "q_club": 100.08,
+      "q_engine": 107.93,
+      "adv": 0.0784
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "MCO",
       "budget": 16.65,
-      "q_club": 110.94,
-      "q_free": 124.41,
-      "q_cap": 113.3,
-      "q_rand": 96.65,
-      "rand_win": 0.12
+      "q_club": 103.08,
+      "q_engine": 107.73,
+      "adv": 0.0451
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "MIL",
       "budget": 18.12,
-      "q_club": 102.93,
-      "q_free": 128.92,
-      "q_cap": 129.93,
-      "q_rand": 103.56,
-      "rand_win": 0.54
+      "q_club": 93.61,
+      "q_engine": 107.93,
+      "adv": 0.153
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "MUN",
       "budget": 12.73,
-      "q_club": 93.97,
-      "q_free": 115.38,
-      "q_cap": 118.93,
-      "q_rand": 91.39,
-      "rand_win": 0.4
+      "q_club": 82.97,
+      "q_engine": 114.38,
+      "adv": 0.3785
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "OLY",
       "budget": 25.26,
-      "q_club": 124.97,
-      "q_free": 129.76,
-      "q_cap": 140.17,
-      "q_rand": 109.72,
-      "rand_win": 0.05
+      "q_club": 106.47,
+      "q_engine": 119.54,
+      "adv": 0.1228
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "PAM",
       "budget": 14.63,
-      "q_club": 112.11,
-      "q_free": 116.27,
-      "q_cap": 114.97,
-      "q_rand": 97.3,
-      "rand_win": 0.05
+      "q_club": 99.61,
+      "q_engine": 111.93,
+      "adv": 0.1237
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "PAN",
       "budget": 22.99,
-      "q_club": 109.09,
-      "q_free": 129.56,
-      "q_cap": 140.17,
-      "q_rand": 107.51,
-      "rand_win": 0.43
+      "q_club": 96.76,
+      "q_engine": 116.02,
+      "adv": 0.199
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "PAR",
       "budget": 18.59,
-      "q_club": 95.06,
-      "q_free": 122.87,
-      "q_cap": 124.51,
-      "q_rand": 105.63,
-      "rand_win": 0.83
+      "q_club": 84.18,
+      "q_engine": 110.69,
+      "adv": 0.3148
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "PRS",
       "budget": 12.93,
-      "q_club": 107.81,
-      "q_free": 117.6,
-      "q_cap": 126.28,
-      "q_rand": 91.82,
-      "rand_win": 0.08
+      "q_club": 89.39,
+      "q_engine": 107.85,
+      "adv": 0.2065
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "RED",
       "budget": 18.71,
-      "q_club": 108.98,
-      "q_free": 122.87,
-      "q_cap": 123.3,
-      "q_rand": 104.07,
-      "rand_win": 0.29
+      "q_club": 89.88,
+      "q_engine": 117.28,
+      "adv": 0.3048
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "TEL",
       "budget": 14.66,
-      "q_club": 106.1,
-      "q_free": 116.27,
-      "q_cap": 114.97,
-      "q_rand": 98.74,
-      "rand_win": 0.25
+      "q_club": 96.39,
+      "q_engine": 111.93,
+      "adv": 0.1612
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "ULK",
       "budget": 15.61,
-      "q_club": 98.66,
-      "q_free": 120.03,
-      "q_cap": 121.8,
-      "q_rand": 99.02,
-      "rand_win": 0.52
+      "q_club": 83.11,
+      "q_engine": 103.8,
+      "adv": 0.249
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "VIR",
       "budget": 14.07,
-      "q_club": 102.27,
-      "q_free": 117.56,
-      "q_cap": 111.51,
-      "q_rand": 96.09,
-      "rand_win": 0.28
+      "q_club": 85.95,
+      "q_engine": 118.0,
+      "adv": 0.373
     },
     {
-      "season": 2025.0,
+      "season": 2025,
       "club": "ZAL",
       "budget": 12.46,
-      "q_club": 112.44,
-      "q_free": 114.59,
-      "q_cap": 113.81,
-      "q_rand": 92.13,
-      "rand_win": 0.02
+      "q_club": 96.76,
+      "q_engine": 111.86,
+      "adv": 0.156
     }
   ],
   "budget_curve": [
@@ -1569,6 +1484,21 @@
     ]
   },
   "limitations": [
+    {
+      "t": "המנוע מחזיק 12 שחקנים; מועדון אמיתי 15–20",
+      "p": "אילוץ הצורה מפזר דקות על אותם 12, ולא קונה עוד שחקנים. המחיר של סגל רזה נמדד ולא הונח: 14.2% מהדקות שהמנוע תכנן הלכו לשחקנים שלא היו זמינים, ונפלו לרמת מחליף. היתרון שורד את זה.",
+      "x": "ADR 0006. ניקוד עומק כביטוח (מונטה קרלו על זמינות) ברשימת v2."
+    },
+    {
+      "t": "עייפות אינה ממודלת",
+      "p": "הנחה של ירידה בתפוקה מעל 30 דקות תוכננה, נאמדה ונדחתה לפי כלל שהוצהר מראש. נתוני משחק שלם לא מבחינים בין עייפות לבין מאמן שמשאיר על הפרקט שחקן שחם. זה **לא** אומר שעייפות לא קיימת.",
+      "x": "ADR 0004. בחינה מחדש רק עם נתוני play-by-play, בתוך המשחק."
+    },
+    {
+      "t": "המספר רגיש לתקרות הצורה",
+      "p": "התקרות על ריכוז הדקות הן המקסימום שנצפה בליגה. הידוק שלהן ב-5% מוריד את היתרון החציוני בתת-המדגם המוצהר מ-13.9% ל-9.8%; ריפוי ב-5% לא מעלה אותו. התקרה הנצפית היא הספציפיקציה, והרגישות מדווחת ולא בוחרת.",
+      "x": "slack_sensitivity.py, 24/24 הוכחו אופטימליים. ADR 0005, run matrix b."
+    },
     {
       "t": "המנוע מניח שכל שחקן פנוי לקנייה",
       "p": "לשחקן אמיתי יש חוזה, משפחה והעדפות. המנוע בוחר מתוך כל מי ששיחק בליגה, כאילו כולם על המדף. זו לא טעות בקוד — פשוט אין נתונים על מי היה באמת זמין.",
