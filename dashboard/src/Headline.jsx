@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { cname as code2name } from "./clubs";
+import { cname as code2name, seasonAvg, pct as bpct } from "./clubs";
 
 /* ══════════════════════════════════════════════════════════════
    Headline — המסך הראשון
@@ -15,7 +15,7 @@ import { cname as code2name } from "./clubs";
          אזהרת העומק: ספסל הוא ביטוח. הוא נשאר, במסגור כן, למטה.
       2. "בחר קבוצה" — חציון על 38 מועדונים מופשט; המועדון שלך לא.
       3. האמון בארבעה משפטים עם סמל. הפירוט הטכני מאחורי "כל הפרטים".
-      4. יחידת תקציב מתורגמת: 1 = שחקן ממוצע בליגה.
+      4. תקציב מוצג כאחוז מהתקציב של קבוצה ממוצעת בעונה (100% = ממוצע).
       בשכבה הראשית אין מספרי ADR, "קונבנציה", "בדיעבד" או "gap=0".
 ══════════════════════════════════════════════════════════════ */
 
@@ -56,6 +56,7 @@ export default function Headline({ onOpenBuilder }) {
   const key = (c) => `${c.club}-${c.season}`;
   const club = clubs.find((c) => key(c) === pick)
     ?? clubs.find((c) => c.club === "TEL" && c.season === 2025) ?? clubs[0];
+  const AVGS = seasonAvg(d.clubs);
   const top = club ? Math.max(club.q_club, club.q_engine) * 1.08 : 1;
 
   return (
@@ -96,9 +97,9 @@ export default function Headline({ onOpenBuilder }) {
             </select>
           </div>
           <p className="sub">
-            {cname(club)} בעונת {sname(club.season)} שילמה על הסגל שלה כמו
-            על <b>{f(club.budget, 1)} שחקנים ממוצעים</b> בליגה. זה התקציב
-            שקיבל גם המנוע.
+            התקציב של {cname(club)} בעונת {sname(club.season)} היה{" "}
+            <b>{bpct(club.budget, AVGS[club.season])}% מהתקציב של קבוצה ממוצעת</b>{" "}
+            באותה עונה. בדיוק אותו תקציב קיבל גם המנוע.
           </p>
 
           <div className="bars">
@@ -244,11 +245,8 @@ export default function Headline({ onOpenBuilder }) {
       </details>
 
       <footer>
-        עודכן {d.meta.generated}. יחידת תקציב אחת = שחקן ממוצע בליגה.
-        {d.meta.observed_budget && <> קבוצות אמיתיות הוציאו בין{" "}
-          <span dir="ltr">{f(d.meta.observed_budget[0], 1)}</span> ל־
-          <span dir="ltr">{f(d.meta.observed_budget[1], 1)}</span>; מחוץ לטווח
-          הזה זו הערכה בלבד.</>}{" "}
+        עודכן {d.meta.generated}. תקציב מוצג כאחוז מהתקציב של קבוצה ממוצעת
+        באותה עונה; אין כאן יורו, כי התרגום ליורו נבדק ונפסל.{" "}
         כל מספר כאן נבדק מול הקבצים שיצרו אותו לפני שהאתר נבנה.
       </footer>
     </div>

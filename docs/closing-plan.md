@@ -121,3 +121,10 @@ number from before the fix.
 - Monte Carlo depth-insurance scoring (expected to lower the headline).
 - Fatigue with a within-game design (play-by-play stints), if ever.
 - Regenerate the 10 `unsourced` before-values in a scratch worktree.
+- **Price-model misses that the engine exploits.** Players who recur across the
+  builder curve are partly real value, partly under-pricing: against known 2025
+  salaries, the salary/`cost` ratio is roughly flat for Vezenkov, Petrusev, Campazzo and
+  Milutinov, but Hernangomez is priced at about half his real salary (the model sees PIR
+  and EuroLeague seasons only, not NBA pedigree). Does not bias the headline — both sides
+  are priced by the same model — but it shapes which players the engine picks. Found
+  2026-09-21 while checking the dashboard builder.

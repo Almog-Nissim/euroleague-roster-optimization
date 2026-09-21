@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { cname } from "./clubs";
+import { cname, seasonAvg, pct } from "./clubs";
 
 /* ══════════════════════════════════════════════════════════════
    RosterBuilder — הבנאי
@@ -66,12 +66,16 @@ export default function RosterBuilder() {
 
   const obsB = (data?.clubs ?? []).map((c) => c.budget);
   const OBS = obsB.length ? { lo: Math.min(...obsB), hi: Math.max(...obsB) } : null;
+  /* תקציב מוצג כאחוז מהקבוצה הממוצעת בעונה של העקומה (data.clubs = עונה אחת). */
+  const AVG = obsB.length ? obsB.reduce((a, b) => a + b, 0) / obsB.length : NaN;
+  const P = (b) => pct(b, AVG);
+  const AVGS = seasonAvg(dash?.clubs);
   // v1.0: העקומה היא המנוע של הכותרת ("curve"); "free" נשאר לקובץ הישן בלבד.
   const pts = data?.curve ?? data?.free ?? [];
   const p = pts[i];
   const prev = pts[i - 1];
 
-  useEffect(() => { if (p) setTyped(String(p.budget)); }, [p?.budget]);
+  useEffect(() => { if (p) setTyped(String(P(p.budget))); }, [p?.budget, AVG]);
 
   const diff = useMemo(() => {
     if (!p || !prev) return { inn: [], out: [] };
@@ -83,7 +87,8 @@ export default function RosterBuilder() {
     };
   }, [p, prev]);
 
-  const marginal = prev ? (p.q - prev.q) / (p.budget - prev.budget) : null;
+  // ניקוד לכל 10% תקציב נוסף (של קבוצה ממוצעת)
+  const marginal = prev ? ((p.q - prev.q) / (p.budget - prev.budget)) * AVG * 0.1 : null;
 
   const [pick, setPick] = useState("");
   const rival = useMemo(() => {
@@ -95,7 +100,8 @@ export default function RosterBuilder() {
   const bGap = rival ? Math.abs(rival.budget - p.budget) : 0;
 
   const snap = (v) => {
-    if (Number.isNaN(v)) return setTyped(String(p.budget));
+    if (Number.isNaN(v)) return setTyped(String(P(p.budget)));
+    v = (v / 100) * AVG;              // הקלט באחוזים, העקומה ביחידות פנימיות
     setI(pts.reduce((best, d, k) =>
       Math.abs(d.budget - v) < Math.abs(pts[best].budget - v) ? k : best, 0));
   };
@@ -150,13 +156,13 @@ export default function RosterBuilder() {
         <div className="ctl">
           <div className="budget">
             <input className="bnum" type="number" value={typed}
-              min={data.meta.b_lo} max={data.meta.b_hi} step={data.meta.step}
+              min={P(data.meta.b_lo)} max={P(data.meta.b_hi)} step={5}
               onChange={(e) => setTyped(e.target.value)}
               onBlur={() => snap(parseFloat(typed))}
               onKeyDown={(e) => e.key === "Enter" && snap(parseFloat(typed))}
               aria-label="תקציב" />
             <span className="bunit">
-              שחקנים ממוצעים
+              % מהתקציב של קבוצה ממוצעת
               {OBS && (p.budget < OBS.lo || p.budget > OBS.hi) && (
                 <em className="oob">אף קבוצה לא הוציאה כזה סכום — זו הערכה</em>
               )}
@@ -175,8 +181,8 @@ export default function RosterBuilder() {
             h="מה שאותם שחקנים באמת ייצרו באותה עונה" />
           <Kpi v={marginal == null ? "—" : `+${f(marginal, 2)}`}
             l="תשואה שולית" c={marginal != null && marginal < 0.5 ? "dim" : ""}
-            h="כמה ניקוד קנתה יחידת התקציב האחרונה" />
-          <Kpi v={f(p.unspent, 2)} l="לא נוצל" c="dim"
+            h="כמה ניקוד מוסיפים עוד 10% תקציב" />
+          <Kpi v={`${f((p.unspent / AVG) * 100, 1)}%`} l="לא נוצל" c="dim"
             h="תקציב שנשאר על השולחן" />
         </div>
       </header>
@@ -185,7 +191,7 @@ export default function RosterBuilder() {
         <div className="ph">
           <h2>הסגל</h2>
           <span className="sub">
-            חמישייה מוצעת (2G · 2F · 1C) · הוצא {f(p.spent, 2)} מתוך {f(p.budget)}
+            חמישייה מוצעת (2G · 2F · 1C) · הוצא {P(p.spent)}% מתוך {P(p.budget)}%
           </span>
         </div>
 
@@ -214,7 +220,7 @@ export default function RosterBuilder() {
 
         <div className="benchhead">
           <span>ספסל</span><span></span><span>דקות</span>
-          <span className="bh-n">דק׳</span><span className="bh-n">עלות</span>
+          <span className="bh-n">דק׳</span><span className="bh-n">מחיר</span>
         </div>
         <ol className="bench">
           {bench.map((r) => (
@@ -226,7 +232,7 @@ export default function RosterBuilder() {
               </span>
               <span className="bbar"><i style={{ width: `${(r.minutes / 32) * 100}%` }} /></span>
               <span className="bmin">{f(r.minutes, 0)}׳</span>
-              <span className="bcost">{f(r.cost, 2)}</span>
+              <span className="bcost" title="אחוז מהתקציב של קבוצה ממוצעת">{f((r.cost / AVG) * 100, 1)}%</span>
             </li>
           ))}
         </ol>
@@ -240,9 +246,15 @@ export default function RosterBuilder() {
           </p>
         )}
 
+        <p className="note">
+          שחקן שחוזר כמעט בכל תקציב הוא "מציאה" לפי מודל המחיר — חלק מהם
+          באמת זולים ביחס למה שהם מפיקים, וחלק פשוט מתומחרים נמוך מדי.
+          המודל רואה רק תפוקה וותק ביורוליג, לא עבר ב־NBA או שם.
+        </p>
+
         {(diff.inn.length > 0 || diff.out.length > 0) && (
           <div className="diff">
-            <span className="dlbl">לעומת {f(prev.budget)}</span>
+            <span className="dlbl">לעומת {P(prev.budget)}%</span>
             {diff.out.map((r) => <span key={r.code} className="tag out">{nice(r.name)}</span>)}
             {diff.inn.map((r) => <span key={r.code} className="tag in">{nice(r.name)}</span>)}
           </div>
@@ -301,10 +313,10 @@ export default function RosterBuilder() {
           <circle cx={X(p.budget)} cy={Y(p.q)} r="5" className="dpred" />
           <circle cx={X(p.budget)} cy={Y(p.q_realised)} r="4" className="dreal" />
           {[pts[0].budget, sat, pts[pts.length - 1].budget].filter(Boolean).map((b) => (
-            <text key={b} x={X(b)} y={H - 12} className="ax mid">{b}</text>
+            <text key={b} x={X(b)} y={H - 12} className="ax mid">{P(b)}%</text>
           ))}
           <text x={(L + W - R) / 2} y={H - 1} className="ax mid dimx">
-            תקציב (1 = שחקן ממוצע בליגה) · כל קו קטן הוא מועדון אמיתי
+            תקציב (100% = קבוצה ממוצעת) · כל קו קטן הוא מועדון אמיתי
           </text>
         </svg>
 
@@ -323,14 +335,14 @@ export default function RosterBuilder() {
               <option value="">הקרוב בתקציב</option>
               {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
                 <option key={c.club} value={c.club}>
-                  {cname(c.club)} · {f(c.budget, 1)} שחקנים
+                  {cname(c.club)} · {P(c.budget)}%
                 </option>
               ))}
             </select>
           </div>
           {bGap > 1.5 && (
             <p className="alert">
-              ⚠️ פער תקציב של {f(bGap, 1)} שחקנים ממוצעים בין שני
+              ⚠️ פער תקציב של {P(bGap)}% בין שני
               הצדדים. זו אינה השוואה באותו כסף — לחצו על
               <button className="lnk" onClick={() => snap(rival.budget)}>
                 השוו באותו תקציב
@@ -342,7 +354,7 @@ export default function RosterBuilder() {
               <span className="vsname">{rival.club}</span>
               <span className="vsn">{f(rival.q)}</span>
               <span className="vsl">
-                <span dir="ltr">{f(rival.budget)}</span> יח׳ · {rival.n} שחקנים
+                תקציב <span dir="ltr">{P(rival.budget)}%</span> · {rival.n} שחקנים
               </span>
             </div>
             <div className="vsgap">
@@ -354,7 +366,7 @@ export default function RosterBuilder() {
             <div className="vsc">
               <span className="vsname">המנוע</span>
               <span className="vsn pred">{f(p.q_realised)}</span>
-              <span className="vsl"><span dir="ltr">{f(p.budget)}</span> יח׳ · {p.n} שחקנים</span>
+              <span className="vsl">תקציב <span dir="ltr">{P(p.budget)}%</span> · {p.n} שחקנים</span>
             </div>
           </div>
           <p className="note">
@@ -468,7 +480,7 @@ export default function RosterBuilder() {
                         className={c.club === rival?.club ? "hl" : ""}>
                         <td><b>{c.club}</b></td>
                         {season === "all" && <td className="num">{c.season}</td>}
-                        <td className="num" dir="ltr">{f(c.budget)}</td>
+                        <td className="num" dir="ltr">{pct(c.budget, AVGS[c.season])}%</td>
                         <td className="num">{f(c.q_club)}</td>
                         <td className="num predc">{f(c.q_engine)}</td>
                         <td className={"num " + (c.gap >= 0 ? "up" : "down")}>
@@ -486,7 +498,7 @@ export default function RosterBuilder() {
 
       <footer>
         המנוע בונה תמיד 12 שחקנים — המינימום החוקי — בכל תקציב.
-        תקציב: 1 = שחקן ממוצע בליגה. אין כאן יורו בכוונה — שלוש דרכים
+        תקציב: 100% = התקציב של קבוצה ממוצעת באותה עונה. אין כאן יורו בכוונה — שלוש דרכים
         סבירות לתרגם ליורו נתנו תשובות שונות מדי.
       </footer>
     </div>

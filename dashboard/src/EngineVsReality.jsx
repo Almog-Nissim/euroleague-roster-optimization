@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { seasonAvg, pct } from "./clubs";
 
 /* ══════════════════════════════════════════════════════════════
    EngineVsReality — "מנוע מול מציאות"
@@ -30,6 +31,7 @@ export default function EngineVsReality() {
       .catch((e) => setErr(String(e.message || e)));
   }, []);
 
+  const avgs = useMemo(() => seasonAvg(d?.clubs), [d]);
   const rows = useMemo(() => {
     if (!d?.clubs) return [];
     return d.clubs
@@ -39,6 +41,7 @@ export default function EngineVsReality() {
         // v1.0 (ADR 0006): המנוע של הכותרת על התוכנית שלו, מול המועדון
         // על מה ששיחק. q_free / q_cap / q_rand היו בקונבנציה הישנה.
         gEng: c.q_engine - c.q_club,
+        bp: pct(c.budget, avgs[c.season]),   // תקציב כאחוז מהממוצע בעונה
       }))
       .sort((a, b) => sort === "budget" ? b.budget - a.budget
         : sort === "club" ? a.club.localeCompare(b.club)
@@ -62,7 +65,7 @@ export default function EngineVsReality() {
 
   /* ── פיזור: תקציב מול פער ── */
   const SW = 760, SH = 250, SL = 52, SR = 20, ST = 20, SB = 42;
-  const bx = rows.map((r) => r.budget);
+  const bx = rows.map((r) => r.bp);
   const gy = rows.map((r) => r.gEng);
   const bLo = Math.floor(Math.min(...bx) / 5) * 5, bHi = Math.ceil(Math.max(...bx) / 5) * 5;
   const gLo = Math.floor(Math.min(...gy) / 5) * 5, gHi = Math.ceil(Math.max(...gy) / 5) * 5;
@@ -189,25 +192,25 @@ export default function EngineVsReality() {
               </g>
             ))}
             {[bLo, (bLo + bHi) / 2, bHi].map((v) => (
-              <text key={v} x={px(v)} y={SH - 14} className="gt">{v}</text>
+              <text key={v} x={px(v)} y={SH - 14} className="gt">{v}%</text>
             ))}
             <line x1={px(bLo)} y1={py(my + slope * (bLo - mx))}
               x2={px(bHi)} y2={py(my + slope * (bHi - mx))} className="trend" />
             {rows.map((r) => (
               <g key={r.club + r.season}>
-                <circle cx={px(r.budget)} cy={py(r.gEng)} r="5" className="pt" />
-                <text x={px(r.budget)} y={py(r.gEng) - 9} className="ptl">{r.club}</text>
-                <title>{`${r.club} · תקציב ${f(r.budget)} · פער ${f(r.gEng)}`}</title>
+                <circle cx={px(r.bp)} cy={py(r.gEng)} r="5" className="pt" />
+                <text x={px(r.bp)} y={py(r.gEng) - 9} className="ptl">{r.club}</text>
+                <title>{`${r.club} · תקציב ${r.bp}% · פער ${f(r.gEng)}`}</title>
               </g>
             ))}
             <text x={(SL + SW - SR) / 2} y={SH - 1} className="gt dimx">
-              תקציב (1 = שחקן ממוצע בליגה)
+              תקציב (100% = קבוצה ממוצעת בעונה)
             </text>
           </svg>
         </div>
 
         <p className="ans">
-          <b>התשובה:</b> שיפוע <b dir="ltr">{f(slope, 2)}</b> ומתאם{" "}
+          <b>התשובה:</b> כל 10% תקציב נוסף משנים את הפער ב־<b dir="ltr">{f(slope * 10, 2)}</b> נקודות, ומתאם{" "}
           <b dir="ltr">r = {f(rr, 2)}</b>.
           {Math.abs(rr) < 0.3
             ? " כלומר כמעט אין קשר: גם מועדונים עשירים מפספסים בהקצאה, לא רק עניים."
@@ -279,7 +282,7 @@ export default function EngineVsReality() {
                 <tr key={r.club + r.season}>
                   <td><b>{r.club}</b></td>
                   <td className="n">{r.season}</td>
-                  <td className="n">{f(r.budget)}</td>
+                  <td className="n">{r.bp}%</td>
                   <td className="n">{f(r.q_club)}</td>
                   <td className="n freec">{f(r.q_engine)}</td>
                   <td className={"n " + (r.gEng >= 0 ? "up" : "down")}>

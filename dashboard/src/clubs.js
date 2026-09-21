@@ -8,3 +8,16 @@ export const CLUB = {
   PAR: "פרטיזן", VIR: "וירטוס", PRS: "פריז", HTA: 'הפועל ת"א', DUB: "דובאי",
 };
 export const cname = (code) => CLUB[code] ?? code;
+
+/* תקציב לתצוגה: אחוז מהתקציב של קבוצה ממוצעת באותה עונה (100% = ממוצע).
+   היחידה הפנימית (1 = שחקן ממוצע במאגר) לא אינטואיטיבית, ויורו נפסל.
+   זה שינוי סקאלה בלבד — לא נוגע במנוע ולא במספר אחד בנתונים. */
+export const seasonAvg = (clubs) => {
+  const acc = {};
+  for (const c of clubs ?? []) {
+    (acc[c.season] ??= []).push(c.budget);
+  }
+  return Object.fromEntries(Object.entries(acc)
+    .map(([s, b]) => [s, b.reduce((x, y) => x + y, 0) / b.length]));
+};
+export const pct = (b, avg) => (avg ? Math.round((b / avg) * 100) : NaN);
