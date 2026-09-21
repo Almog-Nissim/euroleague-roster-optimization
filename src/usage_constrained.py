@@ -129,7 +129,11 @@ def optimise_capped(pool, budget, min_roster, cap=TARGET_USAGE, caps=None,
     oc.LAST.update(status=pulp.LpStatus[p.status],
                    obj=pulp.value(p.objective), fn="capped",
                    n_shape=n_shape,
-                   gap=(gap if caps else 0.0))
+                   gap=(gap if caps else 0.0),
+                   # 🔴 LpStatus "Optimal" לא אומר שהפתרון הוכח אופטימלי: CBC
+                   #    שנעצר על timeLimit עם פתרון אפשרי מדווח גם הוא Optimal.
+                   #    sol_status מבדיל — 1 הוכח, 2 אפשרי בלבד. ADR 0006.
+                   sol_status=int(getattr(p, "sol_status", -1)))
     if pulp.LpStatus[p.status] != "Optimal":
         return None, None
     sel = np.array([x[i].value() > 0.5 for i in range(n)])
