@@ -33,8 +33,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_MD = ROOT / "METHODS.md"
-OUT_PDF = ROOT / "METHODS.pdf"
+# 2026-09-21: המסמך עבר ל-docs/methods-he.md. ה-PDF נוצר לידו ואינו במעקב.
+SRC_MD = ROOT / "docs" / "methods-he.md"
+OUT_PDF = ROOT / "docs" / "methods-he.pdf"
 
 CHROME = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",

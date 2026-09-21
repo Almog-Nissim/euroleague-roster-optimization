@@ -169,6 +169,7 @@ not deterministic in runtime. The headline path does not include them.
 
 ```
 src/
+  README.md               which scripts to read first; the rest grouped by purpose
   scoring.py              the shape constraint and the scoring conventions (ADR 0005/0006)
   usage_constrained.py    the headline LP: budget, positions, ball identity, shape
   headline_exact.py       the v1.0 headline at gap = 0
@@ -177,10 +178,11 @@ src/
   shape_constraint_test.py
   cost_market.py          the market cost model (ADR 0001)
 docs/
+  project-summary.md      the full story, for a technical reader
   adr/                    every design decision, with the rule declared before each run
   closing-plan.md         how the project closes, and the v2 list
+  methods-he.md           every statistical tool used, explained in Hebrew
 CONTEXT.md                the vocabulary: terms used here mean one thing
-METHODS.md / .pdf         every statistical tool used, in plain Hebrew
 dashboard/                React/Vite front end
 ```
 
