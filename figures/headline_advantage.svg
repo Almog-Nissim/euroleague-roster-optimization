@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="758" viewBox="0 0 820 758" role="img" aria-labelledby="t d" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+<title id="t">Engine vs actual club on the same budget: production advantage per club-season</title>
+<desc id="d">38 club-seasons, 2024/25 and 2025/26, sorted. All 38 are positive. Median 18.9%, about +5.0 wins per season.</desc>
+<style>.bg{fill:#fcfcfb} .bar{fill:#2a78d6} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .grid{stroke:#e6e5e1} .ref{stroke:#52514e} @media (prefers-color-scheme: dark){.bg{fill:#1a1a19} .bar{fill:#3987e5} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .grid{stroke:#34332f} .ref{stroke:#c3c2b7}}</style>
+<rect class="bg" width="820" height="758"/>
+<text class="ink" x="110" y="30" font-size="17" font-weight="600">Same budget, the engine's roster out-produces the club's in 38 of 38</text>
+<text class="ink2" x="110" y="52" font-size="13">Production advantage of the engine over the club's actual roster, per club-season · v1.0, proven optimal</text>
+<line class="grid" x1="110.0" y1="84" x2="110.0" y2="700" stroke-width="1"/>
+<text class="ink2" x="110.0" y="718" font-size="11" text-anchor="middle">0%</text>
+<line class="grid" x1="221.7" y1="84" x2="221.7" y2="700" stroke-width="1"/>
+<text class="ink2" x="221.7" y="718" font-size="11" text-anchor="middle">10%</text>
+<line class="grid" x1="333.3" y1="84" x2="333.3" y2="700" stroke-width="1"/>
+<text class="ink2" x="333.3" y="718" font-size="11" text-anchor="middle">20%</text>
+<line class="grid" x1="445.0" y1="84" x2="445.0" y2="700" stroke-width="1"/>
+<text class="ink2" x="445.0" y="718" font-size="11" text-anchor="middle">30%</text>
+<line class="grid" x1="556.7" y1="84" x2="556.7" y2="700" stroke-width="1"/>
+<text class="ink2" x="556.7" y="718" font-size="11" text-anchor="middle">40%</text>
+<line class="grid" x1="668.3" y1="84" x2="668.3" y2="700" stroke-width="1"/>
+<text class="ink2" x="668.3" y="718" font-size="11" text-anchor="middle">50%</text>
+<line class="grid" x1="780.0" y1="84" x2="780.0" y2="700" stroke-width="1"/>
+<text class="ink2" x="780.0" y="718" font-size="11" text-anchor="middle">60%</text>
+<path class="bar" d="M110.0,94.0 H743.7 Q747.7,94.0 747.7,98.0 V102.0 Q747.7,106.0 743.7,106.0 H110.0 Z"><title>2025 ASV: +57.1%</title></path>
+<text class="ink2" x="102" y="104.0" font-size="11" text-anchor="end">2025 ASV</text>
+<path class="bar" d="M110.0,110.0 H679.5 Q683.5,110.0 683.5,114.0 V118.0 Q683.5,122.0 679.5,122.0 H110.0 Z"><title>2024 ZAL: +51.4%</title></path>
+<text class="ink2" x="102" y="120.0" font-size="11" text-anchor="end">2024 ZAL</text>
+<path class="bar" d="M110.0,126.0 H528.6 Q532.6,126.0 532.6,130.0 V134.0 Q532.6,138.0 528.6,138.0 H110.0 Z"><title>2025 MUN: +37.8%</title></path>
+<text class="ink2" x="102" y="136.0" font-size="11" text-anchor="end">2025 MUN</text>
+<path class="bar" d="M110.0,142.0 H522.5 Q526.5,142.0 526.5,146.0 V150.0 Q526.5,154.0 522.5,154.0 H110.0 Z"><title>2025 VIR: +37.3%</title></path>
+<text class="ink2" x="102" y="152.0" font-size="11" text-anchor="end">2025 VIR</text>
+<path class="bar" d="M110.0,158.0 H476.8 Q480.8,158.0 480.8,162.0 V166.0 Q480.8,170.0 476.8,170.0 H110.0 Z"><title>2024 BER: +33.2%</title></path>
+<text class="ink2" x="102" y="168.0" font-size="11" text-anchor="end">2024 BER</text>
+<path class="bar" d="M110.0,174.0 H470.0 Q474.0,174.0 474.0,178.0 V182.0 Q474.0,186.0 470.0,186.0 H110.0 Z"><title>2025 BAR: +32.6%</title></path>
+<text class="ink2" x="102" y="184.0" font-size="11" text-anchor="end">2025 BAR</text>
+<path class="bar" d="M110.0,190.0 H457.6 Q461.6,190.0 461.6,194.0 V198.0 Q461.6,202.0 457.6,202.0 H110.0 Z"><title>2025 PAR: +31.5%</title></path>
+<text class="ink2" x="102" y="200.0" font-size="11" text-anchor="end">2025 PAR</text>
+<path class="bar" d="M110.0,206.0 H452.8 Q456.8,206.0 456.8,210.0 V214.0 Q456.8,218.0 452.8,218.0 H110.0 Z"><title>2024 RED: +31.1%</title></path>
+<text class="ink2" x="102" y="216.0" font-size="11" text-anchor="end">2024 RED</text>
+<path class="bar" d="M110.0,222.0 H446.3 Q450.3,222.0 450.3,226.0 V230.0 Q450.3,234.0 446.3,234.0 H110.0 Z"><title>2025 RED: +30.5%</title></path>
+<text class="ink2" x="102" y="232.0" font-size="11" text-anchor="end">2025 RED</text>
+<path class="bar" d="M110.0,238.0 H438.9 Q442.9,238.0 442.9,242.0 V246.0 Q442.9,250.0 438.9,250.0 H110.0 Z"><title>2024 ULK: +29.8%</title></path>
+<text class="ink2" x="102" y="248.0" font-size="11" text-anchor="end">2024 ULK</text>
+<path class="bar" d="M110.0,254.0 H417.6 Q421.6,254.0 421.6,258.0 V262.0 Q421.6,266.0 417.6,266.0 H110.0 Z"><title>2025 IST: +27.9%</title></path>
+<text class="ink2" x="102" y="264.0" font-size="11" text-anchor="end">2025 IST</text>
+<path class="bar" d="M110.0,270.0 H399.1 Q403.1,270.0 403.1,274.0 V278.0 Q403.1,282.0 399.1,282.0 H110.0 Z"><title>2025 HTA: +26.2%</title></path>
+<text class="ink2" x="102" y="280.0" font-size="11" text-anchor="end">2025 HTA</text>
+<path class="bar" d="M110.0,286.0 H384.1 Q388.1,286.0 388.1,290.0 V294.0 Q388.1,298.0 384.1,298.0 H110.0 Z"><title>2025 ULK: +24.9%</title></path>
+<text class="ink2" x="102" y="296.0" font-size="11" text-anchor="end">2025 ULK</text>
+<path class="bar" d="M110.0,302.0 H356.0 Q360.0,302.0 360.0,306.0 V310.0 Q360.0,314.0 356.0,314.0 H110.0 Z"><title>2024 MAD: +22.4%</title></path>
+<text class="ink2" x="102" y="312.0" font-size="11" text-anchor="end">2024 MAD</text>
+<path class="bar" d="M110.0,318.0 H348.0 Q352.0,318.0 352.0,322.0 V326.0 Q352.0,330.0 348.0,330.0 H110.0 Z"><title>2024 VIR: +21.7%</title></path>
+<text class="ink2" x="102" y="328.0" font-size="11" text-anchor="end">2024 VIR</text>
+<path class="bar" d="M110.0,334.0 H336.6 Q340.6,334.0 340.6,338.0 V342.0 Q340.6,346.0 336.6,346.0 H110.0 Z"><title>2025 PRS: +20.6%</title></path>
+<text class="ink2" x="102" y="344.0" font-size="11" text-anchor="end">2025 PRS</text>
+<path class="bar" d="M110.0,350.0 H328.2 Q332.2,350.0 332.2,354.0 V358.0 Q332.2,362.0 328.2,362.0 H110.0 Z"><title>2025 PAN: +19.9%</title></path>
+<text class="ink2" x="102" y="360.0" font-size="11" text-anchor="end">2025 PAN</text>
+<path class="bar" d="M110.0,366.0 H325.1 Q329.1,366.0 329.1,370.0 V374.0 Q329.1,378.0 325.1,378.0 H110.0 Z"><title>2024 MIL: +19.6%</title></path>
+<text class="ink2" x="102" y="376.0" font-size="11" text-anchor="end">2024 MIL</text>
+<path class="bar" d="M110.0,382.0 H318.6 Q322.6,382.0 322.6,386.0 V390.0 Q322.6,394.0 318.6,394.0 H110.0 Z"><title>2024 ASV: +19.0%</title></path>
+<text class="ink2" x="102" y="392.0" font-size="11" text-anchor="end">2024 ASV</text>
+<path class="bar" d="M110.0,398.0 H316.1 Q320.1,398.0 320.1,402.0 V406.0 Q320.1,410.0 316.1,410.0 H110.0 Z"><title>2025 BAS: +18.8%</title></path>
+<text class="ink2" x="102" y="408.0" font-size="11" text-anchor="end">2025 BAS</text>
+<path class="bar" d="M110.0,414.0 H289.0 Q293.0,414.0 293.0,418.0 V422.0 Q293.0,426.0 289.0,426.0 H110.0 Z"><title>2024 TEL: +16.4%</title></path>
+<text class="ink2" x="102" y="424.0" font-size="11" text-anchor="end">2024 TEL</text>
+<path class="bar" d="M110.0,430.0 H286.0 Q290.0,430.0 290.0,434.0 V438.0 Q290.0,442.0 286.0,442.0 H110.0 Z"><title>2025 TEL: +16.1%</title></path>
+<text class="ink2" x="102" y="440.0" font-size="11" text-anchor="end">2025 TEL</text>
+<path class="bar" d="M110.0,446.0 H284.0 Q288.0,446.0 288.0,450.0 V454.0 Q288.0,458.0 284.0,458.0 H110.0 Z"><title>2025 DUB: +15.9%</title></path>
+<text class="ink2" x="102" y="456.0" font-size="11" text-anchor="end">2025 DUB</text>
+<path class="bar" d="M110.0,462.0 H280.2 Q284.2,462.0 284.2,466.0 V470.0 Q284.2,474.0 280.2,474.0 H110.0 Z"><title>2025 ZAL: +15.6%</title></path>
+<text class="ink2" x="102" y="472.0" font-size="11" text-anchor="end">2025 ZAL</text>
+<path class="bar" d="M110.0,478.0 H277.1 Q281.1,478.0 281.1,482.0 V486.0 Q281.1,490.0 277.1,490.0 H110.0 Z"><title>2024 BAR: +15.3%</title></path>
+<text class="ink2" x="102" y="488.0" font-size="11" text-anchor="end">2024 BAR</text>
+<path class="bar" d="M110.0,494.0 H276.9 Q280.9,494.0 280.9,498.0 V502.0 Q280.9,506.0 276.9,506.0 H110.0 Z"><title>2025 MIL: +15.3%</title></path>
+<text class="ink2" x="102" y="504.0" font-size="11" text-anchor="end">2025 MIL</text>
+<path class="bar" d="M110.0,510.0 H244.2 Q248.2,510.0 248.2,514.0 V518.0 Q248.2,522.0 244.2,522.0 H110.0 Z"><title>2025 PAM: +12.4%</title></path>
+<text class="ink2" x="102" y="520.0" font-size="11" text-anchor="end">2025 PAM</text>
+<path class="bar" d="M110.0,526.0 H243.1 Q247.1,526.0 247.1,530.0 V534.0 Q247.1,538.0 243.1,538.0 H110.0 Z"><title>2025 OLY: +12.3%</title></path>
+<text class="ink2" x="102" y="536.0" font-size="11" text-anchor="end">2025 OLY</text>
+<path class="bar" d="M110.0,542.0 H223.1 Q227.1,542.0 227.1,546.0 V550.0 Q227.1,554.0 223.1,554.0 H110.0 Z"><title>2024 MCO: +10.5%</title></path>
+<text class="ink2" x="102" y="552.0" font-size="11" text-anchor="end">2024 MCO</text>
+<path class="bar" d="M110.0,558.0 H212.0 Q216.0,558.0 216.0,562.0 V566.0 Q216.0,570.0 212.0,570.0 H110.0 Z"><title>2024 IST: +9.5%</title></path>
+<text class="ink2" x="102" y="568.0" font-size="11" text-anchor="end">2024 IST</text>
+<path class="bar" d="M110.0,574.0 H208.3 Q212.3,574.0 212.3,578.0 V582.0 Q212.3,586.0 208.3,586.0 H110.0 Z"><title>2024 PRS: +9.2%</title></path>
+<text class="ink2" x="102" y="584.0" font-size="11" text-anchor="end">2024 PRS</text>
+<path class="bar" d="M110.0,590.0 H203.5 Q207.5,590.0 207.5,594.0 V598.0 Q207.5,602.0 203.5,602.0 H110.0 Z"><title>2024 OLY: +8.7%</title></path>
+<text class="ink2" x="102" y="600.0" font-size="11" text-anchor="end">2024 OLY</text>
+<path class="bar" d="M110.0,606.0 H193.6 Q197.6,606.0 197.6,610.0 V614.0 Q197.6,618.0 193.6,618.0 H110.0 Z"><title>2025 MAD: +7.8%</title></path>
+<text class="ink2" x="102" y="616.0" font-size="11" text-anchor="end">2025 MAD</text>
+<path class="bar" d="M110.0,622.0 H191.1 Q195.1,622.0 195.1,626.0 V630.0 Q195.1,634.0 191.1,634.0 H110.0 Z"><title>2024 BAS: +7.6%</title></path>
+<text class="ink2" x="102" y="632.0" font-size="11" text-anchor="end">2024 BAS</text>
+<path class="bar" d="M110.0,638.0 H185.3 Q189.3,638.0 189.3,642.0 V646.0 Q189.3,650.0 185.3,650.0 H110.0 Z"><title>2024 PAN: +7.1%</title></path>
+<text class="ink2" x="102" y="648.0" font-size="11" text-anchor="end">2024 PAN</text>
+<path class="bar" d="M110.0,654.0 H178.9 Q182.9,654.0 182.9,658.0 V662.0 Q182.9,666.0 178.9,666.0 H110.0 Z"><title>2024 MUN: +6.5%</title></path>
+<text class="ink2" x="102" y="664.0" font-size="11" text-anchor="end">2024 MUN</text>
+<path class="bar" d="M110.0,670.0 H156.4 Q160.4,670.0 160.4,674.0 V678.0 Q160.4,682.0 156.4,682.0 H110.0 Z"><title>2025 MCO: +4.5%</title></path>
+<text class="ink2" x="102" y="680.0" font-size="11" text-anchor="end">2025 MCO</text>
+<path class="bar" d="M110.0,686.0 H110.0 Q112.5,686.0 112.5,688.5 V695.5 Q112.5,698.0 110.0,698.0 H110.0 Z"><title>2024 PAR: +0.2%</title></path>
+<text class="ink2" x="102" y="696.0" font-size="11" text-anchor="end">2024 PAR</text>
+<line class="ref" x1="321.3" y1="78" x2="321.3" y2="700" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text class="ink" x="327.3" y="86" font-size="12" font-weight="600">median 18.9% ≈ +5.01 wins/season [+1.39, +8.69]</text>
+<text class="ink2" x="445.0" y="744" font-size="11" text-anchor="middle">advantage in production (engine ÷ club − 1) · source: data/processed/headline_exact.csv</text>
+</svg>
