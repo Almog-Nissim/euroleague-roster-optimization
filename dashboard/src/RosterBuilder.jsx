@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { cname } from "./clubs";
 
 /* ══════════════════════════════════════════════════════════════
    RosterBuilder — הבנאי
@@ -155,9 +156,9 @@ export default function RosterBuilder() {
               onKeyDown={(e) => e.key === "Enter" && snap(parseFloat(typed))}
               aria-label="תקציב" />
             <span className="bunit">
-              יחידות
+              שחקנים ממוצעים
               {OBS && (p.budget < OBS.lo || p.budget > OBS.hi) && (
-                <em className="oob">מחוץ לטווח שנצפה בליגה</em>
+                <em className="oob">אף קבוצה לא הוציאה כזה סכום — זו הערכה</em>
               )}
             </span>
           </div>
@@ -271,7 +272,7 @@ export default function RosterBuilder() {
                       עם הטקסטורה בלבד, והתווית לא גולשת מהתרשים. */}
                   {X(b) - X(a) > 90 && (
                     <text x={(X(a) + X(b)) / 2} y={H - B - 8} className="ax"
-                      textAnchor="middle">מחוץ לטווח שנצפה</text>)}
+                      textAnchor="middle">אף קבוצה לא כאן</text>)}
                 </g>))}
           {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
             <g key={v}>
@@ -303,7 +304,7 @@ export default function RosterBuilder() {
             <text key={b} x={X(b)} y={H - 12} className="ax mid">{b}</text>
           ))}
           <text x={(L + W - R) / 2} y={H - 1} className="ax mid dimx">
-            תקציב (יחידות מנורמלות) · כל קו קטן הוא מועדון אמיתי
+            תקציב (1 = שחקן ממוצע בליגה) · כל קו קטן הוא מועדון אמיתי
           </text>
         </svg>
 
@@ -322,14 +323,14 @@ export default function RosterBuilder() {
               <option value="">הקרוב בתקציב</option>
               {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
                 <option key={c.club} value={c.club}>
-                  {c.club} · {f(c.budget)} יח׳
+                  {cname(c.club)} · {f(c.budget, 1)} שחקנים
                 </option>
               ))}
             </select>
           </div>
           {bGap > 1.5 && (
             <p className="alert">
-              ⚠️ פער תקציב של {f(bGap)} יחידות בין שני
+              ⚠️ פער תקציב של {f(bGap, 1)} שחקנים ממוצעים בין שני
               הצדדים. זו אינה השוואה באותו כסף — לחצו על
               <button className="lnk" onClick={() => snap(rival.budget)}>
                 השוו באותו תקציב
@@ -443,8 +444,8 @@ export default function RosterBuilder() {
             <p className="note">
               כל שורה היא מועדון בתקציבו האמיתי, ושתי הנקודות בתוצאות
               שקרו בפועל. המנוע מימין למועדון ב־<b>{nWin} מתוך {rows.length}</b>.
-              אף צד לא מחולק מחדש בדיעבד: המנוע נמדד על התוכנית שהתחייב
-              אליה, והמועדון על הסבב ששיחק (ADR 0006).
+              המנוע נמדד על התוכנית שקבע מראש (ואם שחקן נפצע — הוא שילם
+              על זה), והקבוצה על מה ששיחקה בפועל.
             </p>
 
             <details className="det">
@@ -485,8 +486,8 @@ export default function RosterBuilder() {
 
       <footer>
         המנוע בונה תמיד 12 שחקנים — המינימום החוקי — בכל תקציב.
-        הניקוד ביחידות פנימיות; ההמרה ליורו הוקפאה כי שלושה מפרטי כיול
-        לגיטימיים נותנים תשובות שונות.
+        תקציב: 1 = שחקן ממוצע בליגה. אין כאן יורו בכוונה — שלוש דרכים
+        סבירות לתרגם ליורו נתנו תשובות שונות מדי.
       </footer>
     </div>
   );
