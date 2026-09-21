@@ -1,48 +1,49 @@
 group,quantity,unit,before,after,before_status,source_before,source_after
-cost,beta1,log/pir,,0.1727,unsourced,unsourced: ADR 0001,8c2afca:data/processed/refit_acceptance.csv
-cost,calib_n,rows,,61,unsourced,unsourced: ADR 0001,8c2afca:data/processed/refit_acceptance.csv
-cost,calib_clubs,clubs,,13,unsourced,unsourced: ADR 0001,8c2afca:data/processed/refit_acceptance.csv
-cost,calib_r2,,,0.813,unsourced,unsourced: ADR 0001,8c2afca:data/dashboard/roster_sweep.json
-cost,cost_scale,pool mean,,1.328,after_only,after-only,8c2afca:data/dashboard/roster_sweep.json
-cost,club_budget_median,normalised axis,,17.408,unsourced,unsourced: docs/refit-day15-diff.md,8c2afca:data/processed/refit_acceptance.csv
-euro_gate,fit_eur_a,normalised axis,,1.4429,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",8c2afca:data/processed/refit_acceptance.csv
-euro_gate,fit_eur_a,euro-level axis (a / cost_scale),,1.0865210843373494,after_only,after-only,8c2afca:data/processed/refit_acceptance.csv + 8c2afca:data/dashboard/roster_sweep.json
-euro_gate,fit_eur_b,M EUR,,-10.5159,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",8c2afca:data/processed/refit_acceptance.csv
-euro_gate,fit_eur_mae,M EUR,,2.21,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",8c2afca:data/processed/refit_acceptance.csv
-euro_gate,axis_read_as_euro_mae,M EUR,,3.687,after_only,after-only,8c2afca:data/processed/refit_acceptance.csv
-euro_gate,player_rho,Spearman,,0.4889,after_only,after-only,8c2afca:data/processed/refit_acceptance.csv
-euro_gate,player_mae,M EUR,,0.663,after_only,after-only,8c2afca:data/processed/refit_acceptance.csv
-euro_gate,gates_passed,of 3,,0,after_only,after-only,8c2afca:data/processed/refit_acceptance.csv
-advantage,adv_free_median,share,0.18258831074989612,0.16818450812065855,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,adv_cap_median,share,0.06521196790619285,0.14144310083183187,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,clubs_engine_loses_to,of 38,7,0,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,q_cap_gt_q_free_on_ppm_true,of 38,1,16,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,selection_bias_free_median,share of pool ppm,-0.02783533140264345,-0.00657475926218685,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,selection_bias_free_weighted_median,share of pool ppm,-0.0605126578736942,0.0066556977335837,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,selection_bias_cap_median,share of pool ppm,0.06536733640397865,-0.035940949958555,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,curse_cost_free_median,share (x100 = pp),0.029429300663327898,0.096550319816831,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-advantage,curse_cost_cap_median,share (x100 = pp),0.055303765928798695,0.02461502283291355,tracked,8c2afca:data/processed/curse_selection_club_relative.csv,8c2afca:data/processed/curse_selection_market.csv
-headline,headline_capped_wins,wins,2.0332721779141183,4.261697902901208,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,headline_capped_wins_lo,wins,0.3843105301651286,0.9188614146889678,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,headline_capped_wins_hi,wins,3.677676231524069,7.4510572882162975,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,headline_free_wins,wins,5.1732651376327645,4.901284091817464,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,headline_free_wins_lo,wins,1.288115850847938,1.259192421934561,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,headline_free_wins_hi,wins,9.138575523164567,9.036512618029771,tracked,8629441:data/processed/wins_conversion.csv,8c2afca:data/processed/wins_conversion.csv
-headline,gap_random_club_wins,wins,-1.6518958115802194,-1.7238206830418237,tracked,8629441:data/processed/null_to_wins.csv,8c2afca:data/processed/null_to_wins.csv
-headline,gap_free_random_wins,wins,6.844969722825805,6.608848665478404,tracked,8629441:data/processed/null_to_wins.csv,8c2afca:data/processed/null_to_wins.csv
-headline,wasted_budget_share,share,0.2688119860218573,0.3081858357276055,tracked,8629441:data/processed/why_100_results.csv,8c2afca:data/processed/why_100_results.csv
-sweep,saturation,normalised axis,25.0,22.5,tracked,8629441:data/dashboard/roster_sweep.json,8c2afca:data/dashboard/roster_sweep.json
-sweep,spend_ceiling,normalised axis,,23.43,after_only,after-only,8c2afca:data/dashboard/roster_sweep.json
-sweep,flat_points,of 65,,36,after_only,after-only,8c2afca:data/dashboard/roster_sweep.json
-sweep,saturation_regime,,,exhausted,after_only,after-only,8c2afca:data/dashboard/roster_sweep.json
-sweep,utilisation_at_top_of_grid,spent / budget,0.9789999999999999,0.58575,tracked,8629441:data/dashboard/roster_sweep.json,8c2afca:data/dashboard/roster_sweep.json
-sweep,md5 roster_sweep.json,git blob,c285173871cf,f26e57f601b2,tracked,8629441:data/dashboard/roster_sweep.json,8c2afca:data/dashboard/roster_sweep.json
-sweep,md5 dashboard_data.json,git blob,e5bbe2f8285b,265fb5274926,tracked,8629441:data/dashboard/dashboard_data.json,8c2afca:data/dashboard/dashboard_data.json
-price_error,price_error_slope_log_oos,log per pir unit,0.08831094661012379,0.02879814442468223,tracked,8c2afca:data/processed/price_error_club_relative.csv,8c2afca:data/processed/price_error_market.csv
-price_error,price_error_slope_log_oos_p,p,0.01690861369746049,0.44880738130720266,tracked,8c2afca:data/processed/price_error_club_relative.csv,8c2afca:data/processed/price_error_market.csv
-price_error,price_error_slope_m_oos,M EUR per pir unit,0.08066390917577432,0.09684137093390945,tracked,8c2afca:data/processed/price_error_club_relative.csv,8c2afca:data/processed/price_error_market.csv
-price_error,price_error_slope_m_oos_p,p,0.20201429305337143,0.12669018230347437,tracked,8c2afca:data/processed/price_error_club_relative.csv,8c2afca:data/processed/price_error_market.csv
-price_error,picks_minus_skipped_err_median,M EUR (negative = arbitrage),0.27657916386400944,0.19066299936315834,tracked,8c2afca:data/processed/price_error_club_relative.csv,8c2afca:data/processed/price_error_market.csv
-display,display_money_mae,M EUR,,0.893,unsourced,unsourced: docs/refit-day15-diff.md,8c2afca:data/processed/display_money_check.csv
-display,display_money_rho,Spearman,,0.895,unsourced,unsourced: docs/refit-day15-diff.md,8c2afca:data/processed/display_money_check.csv
-display,display_money_negative,players,,1,after_only,after-only,8c2afca:data/processed/display_money_check.csv
+cost,beta1,log/pir,,0.1727,unsourced,unsourced: ADR 0001,e4a670b:data/processed/refit_acceptance.csv
+cost,calib_n,rows,,61,unsourced,unsourced: ADR 0001,e4a670b:data/processed/refit_acceptance.csv
+cost,calib_clubs,clubs,,13,unsourced,unsourced: ADR 0001,e4a670b:data/processed/refit_acceptance.csv
+cost,calib_r2,,,0.813,unsourced,unsourced: ADR 0001,e4a670b:data/dashboard/roster_sweep.json
+cost,cost_scale,pool mean,,1.328,after_only,after-only,e4a670b:data/dashboard/roster_sweep.json
+cost,club_budget_median,normalised axis,,17.408,unsourced,unsourced: docs/refit-day15-diff.md,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,fit_eur_a,normalised axis,,1.4429,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",e4a670b:data/processed/refit_acceptance.csv
+euro_gate,fit_eur_a,euro-level axis (gated),,1.0866,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,fit_eur_b,M EUR,,-10.5159,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",e4a670b:data/processed/refit_acceptance.csv
+euro_gate,fit_eur_mae,M EUR,,2.21,unsourced,"unsourced: CONTEXT.md (day-14 axis, TEL prices)",e4a670b:data/processed/refit_acceptance.csv
+euro_gate,axis_read_as_euro_mae,"M EUR, normalised axis",,3.687,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,axis_read_as_euro_mae,"M EUR, euro-level axis",,8.572,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,player_rho,Spearman,,0.4889,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,player_mae,M EUR,,0.663,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+euro_gate,gates_passed,of 3,,0,after_only,after-only,e4a670b:data/processed/refit_acceptance.csv
+advantage,adv_free_median,share,0.18258831074989612,0.16818450812065855,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,adv_cap_median,share,0.06521196790619285,0.14144310083183187,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,clubs_engine_loses_to,of 38,7,0,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,q_cap_gt_q_free_on_ppm_true,of 38,1,16,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,selection_bias_free_median,share of pool ppm,-0.02783533140264345,-0.00657475926218685,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,selection_bias_free_weighted_median,share of pool ppm,-0.0605126578736942,0.0066556977335837,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,selection_bias_cap_median,share of pool ppm,0.06536733640397865,-0.035940949958555,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,curse_cost_free_median,share (x100 = pp),0.029429300663327898,0.096550319816831,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+advantage,curse_cost_cap_median,share (x100 = pp),0.055303765928798695,0.02461502283291355,tracked,e4a670b:data/processed/curse_selection_club_relative.csv,e4a670b:data/processed/curse_selection_market.csv
+headline,headline_capped_wins,wins,2.0332721779141183,4.261697902901208,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,headline_capped_wins_lo,wins,0.3843105301651286,0.9188614146889678,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,headline_capped_wins_hi,wins,3.677676231524069,7.4510572882162975,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,headline_free_wins,wins,5.1732651376327645,4.901284091817464,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,headline_free_wins_lo,wins,1.288115850847938,1.259192421934561,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,headline_free_wins_hi,wins,9.138575523164567,9.036512618029771,tracked,8629441:data/processed/wins_conversion.csv,e4a670b:data/processed/wins_conversion.csv
+headline,gap_random_club_wins,wins,-1.6518958115802194,-1.7238206830418237,tracked,8629441:data/processed/null_to_wins.csv,e4a670b:data/processed/null_to_wins.csv
+headline,gap_free_random_wins,wins,6.844969722825805,6.608848665478404,tracked,8629441:data/processed/null_to_wins.csv,e4a670b:data/processed/null_to_wins.csv
+headline,wasted_budget_share,share,0.2688119860218573,0.3081858357276055,tracked,8629441:data/processed/why_100_results.csv,e4a670b:data/processed/why_100_results.csv
+sweep,saturation,normalised axis,25.0,22.5,tracked,8629441:data/dashboard/roster_sweep.json,e4a670b:data/dashboard/roster_sweep.json
+sweep,spend_ceiling,normalised axis,,23.43,after_only,after-only,e4a670b:data/dashboard/roster_sweep.json
+sweep,flat_points,of 65,,36,after_only,after-only,e4a670b:data/dashboard/roster_sweep.json
+sweep,saturation_regime,,,exhausted,after_only,after-only,e4a670b:data/dashboard/roster_sweep.json
+sweep,utilisation_at_top_of_grid,spent / budget,0.9789999999999999,0.58575,tracked,8629441:data/dashboard/roster_sweep.json,e4a670b:data/dashboard/roster_sweep.json
+sweep,md5 roster_sweep.json,git blob,c285173871cf,f26e57f601b2,tracked,8629441:data/dashboard/roster_sweep.json,e4a670b:data/dashboard/roster_sweep.json
+sweep,md5 dashboard_data.json,git blob,e5bbe2f8285b,33c974801001,tracked,8629441:data/dashboard/dashboard_data.json,e4a670b:data/dashboard/dashboard_data.json
+price_error,price_error_slope_log_oos,log per pir unit,0.08831094661012379,0.02879814442468223,tracked,e4a670b:data/processed/price_error_club_relative.csv,e4a670b:data/processed/price_error_market.csv
+price_error,price_error_slope_log_oos_p,p,0.01690861369746049,0.44880738130720266,tracked,e4a670b:data/processed/price_error_club_relative.csv,e4a670b:data/processed/price_error_market.csv
+price_error,price_error_slope_m_oos,M EUR per pir unit,0.08066390917577432,0.09684137093390945,tracked,e4a670b:data/processed/price_error_club_relative.csv,e4a670b:data/processed/price_error_market.csv
+price_error,price_error_slope_m_oos_p,p,0.20201429305337143,0.12669018230347437,tracked,e4a670b:data/processed/price_error_club_relative.csv,e4a670b:data/processed/price_error_market.csv
+price_error,picks_minus_skipped_err_median,M EUR (negative = arbitrage),0.27657916386400944,0.19066299936315834,tracked,e4a670b:data/processed/price_error_club_relative.csv,e4a670b:data/processed/price_error_market.csv
+display,display_money_mae,M EUR,,0.893,unsourced,unsourced: docs/refit-day15-diff.md,e4a670b:data/processed/display_money_check.csv
+display,display_money_rho,Spearman,,0.895,unsourced,unsourced: docs/refit-day15-diff.md,e4a670b:data/processed/display_money_check.csv
+display,display_money_negative,players,,1,after_only,after-only,e4a670b:data/processed/display_money_check.csv

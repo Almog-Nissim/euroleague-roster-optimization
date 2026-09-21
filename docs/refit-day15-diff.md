@@ -41,13 +41,18 @@ failed. `a` exists on two axes and must be labelled:
 | `fit_eur` MAE | ≤ 2.15 M€ | 2.21 M€ |
 | player level, HTA·OLY·BAS | ρ ≥ 0.60 and MAE ≤ 1.35 M€ | ρ = 0.489, MAE = 0.66 M€ |
 
-**Known issue, verdict unaffected.** The script checks condition 1 against the
-*normalised* `a` (1.443). The question the gate asked was whether the euro-level axis reads
-as euros (1.087). On that axis `a` would pass, but `b` fails on both axes, so condition 1
-fails either way. MAE and ρ do not depend on scale.
+**Fixed at the source (commit `e4a670b`), verdict unaffected.** The script used to check
+condition 1 against the *normalised* `a` (1.443), while the gate asks whether the euro-level
+axis reads as euros. It now gates the euro-level `a` (1.0866) — condition 3 in the same file
+already multiplied back by `cost_scale` with exactly that reasoning. On that axis `a` passes,
+but `b` fails on both axes, so condition 1 fails either way. MAE and ρ do not depend on scale.
+`refit_acceptance.csv` now carries both axes in named columns (`fit_eur_a`,
+`fit_eur_a_norm`), because the first version of the fix silently broke `refit_diff.py`,
+which had inferred the euro-level `a` by dividing the normalised one by `cost_scale`.
 
-Reading the normalised axis directly as euros gives MAE 3.69 M€ against real club budgets.
-The day-15 note quoted 8.57 M€, apparently on the euro-level axis; no tracked file produces it. The model prices
+Reading the axis directly as euros gives MAE 3.69 M€ on the normalised axis and 8.57 M€ on
+the euro-level axis. The 8.57 was quoted in the day-15 note with no tracked source; since
+`e4a670b` it is produced by `refit_acceptance.py` as `identity_mae`. The model prices
 every club at league-average α, so between-club dispersion is compressed by construction.
 Per player the level is roughly right (MAE 0.66 M€), but the ranking (ρ = 0.489) does not
 clear the bar.
@@ -78,10 +83,11 @@ Curse cost is a share: ×100 gives percentage points.
 | cost | `cost_scale` | — | 1.328 | pool mean | after_only |
 | cost | `club_budget_median` | — | 17.408 | normalised axis | unsourced |
 | euro_gate | `fit_eur_a` | — | 1.4429 | normalised axis | unsourced |
-| euro_gate | `fit_eur_a` | — | 1.0865 | euro-level axis (a / cost_scale) | after_only |
+| euro_gate | `fit_eur_a` | — | 1.0866 | euro-level axis (gated) | after_only |
 | euro_gate | `fit_eur_b` | — | -10.5159 | M EUR | unsourced |
 | euro_gate | `fit_eur_mae` | — | 2.21 | M EUR | unsourced |
-| euro_gate | `axis_read_as_euro_mae` | — | 3.687 | M EUR | after_only |
+| euro_gate | `axis_read_as_euro_mae` | — | 3.687 | M EUR, normalised axis | after_only |
+| euro_gate | `axis_read_as_euro_mae` | — | 8.572 | M EUR, euro-level axis | after_only |
 | euro_gate | `player_rho` | — | 0.4889 | Spearman | after_only |
 | euro_gate | `player_mae` | — | 0.663 | M EUR | after_only |
 | euro_gate | `gates_passed` | — | 0 | of 3 | after_only |
