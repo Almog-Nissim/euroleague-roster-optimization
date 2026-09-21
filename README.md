@@ -1,183 +1,159 @@
 # EuroLeague Roster Optimization
 
-Allocating a fixed budget across a EuroLeague roster under uncertainty, using
-mathematical optimization on nine seasons of real player data.
+A linear-programming engine that builds a EuroLeague roster under a fixed budget, backtested
+against the rosters real clubs actually fielded.
 
-**Status:** Week 1 complete — dataset built, validated, and the predictive
-premise formally tested. Optimization model in progress.
-
----
-
-## The question
-
-Given a budget constraint and a pool of available players, which roster
-maximizes expected team performance — and how stable is that selection when
-player valuations are uncertain?
-
-Before that question is worth asking, one thing has to be true: **aggregate
-player value must actually predict winning.** If it doesn't, any optimization
-built on top of it maximizes noise. Week 1 was spent testing exactly that.
+**Status:** `v1.0` — model frozen. From here the engine takes bug fixes only.
 
 ---
 
-## Result: the premise holds
+## The claim
 
-Regression of a team's win percentage in season *t* on its minutes-weighted
-PIR in season *t-1*, both standardized within season.
+**On the same budget, the engine's roster would have won about 5 more games per season than
+the club's actual roster.**
 
-| Coverage filter | n | R² | Coefficient | 95% CI (clustered) | p |
-|---|---|---|---|---|---|
-| none | 108 | 0.170 | +0.443 | [+0.236, +0.649] | <0.0001 |
-| ≥ 90% | 106 | 0.149 | +0.409 | [+0.204, +0.613] | 0.0001 |
-| ≥ 95% | 93 | 0.141 | +0.424 | [+0.188, +0.661] | 0.0004 |
+```
+  +5.01 wins per season        95% CI  [+1.39, +8.69]
+  adv_cap = 0.1892             median production advantage, 38 club-seasons
+  38 of 38                     club-seasons where the engine's roster out-produces the club's
+```
 
-Standard errors are clustered by team: the same club appears in up to eight
-rows, so its seasons are not independent observations. Clustering widened the
-standard errors by 8–11%, which quantifies how optimistic naive OLS would have
-been here.
+Measured on every EuroLeague club in two test seasons, 2024/25 and 2025/26 — 38
+club-seasons. The engine is trained only on seasons before the one it is tested on.
 
-The coefficient moves only between +0.41 and +0.44 across three different
-exclusion thresholds, and no confidence interval approaches zero. **The
-conclusion is not an artifact of where the filter was set.**
+> **Dashboard:** `<VERCEL LINK — to be filled>`
 
-![Backtest scatter](figures/backtest_scatter.png)
-
-### The diagnostic contrast
-
-The same regression run contemporaneously — season *t* PIR against season *t*
-wins — yields R² = 0.517 (coefficient +0.765).
-
-| Specification | R² |
-|---|---|
-| Contemporaneous (*t* → *t*) | 0.517 |
-| Lagged (*t-1* → *t*) | 0.149 |
-
-The contemporaneous fit is partly tautological and is not the headline. Its
-purpose is diagnostic: it separates two failure modes. A weak lagged result
-combined with a strong contemporaneous one means the metric works and the
-*roster* is what fails to persist — roughly 71% of the within-season
-relationship erodes across one offseason.
-
-That erosion is the case for this project. If value persisted intact, roster
-construction would be trivial: keep the same team. It doesn't, which is why
-allocation is a real decision.
+`<FIGURE — to be generated: per-club advantage, sorted, with the median marked>`
 
 ---
 
-## Methodology
+## How it was measured
 
-**PIR, not Net Rating.** Net Rating is close to a win by construction;
-correlating it with wins is circular. PIR is a cumulative individual
-contribution measure, not an outcome measure.
+**The engine.** For each club-season, a mixed-integer program picks a roster from the whole
+league's player pool and allocates its minutes, maximising predicted production under the
+club's own budget. The budget is what the club's actual roster would cost under the same
+price model, so both sides spend the same.
 
-**Lagged, not contemporaneous.** PIR also correlates with winning within a
-season — a team that won a game almost necessarily accumulated more PIR in it.
-The fix is timing, not metric choice: season *t-1* PIR predicts season *t*
-wins.
+The program carries four kinds of constraint:
 
-**Minutes-weighted.** PIR is minutes-dependent, so weighting by minutes
-dissolves the arbitrary "8–9 rotation players or 12?" cutoff rather than
-answering it.
+- **Budget.** Players are priced by a market cost model with club and season fixed effects
+  (ADR 0001).
+- **Roster and position floors.** 12–16 players, and each position within its observed
+  share of minutes.
+- **Ball identity.** The roster's minutes-weighted usage must equal 20%: five players on the
+  court and one ball. This is an identity, not an estimate.
+- **Shape of the rotation.** No roster may concentrate minutes more than the most
+  concentrated real club did, for every top-k from 1 to 8 (ADR 0005). Without this the
+  engine gave its top six players 192 minutes; the most concentrated of the 38 real
+  club-seasons gave its top six 145.3.
 
-**Normalized per game played.** Season length varies (30 rounds through
-2018-19, 28 in the truncated 2019-20, 34 through 2024-25, 38 in 2025-26).
-Games played is read per team from the official standings rather than inferred
-league-wide, so a truncated or distorted schedule surfaces instead of hiding.
+**The comparison.** Both sides are scored on the production that actually happened
+(`ppm_true`), and **neither side gets hindsight** (ADR 0006):
 
-**Standardized within season.** Raw PIR per game is not comparable across
-seasons: Baskonia in 2025-26 out-produced Olympiacos in 2016-17 (92.5 vs 83.7)
-while winning half as often, because a 20-team league distributes production
-differently than a 16-team one. Z-scoring within season neutralizes league
-size, season length, and pace simultaneously.
+- the engine is credited for the minute plan it committed to, cut to the availability that
+  actually materialised;
+- the club is credited for the rotation it actually played.
 
-**Regular season only.** The playoff field is unbalanced — eight teams, unequal
-game counts — and inflates strong teams' PIR precisely because they won. That
-is a back door to the same circularity.
+Minutes planned for a player who turned out to be injured are not moved to his teammates.
+They fall to replacement level, because that is the real cost of planning around an absent
+player.
+
+**Proof, not approximation.** The headline solves are run with a zero optimality gap and
+proven optimal in 38 of 38. A 0.5% gap turned out to move a single club-season by up to
+14 points (`headline_exact.py`).
+
+**Wins.** Production is converted to wins by a within-season regression of club wins on club
+production, with net budget as a control. The confidence interval bootstraps the slope and
+the gap together.
+
+### The number comes with its decomposition
+
+Two earlier scoring conventions each carried a bias. Reporting `0.1892` without these three
+lines would mislead. Each line changes **one thing** from the previous convention. They
+interact, so they are not a sum:
+
+```
+  previous convention: both sides reallocated with hindsight     0.1414   4.26 wins
+
+  change one thing:
+    score the club on what it played (no flattering reallocation)  0.3232   +18.18 pp
+    take the engine's hindsight away                               0.0423    -9.91 pp
+    add the rotation-shape constraint                              0.1235    -1.79 pp
+
+  all three together = v1.0                                      0.1892   5.01 wins
+```
+
+The old convention flattered the club more than it favoured the engine, so the earlier
+headline was conservative. Most of the old advantage, as it was measured then, came from
+the engine's hindsight, not from better player selection. Remove that hindsight from the
+engine alone and the advantage falls to 0.0423. Both runs, and the rule declared before
+them, are in ADR 0005 and ADR 0006.
 
 ---
 
-## Data
+## Three caveats
 
-Source: [`euroleague-api`](https://pypi.org/project/euroleague-api/), accumulated
-player statistics and official standings.
+1. **Depth.** The engine carries 12 players; real clubs carry 15–20. The shape constraint
+   spreads minutes across the same twelve, and does not buy more players. The cost of that
+   thin roster is measured, not assumed: 14.2% of the engine's planned minutes went to
+   players who turned out to be unavailable, and those minutes fell to replacement level.
+   The engine wins anyway. Scoring depth as insurance (Monte Carlo over availability) is
+   on the v2 list.
+2. **Fatigue is not modelled.** A fatigue discount for minutes above 30 was designed and
+   estimated, and rejected by a rule declared in advance (ADR 0004). Box scores cannot
+   separate fatigue from a coach riding a hot hand. This does **not** show that fatigue is
+   absent.
+3. **Extrapolation.** The wins conversion was learned from score differences smaller than
+   the ones the engine produces. The budget axis is in normalised units and is valid to
+   about 19.5; greying out the range beyond that on the dashboard is still to do. Nothing
+   here is in euros per player: that mapping was tested and rejected.
 
-**Scope rule: the round-robin era, 2016-17 onward.** Before 2016-17 the
-competition used a group format in which teams faced different opponent sets,
-making cross-team totals non-comparable. This is the same criterion that
-excludes 2021-22 below, applied consistently rather than as a convenience.
+**What this is not.** It is not a claim that the engine manages minutes better than
+coaches. The hindsight convention that implied that was stopped (ADR 0005). It is not a
+forecast for a season not yet played. And 38 of 38 is a reason to look harder before it
+is a reason to be pleased. One candidate explanation, the pool restriction on the club
+side, was checked and eliminated (`pool_restriction_check.py`).
 
-Nine seasons, 2016-17 through 2025-26, less 2021-22. **158 team-seasons.**
+---
 
-### Validation
+## Alternative explanations tested
 
-Before switching data sources, both were reconciled against each other:
-
-| Metric | Game-level boxscore (328 requests) | Season endpoint (1 request) |
+| Explanation | Test | Result |
 |---|---|---|
-| Total minutes | 123,200.0 | 123,200.0 |
-| Unique players | 295 | 295 |
-| PIR — Olympiacos | 3,411 | 3,411 |
-| PIR — Real Madrid | 3,388 | 3,388 |
+| The constraints alone produce the gap | a random roster under the same constraints | worse than the club: −1.72 wins [−3.32, −0.35] |
+| It is just money | club production → wins with net budget as a control, 38 club-seasons | 64% of the slope survives the control |
+| Selection bias in the engine's picks | the predicted vs realised production of selected players | bias near zero; the loss to prediction error is reported separately as the winner's curse |
 
-Structural checks are made against numbers derivable from the rules of the
-game, not against what looks plausible. Five players on court for 40 minutes
-means 200 player-minutes per game; 34 rounds means 6,800 per team, with any
-excess attributable to overtime and any shortfall indicating loss.
+The first and third rows were measured under the pre-v1.0 scoring convention. Re-deriving
+them under ADR 0006 is on the v2 list.
 
 ---
 
-## Limitations
+## Reproduce
 
-**No salary data.** Public EuroLeague salary figures do not exist as a
-dataset — only journalistic estimates, net of tax, unnormalized, covering
-mostly the top ten earners. Rather than pretending otherwise, the uncertainty
-itself is modeled: a calibrated point estimate with a justified error width,
-then Monte Carlo simulation to test whether the selection is stable across that
-range.
+The processed data is committed. From a clone:
 
-**Mid-season transfers are dropped.** A player who changes clubs mid-season
-receives a concatenated team code (`OLY;PAR`) and a single combined row; the
-endpoint provides no basis for splitting his minutes between the two clubs. Any
-attribution would invent a number. The affected share has grown from 0.2–0.8%
-of league minutes through 2021-22 to 1.85% (2022-23), 2.50% (2023-24) and 2.27%
-(2025-26) — a structural feature of the modern league, not an anomaly.
+```bash
+pip install -r requirements.txt
+python src/scoring.py                # shape caps -> data/processed/shape_caps.csv (seconds)
+python src/shape_constraint_test.py  # 24 tests, must print 24/24 (~2 min)
+python src/headline_exact.py         # 38 exact solves -> headline_exact.csv (~45 min)
+python src/wins_conversion.py        # -> wins_conversion.csv; also reproduces the old 4.26 as a guard
+python src/export_dashboard.py       # checks every frozen value -> dashboard_data.json
+```
 
-**The omission is not random with respect to the outcome.** Contenders buy at
-the deadline and strugglers sell; both produce concatenated codes. Olympiacos —
-the 2025-26 champion and regular-season top seed — landed at 91.7% minutes
-coverage precisely because it bought two players mid-season, while Partizan at
-79.5% had sold three. Any coverage threshold therefore filters on something
-correlated with winning. This is why the backtest is reported across three
-thresholds rather than one.
+Every script prints its guards (✅/❌). A frozen value that fails to reproduce stops the
+dashboard build.
 
-**2021-22 is excluded, for a technical reason rather than the obvious one.**
-Russian clubs were expelled mid-season and the league recomputed its table as
-though those fixtures had never occurred, at 28 games per club. The accumulated
-player statistics were *not* recomputed and still reflect 30–32 games — and not
-uniformly, since clubs had played different numbers of fixtures against the
-expelled teams before the expulsion. Measured coverage ranges from 107.5% to
-114.3%. Numerator and denominator describe different periods.
+Longer runs, not needed for the headline:
 
-Recovery is possible by re-aggregating from game-level boxscores with the
-expelled opponents filtered out (~330 API requests, for roughly 30 additional
-pairs). Not done: the existing sample is sufficient for the gate decision.
+```bash
+python src/shape_run.py              # the full ADR 0005/0006 grid, 152 solves (10–13 h)
+python src/slack_sensitivity.py      # sensitivity of the headline to the shape caps
+```
 
-**Confounding between metric validity and club persistence.** The lagged
-regression measures two things at once: that PIR captures value, and that rich
-clubs stay rich. Real Madrid occupies three of the five highest PIR z-scores in
-the dataset. Separating the two would require conditioning on roster
-continuity, which is out of scope here.
-
-**23 clusters.** Clubs appearing in only one season drop out of the pairing, so
-cluster-robust inference rests on a modest number of groups. The plain-to-
-clustered standard error ratio of 1.08–1.11 suggests the panel dependence is
-mild, which limits how much this matters.
-
-**Sample skews recent.** Early transitions contribute 12–13 pairs each (a
-16-team league with 3–4 clubs rotating annually), later ones 17–18.
-
-**Additivity.** Summing individual PIR assumes roster value is additive and
-ignores fit, role overlap, and lineup synergy.
+The no-shape solves in `shape_run.py` occasionally take hours. Which one is chance: CBC is
+not deterministic in runtime. The headline path does not include them.
 
 ---
 
@@ -185,59 +161,22 @@ ignores fit, role overlap, and lineup synergy.
 
 ```
 src/
-  paths.py                  single source of truth for all filesystem paths
-  fetch_all_accumulated.py  pulls one accumulated request per season
-  build_team_season.py      aggregation, per-team normalization, z-scores
-  backtest.py               lagged regression, clustered SEs, robustness runs
-  audits/                   one-off verification scripts (schema, coverage)
-data/
-  raw/                      accumulated_rs_{season}.csv, gitignored
-  processed/                team_season.csv, backtest_results.csv
-figures/
-  backtest_scatter.png
+  scoring.py              the shape constraint and the scoring conventions (ADR 0005/0006)
+  usage_constrained.py    the headline LP: budget, positions, ball identity, shape
+  headline_exact.py       the v1.0 headline at gap = 0
+  wins_conversion.py      production -> wins, with CI
+  export_dashboard.py     frozen values, checked, -> dashboard_data.json
+  shape_constraint_test.py
+  cost_market.py          the market cost model (ADR 0001)
+docs/
+  adr/                    every design decision, with the rule declared before each run
+  closing-plan.md         how the project closes, and the v2 list
+CONTEXT.md                the vocabulary: terms used here mean one thing
+METHODS.md / .pdf         every statistical tool used, in plain Hebrew
+dashboard/                React/Vite front end
 ```
 
-Raw data is gitignored; the processed dataset is committed so results are
-inspectable without re-running the pull.
-
-### Reproduce
-
-```bash
-pip install -r requirements.txt
-python src/fetch_all_accumulated.py    # 9 requests, ~30s
-python src/build_team_season.py        # -> data/processed/team_season.csv
-python src/backtest.py                 # -> backtest_results.csv + figure
-```
-
----
-
-## What Week 1 actually surfaced
-
-Three bugs in the pipeline produced clean-looking CSVs and threw no errors.
-Each was caught by checking a number against an expectation derived beforehand,
-not by the code failing:
-
-- Filtering did-not-play on an undocumented `IsPlaying` flag returned exactly
-  5.00 players per team per game — the starting lineup, not the roster. The
-  measurement would have been of starters' value, answering a different
-  question entirely. Fixed by filtering on `Minutes > 0`.
-- A relative output path resolved against the working directory, silently
-  writing to a second `data/` tree. Success messages now print the absolute
-  path they wrote to, and a guard in `paths.py` raises on a stray directory.
-- Team code `PAR` is Partizan Belgrade, not Paris (`PRS`). The intuitive
-  expansion of a three-letter code is a guess, not an identifier; this one was
-  caught only by checking player names against the codes.
-
-### Validation
-
-The core metric was checked against two independent sources before use.
-
-PIR values returned by the API were recomputed by hand from the
-box-score formula for five player-seasons; all five matched exactly.
-Season-level aggregates were then cross-checked against game-level
-boxscores for one season: 123,200 minutes and 295 players, with
-identical PIR totals from both endpoints.
-
-Neither check was expected to fail. Both were run because a metric
-that is wrong in the same way everywhere produces a clean-looking
-regression and no error.
+**How the project was run.** Before each run, predictions were locked from two sides, and a
+decision rule was written down that said what each possible result would license. One
+feature was rejected on evidence (ADR 0004). One scoring convention was stopped by the rule
+it had been given in advance (ADR 0005). Misses are recorded next to hits.
