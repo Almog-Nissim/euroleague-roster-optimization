@@ -384,7 +384,12 @@ direction — the shared intuition that spreading minutes needs more players is 
 6. **All k from 1 to 8 ran**, replacing `K_USED`. Declared in the Decision above, and the
    binding table is the payoff.
 7. **T12 was added**, measuring that `optimise_v2(caps=...)` and
-   `optimise_v3(caps, repl=0.0)` agree: 127.389061 both, to the last digit. Two paths reach
+   `optimise_v3(caps, repl=0.0)` agree: 127.389061 both, to the last digit.
+   **Corrected 2026-09-21, after code review:** this was *not* measured. `optimise_v3` did
+   not write `oc.LAST`, so T12 read v2's value twice and compared a number with itself.
+   Fixed in `7af1ddc`; measured for real, the two agree at 127.38906126787548 — the claim
+   was right by coincidence. The `lp_free_shape` column of `usage_constrained_shape.csv`
+   from both runs holds `lp_cap` in 38 of 38 rows and is invalid; nothing reads it. Two paths reach
    the free-with-shape side and an assumed equivalence between two implementations is what
    broke the calibration through two `NAME2CODE` maps.
 8. **One solve took 11.2 of the 12.8 hours.** 2024 TEL. Every other club-season together

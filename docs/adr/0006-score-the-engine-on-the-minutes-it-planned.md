@@ -307,3 +307,26 @@ and the headline is not claimed exact until none do.
   win rate                      38/38
   exact vs 0.5%-gap run         |Δ median| ≤ 0.005
 ```
+
+## Corrections after code review — 2026-09-21
+
+A two-axis review (standards, spec) of everything since `3a2d3ec`, run as the gate before
+`v1.0`, found defects that touch the runs reported above. Each is listed with what it did to
+the numbers. Fixes are in `7af1ddc` unless noted, test-first: three tests confirmed red on
+the old code, then green (22/22).
+
+| # | Defect | What it touched | Headline F? |
+|---|---|---|---|
+| 1 | `optimise_v3` never wrote `oc.LAST`. T12 compared v2 with itself; `lp_free_shape` holds `lp_cap` in 38/38 rows. | The equivalence claim in ADR 0005 was unmeasured. Measured now: it holds exactly. The column is invalid. | No |
+| 2 | `solver_guard` checked `status == "Optimal"` only. A CBC stop on `timeLimit` with a feasible incumbent also reports Optimal; only `sol_status` (2) tells. `optimise_v2`/`optimise_capped` never called the guard. | Every shape solve in both gap runs (`timeLimit=120`, `gapRel=0.005`) could have stopped unproven, silently. Cells C, D, E_shape, F_shape of the gap runs carry this. Plausibly part of the run-to-run swing (C 0.1205 → 0.1235). | The gap-run F: yes. The exact re-run guards on `sol_status == 1` and is not affected. |
+| 3 | `score_shape` fell back silently: dropped position floors, then greedy. | Measured on the saved vectors (reproducing `q_cap_shape` to 2.8e-14): floors dropped on **9 of 38** engine shape rosters, greedy 0. Floors met on predicted availability become infeasible on true availability. Cells C and D, mildly in the engine's favour. | No — F does not reallocate |
+| 4 | T9 tested an infeasible LP, never a time-limit stop. | The declared "time limit raises" was not tested. T9b added. | — |
+| 5 | T11 checked `"gap" in LAST`, and LAST stored the declared `gapRel`, not the achieved gap. | "Gap printed per solve, max < 0.5%" was never verified. **Open.** | — |
+| 6 | T13/T15 test the engine side only; T10b tests a stand-in greedy, not `score_rows`. | Partial coverage of what the ADR declared. **Open.** | — |
+| 7 | `shape_run --clubs` / `--slack` write the tracked `usage_constrained_shape.csv` and `shape_minutes.csv` incrementally. | A sanity or sensitivity run would overwrite the headline files with a subset. Did not happen in a committed state. **Open; must be fixed before the SLACK run.** | — |
+| 8 | `dump_rosters` fills `minutes_alloc` from the free LP without shape, unclipped. | Not the ADR 0006 convention the closing plan claims. **Open.** | — |
+
+**What stands.** The specification cell F is computed by `score_planned` — no reallocation,
+no floors, no fallback — on the plan of the capped+shape LP. Defect 2 means the *gap-run*
+value of F (0.1892) rests on solves that were not proven within the gap; that is exactly what
+the exact re-run replaces. The v1.0 number is the exact re-run's, not 0.1892.
