@@ -36,6 +36,16 @@ ADR 0006 solve finishes and the CPU is free.
   of 2025, to `net_eur`, complete at 56/56. This changes one of the three refutations, so
   **lock a prediction before re-running it.** It writes no CSV.
 
+**Status:** `dump_rosters` done (`engine_rosters.csv` regenerated) · `refit_acceptance` done
+(`e4a670b`, `46abf3d`) · `score_to_wins` waiting on a prediction from both sides.
+
+**Found while regenerating:** `engine_rosters.csv` was committed on day 10 and never
+regenerated after the market refit (ADR 0001, day 15), so it held engine rosters from the
+previous cost model — all 38 differed. Two tracked results are derived from it and are
+therefore stale: `roster_usage.csv` and `usage_decompose.csv` (the "21.83% against 20.03%"
+usage gap quoted in `usage_constrained.py`). Neither is on the headline path. Regenerate
+them or mark them historical — not a v1.0 blocker.
+
 **Done when:** all three have run, their outputs are committed, and no document quotes a
 number from before the fix.
 
