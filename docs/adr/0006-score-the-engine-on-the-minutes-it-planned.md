@@ -1,7 +1,7 @@
 # ADR 0006 — Score the engine on the minutes it planned, not on a hindsight reallocation
 
-Status: locked, run pending — specification, decision rule, tests and predictions fixed
-before any code runs
+Status: adopted — the rule fired "rises, ≤ 50%" (see Result). The v1.0 number is the
+exact re-run's (see Follow-up); corrections after code review at the end
 Date: 2026-09-13
 Everything above "Result" was written before a single solve executed.
 
