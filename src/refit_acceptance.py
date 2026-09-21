@@ -176,6 +176,7 @@ def main() -> int:
     r = float(np.corrcoef(x, y)[0, 1])
     mae = float(np.abs(y - pred).mean())
     ident_mae = float(np.abs(y - x).mean())      # אם הציר כבר יורו
+    ident_mae_norm = float(np.abs(y - x_norm).mean())
     print(f"  net_eur = {a:.4f}·ציר_יורו {b:+.4f}   n={len(m)} · "
           f"R²={r*r:.3f} · MAE={mae:.2f}M€")
     print(f"  cost_scale={scale1:.4f} · a על הציר המנורמל {a_norm:.4f} "
@@ -252,9 +253,15 @@ def main() -> int:
         n_clubs_fit=fit_meta.get("n_clubs"),
         pool_cost_mean=round(float(cand.cost.mean()), 4),
         club_budget_median=round(float(cb.budget.median()), 3),
-        fit_eur_a=round(float(a), 4), fit_eur_b=round(float(b), 4),
+        # 🔴 שני הצירים בעמודות מפורשות. עד כאן fit_eur_a היה המנורמל,
+        #    ו-refit_diff הסיק את ציר היורו בחלוקה ב-cost_scale. אחרי
+        #    תיקון תנאי 1 המשמעות התהפכה ו-refit_diff היה מדווח את שני
+        #    המספרים שגוי בשקט. צרכן לא מנחש ציר; הוא קורא עמודה בשמה.
+        fit_eur_a=round(float(a), 4), fit_eur_a_norm=round(a_norm, 4),
+        fit_eur_b=round(float(b), 4),
         fit_eur_r2=round(r * r, 3), fit_eur_mae=round(mae, 3),
         identity_mae=round(ident_mae, 3),
+        identity_mae_norm=round(ident_mae_norm, 3),
         player_n=len(d), player_rho=round(float(rho), 4),
         player_mae=round(mae_p, 3),
         player_bias_med=round(float(d.err.median()), 3),

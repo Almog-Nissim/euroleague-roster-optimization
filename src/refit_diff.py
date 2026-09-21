@@ -243,16 +243,20 @@ def main() -> int:
     row("cost", "club_budget_median", "normalised axis", np.nan,
         float(ra.club_budget_median), UNSRC_DOC, sa_ra)
 
+    # 🔴 שני הצירים נקראים בשמם. קודם fit_eur_a פורש כמנורמל וציר היורו
+    #    הוסק בחלוקה ב-scale — הנחה שנשברה בשקט כשתנאי 1 תוקן לציר היורו.
     row("euro_gate", "fit_eur_a", "normalised axis", np.nan,
-        float(ra.fit_eur_a), UNSRC_CTX, sa_ra)
-    row("euro_gate", "fit_eur_a", "euro-level axis (a / cost_scale)", np.nan,
-        float(ra.fit_eur_a) / scale, AFTER_ONLY, sa_ra + " + " + sa_rs)
+        float(ra.fit_eur_a_norm), UNSRC_CTX, sa_ra)
+    row("euro_gate", "fit_eur_a", "euro-level axis (gated)", np.nan,
+        float(ra.fit_eur_a), AFTER_ONLY, sa_ra)
     row("euro_gate", "fit_eur_b", "M EUR", np.nan, float(ra.fit_eur_b),
         UNSRC_CTX, sa_ra)
     row("euro_gate", "fit_eur_mae", "M EUR", np.nan, float(ra.fit_eur_mae),
         UNSRC_CTX, sa_ra)
-    row("euro_gate", "axis_read_as_euro_mae", "M EUR", np.nan,
-        float(ra.identity_mae), AFTER_ONLY, sa_ra)
+    row("euro_gate", "axis_read_as_euro_mae", "M EUR, normalised axis",
+        np.nan, float(ra.identity_mae_norm), AFTER_ONLY, sa_ra)
+    row("euro_gate", "axis_read_as_euro_mae", "M EUR, euro-level axis",
+        np.nan, float(ra.identity_mae), AFTER_ONLY, sa_ra)
     row("euro_gate", "player_rho", "Spearman", np.nan, float(ra.player_rho),
         AFTER_ONLY, sa_ra)
     row("euro_gate", "player_mae", "M EUR", np.nan, float(ra.player_mae),
