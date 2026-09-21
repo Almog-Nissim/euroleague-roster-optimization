@@ -53,6 +53,11 @@ PRED_CLAUDE = dict(
     agreement="שני התרגומים יתנו מספרים בטווח של 30% זה מזה",
 )
 PRED_ALMOG = dict()
+
+# 🔴 ננעל 2026-09-21, לפני ההרצה, משני הצדדים. בקרת התקציב עוברת
+#    מ-gross_eur (ריק לכל 2025) ל-net_eur (56/56). נמדד: כמה נקודות
+#    אחוז זז "אחוז השיפוע שנשאר אחרי הבקרה".
+PRED_BUDGET = dict(claude=15.0, almog=10.0)   # |Δ keep_pct| בנקודות, חסם עליון
 # ====================================================================
 
 import sys
@@ -205,24 +210,45 @@ def main():
     # 🔴 תוקן. הבקרה רצה על gross_eur, ש-CONTEXT מסמן deprecated והוא
     #    ריק לכל 20 מועדוני 2025. ה-merge הוא how="inner" על dropna,
     #    ולכן **כל עונת 2025 נשרה בשקט** מבקרת התקציב — אחת משלוש
-    #    ההפרכות. נמדד: gross_eur 36/56 שורות (2025: 0/20) מול
-    #    net_eur 56/56. net_eur הוא גם מה ש-CONTEXT מגדיר כתקציב
-    #    השחקנים השנתי האמיתי של מועדון.
-    m = d.merge(bud[["season", "team", "net_eur"]].dropna(),
-                on=["season", "team"], how="inner")
-    if len(m) >= 10:
-        m["lb"] = np.log(m.net_eur)
+    #    ההפרכות. net_eur מלא 56/56 והוא מה ש-CONTEXT מגדיר כתקציב.
+    #    שתי הבקרות רצות כאן זו לצד זו, כדי שהתזוזה תהיה מספר ולא טענה.
+    def budget_control(col):
+        m = d.merge(bud[["season", "team", col]].dropna(),
+                    on=["season", "team"], how="inner")
+        if len(m) < 10:
+            return dict(col=col, n=len(m), seasons="", slope_raw=np.nan,
+                        slope_ctrl=np.nan, keep_pct=np.nan)
+        m = m.copy()
+        m["lb"] = np.log(m[col])
         for c in ("q_club", "lb", "wins"):
             m[c + "_d"] = m[c] - m.groupby("season")[c].transform("mean")
         m1 = sm.OLS(m.wins_d, sm.add_constant(m[["q_club_d"]])).fit()
         m2 = sm.OLS(m.wins_d, sm.add_constant(m[["q_club_d", "lb_d"]])).fit()
-        print(f"    n={len(m)}   בלי בקרה: {m1.params.q_club_d:.3f}   "
-              f"עם בקרת תקציב: {m2.params.q_club_d:.3f}")
-        keep_pct = m2.params.q_club_d / m1.params.q_club_d
-        print(f"    נשאר {keep_pct:.0%} מהשיפוע   ->  "
-              f"**{sl*gap*keep_pct:+.2f} ניצחונות** אחרי הבקרה")
-    else:
-        print(f"    רק {len(m)} מועדונים עם תקציב — לא ניתן לבקר.")
+        return dict(col=col, n=len(m),
+                    seasons=",".join(map(str, sorted(m.season.unique()))),
+                    slope_raw=float(m1.params.q_club_d),
+                    slope_ctrl=float(m2.params.q_club_d),
+                    keep_pct=float(m2.params.q_club_d / m1.params.q_club_d))
+
+    res = [budget_control("gross_eur"), budget_control("net_eur")]
+    for r_ in res:
+        tag = "ישן, deprecated" if r_["col"] == "gross_eur" else "הספק"
+        print(f"    {r_['col']:<9} ({tag}) n={r_['n']:<3} עונות {r_['seasons']:<16}"
+              f" בלי בקרה {r_['slope_raw']:.3f} · עם {r_['slope_ctrl']:.3f}"
+              f" · נשאר {r_['keep_pct']:.1%}")
+    old_k, new_k = res[0]["keep_pct"], res[1]["keep_pct"]
+    delta_pp = abs(new_k - old_k) * 100
+    print(f"\n    Δ אחוז השיפוע שנשאר: {delta_pp:.1f} נקודות")
+    print(f"    ->  **{sl*gap*new_k:+.2f} ניצחונות** אחרי הבקרה (net_eur)")
+    ok_n = res[1]["n"] > res[0]["n"]
+    print(f"    {'✅' if ok_n else '❌'} net_eur מכניס יותר עונות-מועדון: "
+          f"{res[0]['n']} -> {res[1]['n']}")
+    for who, lim in PRED_BUDGET.items():
+        print(f"    {'✅' if delta_pp < lim else '❌'} תחזית {who}: "
+              f"|Δ| < {lim:.0f} נקודות -> {delta_pp:.1f}")
+    out = PROCESSED_DIR / "score_to_wins_budget_control.csv"
+    pd.DataFrame(res).assign(delta_pp=delta_pp).to_csv(out, index=False)
+    print(f"    נשמר: {out.name}")
 
     h("מול התחזיות של קלוד")
     for k, v in PRED_CLAUDE.items():
