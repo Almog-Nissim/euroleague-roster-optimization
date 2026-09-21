@@ -188,39 +188,42 @@ def convert(md: str) -> str:
 
 
 def main() -> int:
+    """🔴 תוקן אחרי code review. הגרסה הקודמת מחקה את METHODS.pdf המקומט
+    **לפני** ההמרה, כך ש-Chrome שנכשל השאיר את הריפו בלי PDF, וכתבה
+    _methods_build.html לשורש, שקריסה השאירה שם כקובץ תועה. עכשיו הכול
+    נבנה בתיקייה זמנית, והקובץ המקומט מוחלף רק אחרי הצלחה, בפעולה אחת.
+    """
+    import tempfile
     if not SRC_MD.exists():
         print(f"❌ לא נמצא {SRC_MD}")
         return 1
-    md = SRC_MD.read_text(encoding="utf-8")
-    htm = convert(md)
-
-    tmp = ROOT / "_methods_build.html"
-    tmp.write_text(htm, encoding="utf-8")
-
     exe = next((c for c in CHROME if Path(c).exists()), None)
     if exe is None:
-        tmp.unlink(missing_ok=True)
-        print("❌ לא נמצא Chrome או Edge. אין ממיר PDF במכונה הזאת.")
+        print("❌ לא נמצא Chrome או Edge. אין ממיר PDF במכונה הזאת. "
+              "METHODS.pdf לא נגע.")
         return 1
 
+    md = SRC_MD.read_text(encoding="utf-8")
     before = OUT_PDF.stat().st_size if OUT_PDF.exists() else None
-    if OUT_PDF.exists():
-        OUT_PDF.unlink()                 # הישן מועף, לא נדרס חלקית
+    with tempfile.TemporaryDirectory() as td:
+        tmp_html = Path(td) / "methods.html"
+        tmp_pdf = Path(td) / "methods.pdf"
+        tmp_html.write_text(convert(md), encoding="utf-8")
+        cmd = [exe, "--headless", "--disable-gpu", "--no-pdf-header-footer",
+               f"--print-to-pdf={tmp_pdf}", tmp_html.resolve().as_uri()]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        ok = tmp_pdf.exists() and tmp_pdf.stat().st_size > 20_000
+        if ok:
+            shutil.copyfile(tmp_pdf, OUT_PDF)      # הקובץ המקומט מוחלף רק כאן
 
-    cmd = [exe, "--headless", "--disable-gpu", "--no-pdf-header-footer",
-           f"--print-to-pdf={OUT_PDF}", tmp.resolve().as_uri()]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-    tmp.unlink(missing_ok=True)
-
-    ok = OUT_PDF.exists() and OUT_PDF.stat().st_size > 20_000
     print(f"  מקור : {SRC_MD.name}  ({len(md):,} תווים)")
     print(f"  מנוע : {Path(exe).name}")
-    if before is not None:
-        print(f"  הישן : {before/1024:.0f} KB — נמחק")
     if ok:
-        print(f"  {'✅'} נכתב: {OUT_PDF.name}  ({OUT_PDF.stat().st_size/1024:.0f} KB)")
+        was = f" · הקודם {before/1024:.0f} KB" if before is not None else ""
+        print(f"  ✅ נכתב: {OUT_PDF.name}  ({OUT_PDF.stat().st_size/1024:.0f} KB){was}")
     else:
-        print(f"  ❌ לא נוצר PDF תקין. rc={r.returncode}")
+        print(f"  ❌ לא נוצר PDF תקין. rc={r.returncode}. "
+              f"METHODS.pdf הקיים לא נגע.")
         print((r.stderr or "")[-600:])
     return 0 if ok else 1
 

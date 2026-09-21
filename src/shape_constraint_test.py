@@ -227,9 +227,18 @@ def synthetic(caps):
     check("T18", "score_shape שמוריד רצפות עמדה סופר את זה ב-FALLBACKS",
           counted, f"לפני {before} · אחרי {after}")
 
-    check("T11", "הפער האופטימלי מדווח",
-          "gap" in lastc or "obj" in lastc,
-          f"LAST = {sorted(lastc)}")
+    # 🔴 T11 תוקן אחרי code review. הגרסה הקודמת בדקה ש-"gap" in LAST —
+    #    ו-LAST שמר את gapRel *המוצהר*, לא את מה שהושג. פלצבו. עכשיו: אותה
+    #    בעיה פעם ב-gap=0 (מוכח) ופעם בפער המוצהר; הפער שהושג בפועל חייב
+    #    להיות ≤ 0.5%, ושני הפתרונות sol_status == 1.
+    _, _, l_ex = solve(pool, B, MR, caps=caps, gap=0.0, time_limit=300)
+    ach = (l_ex["obj"] - lastc["obj"]) / abs(l_ex["obj"])
+    check("T11", "הפער שהושג בפועל ≤ 0.5%, ושני הפתרונות הוכחו",
+          -1e-9 <= ach <= 0.005 and l_ex.get("sol_status") == 1
+          and lastc.get("sol_status") == 1,
+          f"מדויק {l_ex['obj']:.4f} · בפער {lastc['obj']:.4f} · "
+          f"פער שהושג {ach:.4%} · sol_status {l_ex.get('sol_status')}/"
+          f"{lastc.get('sol_status')}")
 
     # --- T12: שני המסלולים לצד החופשי-עם-צורה חייבים להסכים ---
     # shape_run משתמש ב-optimise_v3(repl=0.0); roster_sweep ב-
@@ -323,6 +332,10 @@ def club_side_test(caps):
     ps = pd.read_csv(PROCESSED_DIR / "player_season.csv",
                      dtype={"player_code": str})
     gmax = ps.groupby("season").games.max()
+    from roster_membership_audit import score_rows
+    pos = pd.read_csv(PROCESSED_DIR / "player_positions.csv",
+                      dtype={"player_code": str})
+    posmap = pos.drop_duplicates("player_code").set_index("player_code").position
 
     n_ok_actual, n_viol_greedy, n = 0, 0, 0
     worst = []
@@ -331,24 +344,45 @@ def club_side_test(caps):
         e_act = (g.min_per_game * g.games / gmax[s]).values
         if not scoring.check_shape(e_act, caps):
             n_ok_actual += 1
-        # החלוקה החמדנית של score_rows, בקירוב עליון (בלי תקרות עמדה)
-        av = np.clip((g.games / gmax[s]).values, 0, 1)
-        av = av[np.argsort(-e_act)]
-        left, gr = ro.MINUTES_PER_GAME, []
-        for a in av:
-            t = max(min(ro.MAX_MIN_PLAYER, left) * a, 0.0)
-            gr.append(t)
-            left -= t
-        v = scoring.check_shape(np.array(gr), caps)
+        # 🔴 T10b תוקן אחרי code review: score_rows האמיתי, עם עמדות ותקרות
+        #    עמדה, ממוין לפי ppm_true — לא חמדן-תחליף ממוין לפי e_act.
+        gg = g.assign(ppm_true=g.ppm,
+                      avail_true=(g.games / gmax[s]).clip(upper=1.0),
+                      position=g.player_code.astype(str).map(posmap))
+        gg = gg[gg.position.notna()]
+        *_, gr = score_rows(gg, "ppm_true", "avail_true", None,
+                            return_minutes=True)
+        v = scoring.check_shape(gr, caps)
         if v:
             n_viol_greedy += 1
             worst.append((f"{s} {c}", v[0]))
 
     check("T10a", "38/38 המועדונים על הדקות שבפועל מקיימים כל תקרה",
           n_ok_actual == n, f"{n_ok_actual}/{n}")
-    check("T10b", "38/38 מפרים את הצורה תחת הסקורר החמדני",
-          n_viol_greedy == n,
+    # 🔴 תוקן: עם score_rows האמיתי זה 37/38, לא 38/38 — 2024 BER לא מפר.
+    #    ה-38/38 שב-ADR 0005 נמדד על תחליף בלי תקרות עמדה. הטסט מקבע את
+    #    העובדה כפי שהיא, כולל שם החריג, כדי שהיא לא תזוז בשקט.
+    names_ok = sorted(set(f"{s} {c}" for (s, c), _ in split.groupby(["season", "club"]))
+                      - set(w[0] for w in worst)) == ["2024 BER"]
+    check("T10b", "37/38 מפרים את הצורה תחת score_rows, החריג היחיד 2024 BER",
+          n_viol_greedy == n - 1 and names_ok,
           f"{n_viol_greedy}/{n} · לדוגמה {worst[0] if worst else '-'}")
+
+    # --- T13c / T15c: צד המועדון, על קובץ התוצאות המקומט ---
+    # 🔴 נוספו אחרי code review: T13/T15 בדקו רק את המנוע.
+    m = pd.read_csv(PROCESSED_DIR / "shape_minutes.csv", dtype={"pc": str})
+    c = m[m.side == "club"]
+    over = c[c.e_scored > 32 * c.avail_true + 1e-9]
+    check("T13c", "צד המועדון: אף דקה אינה חורגת מ-32·avail_true",
+          len(over) == 0, f"חריגות: {len(over)} מתוך {len(c)} שורות")
+    # T15 על המועדון: ה-spec אמר "= 200 בשני הצדדים", וזה לא מדויק. הדקות
+    # בפועל כוללות הארכות, ולכן 20/38 מועדונים מעל 200 (עד 203.3). לא
+    # נקצץ: זה שמרני לטובת המועדון (קיצוץ היה מעלה את F ב-0.0054).
+    # הטסט: החריגה חסומה ב-2%, כלומר הארכות ולא באג.
+    tot = c.groupby(["season", "club"]).e_scored.sum()
+    check("T15c", "צד המועדון: סה\"כ דקות ≤ 200·1.02 (הארכות, לא באג)",
+          float(tot.max()) <= 204.0,
+          f"מעל 200: {int((tot > 200).sum())}/{len(tot)} · מקסימום {tot.max():.1f}")
 
 
 # =====================================================================

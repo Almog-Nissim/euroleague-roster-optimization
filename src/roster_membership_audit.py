@@ -51,7 +51,7 @@ def h(t):
     print("\n" + SEP + f"\n{t}\n" + SEP)
 
 
-def score_rows(df, ppm_col, avail_col, repl):
+def score_rows(df, ppm_col, avail_col, repl, return_minutes=False):
     """אותה פונקציית ניקוד של optimizer_backtest, על DataFrame חופשי.
 
     משוכפלת במכוון ולא מיובאת: כאן הקלט אינו בהכרח cand, ואני רוצה
@@ -65,6 +65,7 @@ def score_rows(df, ppm_col, avail_col, repl):
     left = ro.MINUTES_PER_GAME
     q = 0.0
     used = 0.0
+    e = np.zeros(len(df))           # return_minutes: וקטור הדקות, לטסטים
     for j in order:
         g = pos[j]
         take = max(min(ro.MAX_MIN_PLAYER, left, caps[g]) * av[j], 0.0)
@@ -72,10 +73,15 @@ def score_rows(df, ppm_col, avail_col, repl):
         left -= take
         caps[g] -= take
         used += take
+        e[j] = take
     filled = 0.0
     if repl is not None and left > 0:
         filled = left * repl
         q += filled
+    # return_minutes נוסף אחרי code review (T10b), ברירת מחדל False: 22
+    # הקבצים שמייבאים את score_rows מקבלים בדיוק את מה שקיבלו.
+    if return_minutes:
+        return q, used, filled, e
     return q, used, filled
 
 

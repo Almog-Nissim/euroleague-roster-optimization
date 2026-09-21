@@ -53,6 +53,15 @@ maximum.** So `adv_cap = 0.1414` is conservative in its denominator, and the sha
 lives in the numerator *and* the denominator. Putting the constraint only in the LP would
 be a one-sided tightening.
 
+> **Corrected 2026-09-21, after code review.** The row "as score_rows hands them out" was
+> measured on a stand-in — a greedy allocation with no position caps, ordered by minutes
+> played — not on `score_rows` itself. With the real scorer (T10b now calls it):
+> mean **165.5**, min **139.4**, max **182.7**; inflation **+31.6%**, not +40.8%; and
+> **37 of 38** clubs violate the envelope, not 38 — 2024 BER does not, and its minimum is
+> below the k=6 cap. The direction of the finding and every decision taken on it stand:
+> the greedy scorer flatters the club and puts almost every club outside its own envelope.
+> The magnitude was overstated.
+
 **Two existing defects, to be fixed here.** In `score_realistic`, `cap_k` is looked up by
 `ppm` rank, but the constraint is defined on the k largest values of `e`; position caps
 break the monotonicity between `ppm` and `e`, so the cap can be applied to the wrong
