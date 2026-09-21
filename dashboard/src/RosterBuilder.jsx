@@ -24,8 +24,9 @@ const SPOTS = [
   { x: 142, y: 224 }, { x: 258, y: 224 },             // G
 ];
 
-/* ✅ הכיול מגיע מ-meta.eur — נאמד ב-roster_sweep.py, לא כאן.
-   אין מספר בממשק בלי סקריפט מייצר. */
+/* 🔴 v1.0: כל התצוגה ביורו הוסרה. ציר היורו נבדק ונדחה — refit_acceptance
+   נכשל בשלושת השערים — ו-fit_eur נבנה ברמת מועדון. מ-meta.eur נשאר רק
+   הטווח הנצפה (lo/hi) ביחידות מנורמלות, לאזהרת "מחוץ לטווח שנצפה". */
 const EUR_FALLBACK = { a: 0.7639, b: -2.119, mae: 2.15, lo: 12.9, hi: 36.9 };
 
 const tc = (s) => s.split(/[\s,]+/).filter(Boolean)
@@ -62,7 +63,6 @@ export default function RosterBuilder() {
   }, []);
 
   const EUR = data?.meta?.eur ?? EUR_FALLBACK;
-  const toEur = (u) => EUR.a * u + EUR.b;
   const pts = data?.free ?? [];
   const p = pts[i];
   const prev = pts[i - 1];
@@ -153,10 +153,6 @@ export default function RosterBuilder() {
               aria-label="תקציב" />
             <span className="bunit">
               יחידות
-              <b className="eur" dir="ltr">
-                ≈ {f(toEur(p.budget))}M EUR
-                <span className="pm"> ± {EUR.mae}</span>
-              </b>
               {(p.budget < EUR.lo || p.budget > EUR.hi) && (
                 <em className="oob">מחוץ לטווח שנצפה בליגה</em>
               )}
@@ -305,14 +301,14 @@ export default function RosterBuilder() {
               <option value="">הקרוב בתקציב</option>
               {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
                 <option key={c.club} value={c.club}>
-                  {c.club} · ≈{f(toEur(c.budget))}M
+                  {c.club} · {f(c.budget)} יח׳
                 </option>
               ))}
             </select>
           </div>
           {bGap > 1.5 && (
             <p className="alert">
-              ⚠️ פער תקציב של {f(bGap)} יחידות (≈{f(EUR.a * bGap)}M) בין שני
+              ⚠️ פער תקציב של {f(bGap)} יחידות בין שני
               הצדדים. זו אינה השוואה באותו כסף — לחצו על
               <button className="lnk" onClick={() => snap(rival.budget)}>
                 השוו באותו תקציב
@@ -324,7 +320,7 @@ export default function RosterBuilder() {
               <span className="vsname">{rival.club}</span>
               <span className="vsn">{f(rival.q)}</span>
               <span className="vsl">
-                <span dir="ltr">≈{f(toEur(rival.budget))}M EUR</span> · {rival.n} שחקנים
+                <span dir="ltr">{f(rival.budget)}</span> יח׳ · {rival.n} שחקנים
               </span>
             </div>
             <div className="vsgap">
@@ -336,7 +332,7 @@ export default function RosterBuilder() {
             <div className="vsc">
               <span className="vsname">המנוע</span>
               <span className="vsn pred">{f(p.q_realised)}</span>
-              <span className="vsl"><span dir="ltr">≈{f(toEur(p.budget))}M EUR</span> · {p.n} שחקנים</span>
+              <span className="vsl"><span dir="ltr">{f(p.budget)}</span> יח׳ · {p.n} שחקנים</span>
             </div>
           </div>
           <p className="note">
@@ -459,7 +455,7 @@ export default function RosterBuilder() {
                         className={c.club === rival?.club ? "hl" : ""}>
                         <td><b>{c.club}</b></td>
                         {season === "all" && <td className="num">{c.season}</td>}
-                        <td className="num" dir="ltr">{f(toEur(c.budget))}M</td>
+                        <td className="num" dir="ltr">{f(c.budget)}</td>
                         <td className="num dimc">{c.q_rand == null ? "—" : f(c.q_rand)}</td>
                         <td className="num">{f(c.q_club)}</td>
                         <td className="num">{c.q_cap == null ? "—" : f(c.q_cap)}</td>
