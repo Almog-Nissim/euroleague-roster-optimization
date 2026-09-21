@@ -51,7 +51,7 @@ export default function RosterBuilder() {
   useEffect(() => {
     fetch("/roster_sweep.json")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => { setData(d); setI(Math.floor(d.free.length / 2)); })
+      .then((d) => { setData(d); setI(Math.floor((d.curve ?? d.free).length / 2)); })
       .catch(() => setFail(true));
     fetch("/dashboard_data.json")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -65,7 +65,8 @@ export default function RosterBuilder() {
 
   const obsB = (data?.clubs ?? []).map((c) => c.budget);
   const OBS = obsB.length ? { lo: Math.min(...obsB), hi: Math.max(...obsB) } : null;
-  const pts = data?.free ?? [];
+  // v1.0: העקומה היא המנוע של הכותרת ("curve"); "free" נשאר לקובץ הישן בלבד.
+  const pts = data?.curve ?? data?.free ?? [];
   const p = pts[i];
   const prev = pts[i - 1];
 
@@ -266,8 +267,11 @@ export default function RosterBuilder() {
                 <g key={a}>
                   <rect x={X(a)} y={T} width={X(b) - X(a)} height={H - B - T}
                     fill="url(#hx)" className="xtra" />
-                  <text x={(X(a) + X(b)) / 2} y={T + 12} className="ax"
-                    textAnchor="middle">מחוץ לטווח שנצפה</text>
+                  {/* תווית רק לפס רחב דיו; פס צר (למשל 25.26–26) נשאר
+                      עם הטקסטורה בלבד, והתווית לא גולשת מהתרשים. */}
+                  {X(b) - X(a) > 90 && (
+                    <text x={(X(a) + X(b)) / 2} y={H - B - 8} className="ax"
+                      textAnchor="middle">מחוץ לטווח שנצפה</text>)}
                 </g>))}
           {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
             <g key={v}>
@@ -282,7 +286,11 @@ export default function RosterBuilder() {
           {sat && (
             <>
               <line x1={X(sat)} x2={X(sat)} y1={T} y2={H - B} className="sat" />
-              <text x={X(sat) - 7} y={T + 10} className="satl">מכאן הכסף כמעט מפסיק לקנות</text>
+              {/* בדף RTL, text-anchor:end מצמיח את הטקסט ימינה — ובעקומת v1.0
+                  הרוויה (26) יושבת בדיוק בקצה הימני, אז התווית חרגה מהתרשים.
+                  start ב-RTL מצמיח שמאלה, אל תוך התרשים. */}
+              <text x={X(sat) - 7} y={T + 10} className="satl"
+                direction="rtl" style={{ textAnchor: "start" }}>מכאן הכסף כמעט מפסיק לקנות</text>
             </>
           )}
           <path d={band} fill="url(#hx)" />
@@ -362,15 +370,16 @@ export default function RosterBuilder() {
         const shown = season === "all" ? dash.clubs
           : dash.clubs.filter((c) => c.season === season);
         const rows = shown
-          .map((c) => ({ ...c, gap: c.q_free - c.q_club }))
+          .map((c) => ({ ...c, gap: c.q_engine - c.q_club }))
           .sort((a, b) => sortBy === "gap" ? b.gap - a.gap
             : sortBy === "budget" ? b.budget - a.budget
             : b.q_club - a.q_club);
 
-        /* דמבל: קו אחד למועדון, ארבע נקודות עליו.
-           ⚠️ כל הערכים על ppm_true — נצפים. חזוי היה מנפח ב-155%. */
-        const vals = rows.flatMap((c) => [c.q_club, c.q_free,
-          c.q_cap ?? c.q_club, c.q_rand ?? c.q_club]);
+        /* דמבל: קו אחד למועדון, שתי נקודות — v1.0 / ADR 0006: המועדון על
+           מה ששיחק, המנוע של הכותרת על התוכנית שלו. שתיהן על ppm_true.
+           (אקראי / מאולץ / חופשי היו בקונבנציה הישנה והוסרו.) */
+        const vals = rows.flatMap((c) => [c.q_club, c.q_engine]);
+        const nWin = rows.filter((c) => c.gap > 0).length;
         const lo = Math.floor(Math.min(...vals) / 10) * 10;
         const hi = Math.ceil(Math.max(...vals) / 10) * 10;
         const RW = 720, LB = 74, RB = 18, ROW = 26, TOP = 26;
@@ -393,10 +402,8 @@ export default function RosterBuilder() {
             </div>
 
             <div className="lgnd">
-              <span><i className="d rand" />סגל אקראי</span>
-              <span><i className="d club" />המועדון</span>
-              <span><i className="d cap" />מנוע מאולץ</span>
-              <span><i className="d free" />מנוע חופשי</span>
+              <span><i className="d club" />המועדון, כפי ששיחק</span>
+              <span><i className="d free" />המנוע, התוכנית שלו</span>
             </div>
 
             <div className="tblwrap">
@@ -410,8 +417,8 @@ export default function RosterBuilder() {
                   </g>
                 ))}
                 {rows.map((c, i) => {
-                  const a = Math.min(c.q_club, c.q_free);
-                  const b = Math.max(c.q_club, c.q_free);
+                  const a = Math.min(c.q_club, c.q_engine);
+                  const b = Math.max(c.q_club, c.q_engine);
                   return (
                     <g key={c.club + c.season}
                       className={c.club === rival?.club ? "dr on" : "dr"}>
@@ -422,14 +429,10 @@ export default function RosterBuilder() {
                       </text>
                       <line x1={px(a)} x2={px(b)} y1={py(i)} y2={py(i)}
                         className="dline" />
-                      {c.q_rand != null &&
-                        <circle cx={px(c.q_rand)} cy={py(i)} r="4" className="rand" />}
                       <circle cx={px(c.q_club)} cy={py(i)} r="5" className="club" />
-                      {c.q_cap != null &&
-                        <circle cx={px(c.q_cap)} cy={py(i)} r="4" className="cap" />}
-                      <circle cx={px(c.q_free)} cy={py(i)} r="5.5" className="free" />
+                      <circle cx={px(c.q_engine)} cy={py(i)} r="5.5" className="free" />
                       <title>
-                        {`${c.club} ${c.season} · אקראי ${f(c.q_rand)} · מועדון ${f(c.q_club)} · מאולץ ${f(c.q_cap)} · חופשי ${f(c.q_free)}`}
+                        {`${c.club} ${c.season} · מועדון ${f(c.q_club)} · מנוע ${f(c.q_engine)} · פער ${f(c.gap)}`}
                       </title>
                     </g>
                   );
@@ -438,12 +441,10 @@ export default function RosterBuilder() {
             </div>
 
             <p className="note">
-              כל שורה היא מועדון בתקציבו האמיתי, וכל הנקודות בתוצאות
-              שקרו בפועל. הדבר שכדאי לחפש: <b>נקודת האקראי כמעט תמיד
-              משמאל לנקודת המועדון</b> — סגל שהוגרל מהמאגר, תחת אותם
-              אילוצים בדיוק, מנצח את המועדון ב־9 מתוך 38 בלבד. כלומר
-              היתרון של המנוע אינו מיוצר על ידי 12 השחקנים ורצפות
-              העמדה, אלא על ידי הבחירה עצמה.
+              כל שורה היא מועדון בתקציבו האמיתי, ושתי הנקודות בתוצאות
+              שקרו בפועל. המנוע מימין למועדון ב־<b>{nWin} מתוך {rows.length}</b>.
+              אף צד לא מחולק מחדש בדיעבד: המנוע נמדד על התוכנית שהתחייב
+              אליה, והמועדון על הסבב ששיחק (ADR 0006).
             </p>
 
             <details className="det">
@@ -455,10 +456,8 @@ export default function RosterBuilder() {
                       <th onClick={() => setSortBy("q")} className="clk">מועדון</th>
                       {season === "all" && <th>עונה</th>}
                       <th onClick={() => setSortBy("budget")} className="clk num">תקציב</th>
-                      <th className="num">אקראי</th>
                       <th className="num">המועדון</th>
-                      <th className="num">מאולץ</th>
-                      <th className="num">חופשי</th>
+                      <th className="num">המנוע</th>
                       <th onClick={() => setSortBy("gap")} className="clk num">פער</th>
                     </tr>
                   </thead>
@@ -469,10 +468,8 @@ export default function RosterBuilder() {
                         <td><b>{c.club}</b></td>
                         {season === "all" && <td className="num">{c.season}</td>}
                         <td className="num" dir="ltr">{f(c.budget)}</td>
-                        <td className="num dimc">{c.q_rand == null ? "—" : f(c.q_rand)}</td>
                         <td className="num">{f(c.q_club)}</td>
-                        <td className="num">{c.q_cap == null ? "—" : f(c.q_cap)}</td>
-                        <td className="num predc">{f(c.q_free)}</td>
+                        <td className="num predc">{f(c.q_engine)}</td>
                         <td className={"num " + (c.gap >= 0 ? "up" : "down")}>
                           {c.gap >= 0 ? "+" : ""}{f(c.gap)}
                         </td>

@@ -74,6 +74,18 @@ number from before the fix.
 
 **Done when:** a stranger understands what they see within 30 seconds.
 
+**Status, 2026-09-21 (local, verified before push):**
+- `B_HI` = **26**, derived from the v1.0 curve (saturation 26.0; both locked predictions,
+  22–27 and 24–27, hit). The builder curve is now the headline engine at `gap = 0`,
+  scored by ADR 0006; 19 points, 8–26.
+- Euro display removed everywhere; the per-player figure with it.
+- Caveats shown first: depth, fatigue, shape-cap sensitivity; extrapolation greyed out
+  outside the budgets real clubs actually spent (12.46–25.26), not a hard-coded 19.5.
+- The per-club views (engine-vs-reality tab and the builder's all-clubs chart) moved to
+  ADR 0006. Null model: only random-vs-club kept, labelled as the previous convention.
+- Checked locally on all three tabs, desktop and mobile (375 px): no NaN, no euro, no
+  sideways scroll, chart labels inside the plot.
+
 ## 3. Repo
 
 - **New README:** one claim, how it was measured, the three caveats, the run order to
