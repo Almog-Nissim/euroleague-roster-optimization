@@ -64,6 +64,13 @@ number from before the fix.
   - fatigue is not modelled (ADR 0004);
   - extrapolation outside the data is greyed out.
 - Check the Vercel link, including on mobile.
+- **Found 2026-09-21:** the production deployment
+  (`dashboard-mu-eight-81.vercel.app`) is public but was last deployed on 26 August, so it
+  still shows **+2.03** wins — the pre-ADR-0001 number, two versions behind v1.0's +5.01.
+  Its lead figure is **3.44M EUR**, though the euro axis was tested and rejected
+  (`refit_acceptance`, all three gates failed). Redeploy after the dashboard work, and
+  remove or rework the euro figure before anyone is sent there. The preview URL
+  `dashboard-80lgi1gdk-…` sits behind Vercel login and must not be linked.
 
 **Done when:** a stranger understands what they see within 30 seconds.
 

@@ -21,7 +21,7 @@ the club's actual roster.**
 Measured on every EuroLeague club in two test seasons, 2024/25 and 2025/26 — 38
 club-seasons. The engine is trained only on seasons before the one it is tested on.
 
-> **Dashboard:** `<VERCEL LINK — to be filled>`
+> **Dashboard:** [dashboard-mu-eight-81.vercel.app](https://dashboard-mu-eight-81.vercel.app/)
 
 ![Engine vs actual club on the same budget, per club-season](figures/headline_advantage.svg)
 
