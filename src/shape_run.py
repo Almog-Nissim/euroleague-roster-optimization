@@ -31,7 +31,7 @@ shape_run.py  (ADR 0005, שלב 4)
 
 הרצה:
     python src/shape_run.py                 # a: 38 עונות, 4 תאים
-    python src/shape_run.py --slack         # b: רגישות על 12 המוצהרות
+    python src/slack_sensitivity.py         # b: רגישות, gap=0, תא F
     python src/shape_run.py --clubs 4       # חתך קטן לבדיקת שפיות
 """
 
@@ -187,6 +187,12 @@ def run(caps, n_clubs, only=None, label="spec"):
     split = pd.read_csv(PROCESSED_DIR / "player_club_season.csv",
                         dtype={"player_code": str})
 
+    # 🔴 פתוח 7 מה-code review: הרצה חלקית (--clubs) כתבה תוך כדי ריצה
+    #    לקבצי הכותרת המקומטים והחליפה אותם בתת-מדגם. עכשיו רק הרצה
+    #    מלאה של הספציפיקציה כותבת אליהם; כל השאר -> *_partial.csv.
+    full = only is None and n_clubs >= 38 and label == "spec"
+    out_main = OUT_MAIN if full else OUT_MAIN.with_name(OUT_MAIN.stem + "_partial.csv")
+    out_mins = OUT_MINS if full else OUT_MINS.with_name(OUT_MINS.stem + "_partial.csv")
     rows, mins_rows, t0 = [], [], time.time()
     for train_max, test in SEASONS:
         clubs = sorted(split[split.season == test].club.unique())
@@ -228,8 +234,8 @@ def run(caps, n_clubs, only=None, label="spec"):
             rows.append(r)
             # 🔴 כתיבה מצטברת. ההרצה של ADR 0005 לקחה 12.8 שעות, ולו
             #    קרסה בשעה ה-12 לא היה נשאר דבר.
-            pd.DataFrame(rows).to_csv(OUT_MAIN, index=False)
-            pd.DataFrame(mins_rows).to_csv(OUT_MINS, index=False)
+            pd.DataFrame(rows).to_csv(out_main, index=False)
+            pd.DataFrame(mins_rows).to_csv(out_mins, index=False)
             print(f"  {club:<7}{r['adv_cap_A']:>+9.2%}{r['adv_cap_B']:>+9.2%}"
                   f"{r['adv_cap_C']:>+9.2%}{r['adv_cap_D']:>+9.2%}"
                   f"{r['adv_cap_F_shape']:>+9.2%}"
@@ -348,25 +354,11 @@ def main():
     print("  תקרות: " + " ".join(f"{k}:{v:.1f}" for k, v in sorted(caps.items())))
 
     if a.slack:
-        hdr("רגישות SLACK — 12 עונות-המועדון שהוצהרו")
-        out = []
-        for s in (0.95, 1.00, 1.05):
-            cs = scoring.slack_caps(caps, s)
-            print(f"\n  --- SLACK = {s:.2f} ---", flush=True)
-            d = run(cs, 999, only=set(SUBSAMPLE_12), label=f"slack{s}")
-            if d.empty:
-                continue
-            out.append(dict(slack=s, n=len(d),
-                            adv_cap_C=float(d.adv_cap_C.median()),
-                            adv_cap_D=float(d.adv_cap_D.median()),
-                            n_roster=float(d.n_cap_shape.median()),
-                            top6=float(d.top6_cap_shape.median())))
-        r = pd.DataFrame(out)
-        r.to_csv(OUT_SLACK, index=False)
-        print("\n" + r.to_string(index=False))
-        print(f"\n  נשמר: {OUT_SLACK}")
-        print("  ⚠️ מדווח, לא נבחר. SLACK=1.00 הוא הספציפיקציה.")
-        return 0
+        # 🔴 הוסר אחרי code review. הנתיב כאן דרס את קבצי הכותרת בתת-מדגם,
+        #    דיווח תאי C/D במקום F, ופתר בפער 0.5%. הרגישות רצה עכשיו
+        #    ב-src/slack_sensitivity.py: gap=0, תא F, בלי לגעת בכותרת.
+        print("  ❌ --slack הוסר. הרץ: python src/slack_sensitivity.py")
+        return 1
 
     d = run(caps, a.clubs)
     if d.empty:
@@ -374,7 +366,11 @@ def main():
         return 1
     cells, ok_base = report(d)
 
-    d.to_csv(OUT_MAIN, index=False)
+    # 🔴 רק הרצה מלאה כותבת לקבצי הכותרת המקומטים. פתוח 7.
+    full = a.clubs >= 38 and len(d) >= 38
+    out_main = OUT_MAIN if full else OUT_MAIN.with_name(OUT_MAIN.stem + "_partial.csv")
+    out_bind = OUT_BIND if full else OUT_BIND.with_name(OUT_BIND.stem + "_partial.csv")
+    d.to_csv(out_main, index=False)
     long = []
     for _, r in d.iterrows():
         for side in ("free", "cap"):
@@ -382,8 +378,10 @@ def main():
                 if k:
                     long.append(dict(season=r.season, club=r.club,
                                      side=side, k=int(k)))
-    pd.DataFrame(long).to_csv(OUT_BIND, index=False)
-    print(f"\n  נשמר: {OUT_MAIN}\n  נשמר: {OUT_BIND}")
+    pd.DataFrame(long).to_csv(out_bind, index=False)
+    print(f"\n  נשמר: {out_main}\n  נשמר: {out_bind}")
+    if not full:
+        print("  ⚠️ הרצה חלקית — קבצי הכותרת המקומטים לא נגעו.")
     print(f"  ⚠️ usage_constrained_results.csv לא נגע. קו הבסיס שמור.")
     return 0 if ok_base else 1
 
