@@ -31,16 +31,17 @@ Do not read a `cost` value as money. The euro axis was tested and rejected (see
 of `TARGET_CLUB`. The dashboard does not use that path. Two different units share one name.
 
 **`budget`** — the right-hand side of the LP constraint `Σ cost_i · x_i ≤ B`. Same
-dimensionless units as `cost`. The sweep grid runs from `B_LO=8.0` to `B_HI=40.0` in steps
-of `0.5`. Under `market`, the slider saturates well below `B_HI`: that is an open product
-decision. Not to be confused with `net_eur` (below).
+dimensionless units as `cost`. The builder curve runs from `B_LO=8.0` to `B_HI=26.0` in steps
+of `1.0`; `B_HI` is the saturation point of the v1.0 curve, derived by `roster_sweep.py`.
+The dashboard displays a budget as a percentage of the average club's budget in the same
+season (100% = average); that is display only. Not to be confused with `net_eur` (below).
 
 **`net_eur`** — a club's real annual player budget in euros, from `club_budgets_gemini.csv`.
 An external input. It does **not** enter the cost model. It is used only for `fit_eur`
 and for the Day 9 diagnostic of how β₁ varies with club wealth.
 
-**`gross_eur`** — deprecated. Empty for every 2025 row. Still silently filters rows in
-`score_to_wins.py` via an inner join. Do not use; remove the dependency.
+**`gross_eur`** — deprecated. Empty for every 2025 row. `score_to_wins.py` now controls
+for `net_eur` and reports `gross_eur` only for comparison. Do not use it in new code.
 
 **`salary_mid`** — a real observed player salary in euros, from `salary_anchors.csv`
 (verified player codes) or `salary_external_2025.csv` (name-matched). This is ground truth.
@@ -48,8 +49,8 @@ It is the only "salary" in the repo that means what it says.
 
 **`fit_eur`** — an affine display map from `budget` to `net_eur`, fit on club points.
 **Club level by construction.** Showing a euro figure next to a single player is
-outside what the fit was built for. Whether to show one at all is an open product
-decision: one player currently displays a negative amount.
+outside what the fit was built for. The euro axis failed its acceptance test, and v1.0
+removed every euro figure from the dashboard.
 
 ## Calibration and evaluation splits
 

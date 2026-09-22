@@ -49,7 +49,8 @@ agreement.
 ## Agent skills
 
 Where the engineering skills read their per-repo configuration. Not the same as
-`## Skills` above, which says when to invoke each one.
+`## Skills` above, which says when to invoke each one. The `docs/agents/` files are local
+only (untracked with `.agents/` on 2026-09-22).
 
 ### Issue tracker
 

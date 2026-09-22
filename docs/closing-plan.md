@@ -21,7 +21,7 @@ last. Estimate: 3–4 sessions.
 **Status, 2026-09-21:** headline final — `adv_cap = 0.1892` proven optimal 38/38
 (`headline_exact.py`), **+5.01 wins per season, CI95 [+1.39, +8.69]**
 (`wins_conversion.py`, which also reproduces the day-15 4.26 as a guard). `FROZEN` updated,
-dashboard regenerated. Remaining: `git tag v1.0`. `SLACK` and the sweep run after the tag.
+dashboard regenerated. Tagged `v1.0` (`0690e0e`); `SLACK` and the sweep ran after the tag.
 
 ## 1b. Queued behind the running solve — code fixed, regeneration owed
 
@@ -93,6 +93,12 @@ number from before the fix.
 - **Tidy the root:** move the day summaries and patches to `docs/archive/`, and decide what
   to do with `.agents/`, `.claude/` and `skills-lock.json`.
 - **`METHODS.md`:** update it to the market spec, or mark it historical.
+
+**Status, 2026-09-22:** done. README v1.0 and `docs/project-summary.md` written.
+`METHODS.md` moved to `docs/methods-he.md` (PDF generated, not tracked). `.agents/`,
+`skills-lock.json` and `docs/agents/` untracked (local tooling). Vite template
+leftovers, one-off scratch scripts and dead patches removed; `src/README.md` indexes
+the scripts.
 
 **Done when:** someone who clones the repo reproduces the headline from the README alone.
 

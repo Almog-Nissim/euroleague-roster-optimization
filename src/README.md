@@ -66,6 +66,11 @@ Inputs to the engine.
 
 `paths` · `el_paths` · `player_id` · `club_codes`
 
+## src/audits/
+
+Early probes (days 4–6): salary coverage, survival and minute thresholds, the age curve,
+the v0 end-to-end skeleton. Kept for the record; not on any current path.
+
 ## Earlier stages and diagnostics
 
 How the project got here: earlier backtests, curse and depth studies, scale and
