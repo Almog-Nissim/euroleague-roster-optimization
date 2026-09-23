@@ -175,15 +175,15 @@ export default function RosterBuilder() {
 
         <div className="kpihead">מה יוצא מהתקציב הזה</div>
         <div className="kpis">
-          <Kpi v={f(p.q)} l="ניקוד חזוי" c="pred"
-            h="מה שהמודל ציפה מהסגל הזה, לפני העונה" />
-          <Kpi v={f(p.q_realised)} l="בפועל" c="real"
-            h="מה שאותם שחקנים באמת ייצרו באותה עונה" />
+          <Kpi v={f(p.q)} l="תפוקה צפויה" c="pred"
+            h="מה שהמודל ציפה מהסגל הזה לפני העונה" />
+          <Kpi v={f(p.q_realised)} l="תפוקה בפועל" c="real"
+            h="מה שאותם שחקנים באמת עשו באותה עונה" />
           <Kpi v={marginal == null ? "—" : `+${f(marginal, 2)}`}
-            l="תשואה שולית" c={marginal != null && marginal < 0.5 ? "dim" : ""}
-            h="כמה ניקוד מוסיפים עוד 10% תקציב" />
-          <Kpi v={`${f((p.unspent / AVG) * 100, 1)}%`} l="לא נוצל" c="dim"
-            h="תקציב שנשאר על השולחן" />
+            l="מה קונים 10% נוספים" c={marginal != null && marginal < 0.5 ? "dim" : ""}
+            h="כמה תפוקה מוסיפה הגדלת התקציב ב-10%" />
+          <Kpi v={`${f((p.unspent / AVG) * 100, 1)}%`} l="תקציב שלא נוצל" c="dim"
+            h="מה שנשאר אחרי שנקנו 12 השחקנים" />
         </div>
       </header>
 
@@ -191,7 +191,7 @@ export default function RosterBuilder() {
         <div className="ph">
           <h2>הסגל</h2>
           <span className="sub">
-            חמישייה מוצעת (2G · 2F · 1C) · הוצא {P(p.spent)}% מתוך {P(p.budget)}%
+            חמישייה משוערת: 2 אחוריים, 2 כנפיים ומרכז · הוצאו {P(p.spent)}% מתוך {P(p.budget)}%
           </span>
         </div>
 
@@ -220,7 +220,7 @@ export default function RosterBuilder() {
 
         <div className="benchhead">
           <span>ספסל</span><span></span><span>דקות</span>
-          <span className="bh-n">דק׳</span><span className="bh-n">מחיר</span>
+          <span className="bh-n">דק׳</span><span className="bh-n">מהתקציב</span>
         </div>
         <ol className="bench">
           {bench.map((r) => (
@@ -284,7 +284,7 @@ export default function RosterBuilder() {
                       עם הטקסטורה בלבד, והתווית לא גולשת מהתרשים. */}
                   {X(b) - X(a) > 90 && (
                     <text x={(X(a) + X(b)) / 2} y={H - B - 8} className="ax"
-                      textAnchor="middle">אף קבוצה לא כאן</text>)}
+                      textAnchor="middle">אף קבוצה לא הוציאה כך</text>)}
                 </g>))}
           {[lo, Math.round((lo + hi) / 2), hi].map((v) => (
             <g key={v}>
@@ -331,9 +331,9 @@ export default function RosterBuilder() {
       {rival && (
         <section className="panel">
           <div className="ph">
-            <h2>מול מועדון אמיתי</h2>
+            <h2>מול קבוצה אמיתית</h2>
             <select className="sel" value={pick} onChange={(e) => setPick(e.target.value)}>
-              <option value="">הקרוב בתקציב</option>
+              <option value="">הקרובה בתקציב</option>
               {[...data.clubs].sort((a, b) => b.budget - a.budget).map((c) => (
                 <option key={c.club} value={c.club}>
                   {cname(c.club)} · {P(c.budget)}%
@@ -352,7 +352,7 @@ export default function RosterBuilder() {
           )}
           <div className="vs">
             <div className="vsc">
-              <span className="vsname">{rival.club}</span>
+              <span className="vsname">{cname(rival.club)}</span>
               <span className="vsn">{f(rival.q)}</span>
               <span className="vsl">
                 תקציב <span dir="ltr">{P(rival.budget)}%</span> · {rival.n} שחקנים
@@ -371,10 +371,11 @@ export default function RosterBuilder() {
             </div>
           </div>
           <p className="note">
-            שני הצדדים נמדדים לפי <b>מה שקרה בפועל</b>, לא לפי תחזית. השוואה
-            של תחזית מול תחזית הייתה מנפחת את היתרון של המנוע ב-155%. בגלל זה
-            המנוע יכול גם להפסיד: בתקציבים נמוכים הוא קונה שחקנים זולים, ודווקא
-            עליהם המודל הכי פחות בטוח.
+שני הצדדים נמדדים לפי <b>מה שקרה בפועל</b>, ולא לפי תחזית. אילו
+            היינו משווים תחזית של המנוע לתחזית של הקבוצה, היתרון היה מנופח
+            בכ-12 נקודות אחוז. בגלל שההשוואה הוגנת, המנוע יכול גם להפסיד:
+            בתקציבים נמוכים הוא קונה שחקנים זולים, ודווקא עליהם התחזית הכי
+            פחות מדויקת.
           </p>
         </section>
       )}
@@ -404,7 +405,7 @@ export default function RosterBuilder() {
         return (
           <section className="panel">
             <div className="ph">
-              <h2>המנוע מול כל המועדונים</h2>
+              <h2>המנוע מול כל הקבוצות</h2>
               <span className="tabs">
                 {seasons.map((s) => (
                   <button key={s} className={"tb" + (s === season ? " on" : "")}
@@ -467,10 +468,10 @@ export default function RosterBuilder() {
                 <table className="tbl">
                   <thead>
                     <tr>
-                      <th onClick={() => setSortBy("q")} className="clk">מועדון</th>
+                      <th onClick={() => setSortBy("q")} className="clk">קבוצה</th>
                       {season === "all" && <th>עונה</th>}
                       <th onClick={() => setSortBy("budget")} className="clk num">תקציב</th>
-                      <th className="num">המועדון</th>
+                      <th className="num">הקבוצה</th>
                       <th className="num">המנוע</th>
                       <th onClick={() => setSortBy("gap")} className="clk num">פער</th>
                     </tr>
@@ -479,7 +480,7 @@ export default function RosterBuilder() {
                     {rows.map((c) => (
                       <tr key={c.club + c.season}
                         className={c.club === rival?.club ? "hl" : ""}>
-                        <td><b>{c.club}</b></td>
+                        <td><b>{cname(c.club)}</b></td>
                         {season === "all" && <td className="num">{c.season}</td>}
                         <td className="num" dir="ltr">{pct(c.budget, AVGS[c.season])}%</td>
                         <td className="num">{f(c.q_club)}</td>

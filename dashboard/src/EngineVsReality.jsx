@@ -161,8 +161,8 @@ export default function EngineVsReality() {
         </div>
 
         <p className="ans">
-          <b>התשובה:</b> סגל אקראי מנצח את המועדון ב־<b>{randBeats} מתוך {rows.length}</b>
-          {" "}בלבד, בעוד המנוע מנצח ב־<b>{engBeats}</b>. אילו האילוצים היו
+          <b>התשובה:</b> סגל אקראי מנצח את המועדון ב-<b>{randBeats} מתוך {rows.length}</b>
+          {" "}בלבד, בעוד המנוע מנצח ב-<b>{engBeats}</b>. אילו האילוצים היו
           מייצרים את היתרון, האקראי היה נמצא גם הוא מימין לקו.
           הוא לא — ולכן היתרון מגיע מהבחירה.
         </p>
@@ -210,9 +210,9 @@ export default function EngineVsReality() {
         </div>
 
         <p className="ans">
-          <b>התשובה:</b> כל 10% תקציב נוסף משנים את הפער
-          ב-<b dir="ltr">{f(slope * 10, 2)}</b> נקודות (מתאם{" "}
-          <b dir="ltr">r = {f(rr, 2)}</b>).
+          <b>התשובה:</b> כל 10% תקציב נוסף {slope < 0 ? "מקטינים" : "מגדילים"}{" "}
+          את הפער ב-<b dir="ltr">{f(Math.abs(slope * 10), 2)}</b> נקודות בלבד
+          (מתאם <b dir="ltr">r = {f(rr, 2)}</b>).
           {Math.abs(rr) < 0.3
             ? " כמעט אין קשר: גם קבוצות עשירות משאירות ניצחונות על השולחן, לא רק עניות."
             : rr < 0
@@ -272,9 +272,9 @@ export default function EngineVsReality() {
           <table className="tbl">
             <thead>
               <tr>
-                <th>מועדון</th><th>עונה</th><th className="n">תקציב</th>
-                <th className="n">המועדון, כפי ששיחק</th>
-                <th className="n">המנוע, התוכנית שלו</th>
+                <th>קבוצה</th><th>עונה</th><th className="n">תקציב</th>
+                <th className="n">הקבוצה, כפי ששיחקה</th>
+                <th className="n">המנוע, לפי התוכנית</th>
                 <th className="n">פער</th><th className="n">יתרון</th>
               </tr>
             </thead>
@@ -305,7 +305,7 @@ export default function EngineVsReality() {
         <br />
         <b>הניקוד</b> נעשה בלי ידיעה בדיעבד לשני הצדדים. המנוע נמדד לפי
         תוכנית הדקות שקבע לפני העונה. דקות שתוכננו לשחקן שלא היה זמין אינן
-        עוברות לשאר הסגל, אלא נזקפות לרמת שחקן חלופי — התפוקה האופיינית של
+        עוברות לשאר הסגל, אלא נזקפות לרמת שחקן חלופי, כלומר התפוקה האופיינית של
         שחקן שמחתימים באמצע העונה. הקבוצה נמדדת לפי הרוטציה ששיחקה בפועל.
       </footer>
     </Shell>
