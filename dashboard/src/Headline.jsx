@@ -24,6 +24,11 @@ const pct = (n) => `${(n * 100).toFixed(1)}%`;
 
 const cname = (c) => code2name(c.club);
 const sname = (s) => `${s}/${String((s + 1) % 100).padStart(2, "0")}`;
+/* 2026-09-22 ISO -> 22.9.2026. הפורמט של הקובץ, לא של הקורא. */
+const hdate = (iso) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ""));
+  return m ? `${+m[3]}.${+m[2]}.${m[1]}` : iso;
+};
 
 export default function Headline({ onOpenBuilder }) {
   const [d, setD] = useState(null);
@@ -243,9 +248,11 @@ export default function Headline({ onOpenBuilder }) {
       </details>
 
       <footer>
-        עודכן {d.meta.generated}. תקציב מוצג כאחוז מהתקציב של קבוצה ממוצעת
-        באותה עונה; אין כאן יורו, כי התרגום ליורו נבדק ונפסל.{" "}
-        כל מספר כאן נבדק מול הקבצים שיצרו אותו לפני שהאתר נבנה.
+        התקציב מוצג כאחוז מהתקציב של קבוצה ממוצעת באותה עונה.
+        אין כאן סכומים ביורו, כי ניסינו שלוש דרכים לתרגם והן נתנו
+        תשובות רחוקות מדי זו מזו.
+        <br />
+        כל מספר באתר נבדק מול הקובץ שיצר אותו. עודכן {hdate(d.meta.generated)}.
       </footer>
     </div>
   );

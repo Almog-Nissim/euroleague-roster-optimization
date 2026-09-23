@@ -66,13 +66,13 @@ reported, not hidden. Its effect on the claim is measured directly: the "winner'
 term (§5) is the advantage lost because the engine optimises on *predicted* production and
 is scored on *real* production.
 
-**Cost.** Salaries are public for only 175 player-seasons. 77 fit the model; the rest are
-held out, or used for squad structure only. The split is by club, not by row: a club goes
+**Cost.** Salaries are public for only 175 player-seasons. The 2025 fit uses 61 of them,
+from 13 clubs; the rest are held out, or used for squad structure only. The split is by club, not by row: a club goes
 entirely to one side, because the model has club fixed effects.
 
 ```
-log(salary / squad_mean) ~ β₁·pir_lag_shrunk + el_seasons + club FE + season FE
-β₁ = 0.148 on the market (74 salaries, 14 clubs, t = 6.43)
+log(salary) = α_club + γ_season + β₁·pir_lag_shrunk + β₂·el_seasons
+β₁ = 0.1727 (t = 5.81), R² = 0.81, n = 61, 13 clubs   (2025 production fit)
 ```
 
 The pool is priced at a league-average club (ADR 0001), and divided by the pool mean. So
@@ -97,15 +97,18 @@ max   Σ ppm_i · e_i
 s.t.  Σ cost_i · x_i                ≤ B               budget = cost of the club's real roster
       12 ≤ Σ x_i ≤ 16                                  roster size
       e_i ≤ 32 · avail_i · x_i                         per-player minute cap (observed max)
-      Σ e_i = 200                                      five players × 40 minutes
-      Σ e_i (per position) ≤ POS_MAX_SHARE · 200       each position within its observed share
-      Σ usage_i · e_i = 0.20 · 200                     ball identity: 5 players, 1 ball
+      Σ e_i ≤ 200                                      five players × 40 minutes
+      per position: Σ x_i ≥ floor,                     roster floors (2 G, 1 F, 1 C) and
+        min_share·200 ≤ Σ e_i ≤ max_share·200          each position within its observed share
+      Σ (usage_i − 0.20) · e_i ≤ 0                     ball identity, as a cap (below)
       Σ top-k(e) ≤ C_k        for k = 1..8             shape of the rotation (ADR 0005)
 ```
 
 **Ball identity.** Usage is the share of possessions a player ends. Five players share one
-ball, so the minutes-weighted mean usage must be exactly 20%. That is arithmetic, not an
-estimate. Without it the engine stacks high-usage scorers whose usage cannot add up.
+ball, so on a real team the minutes-weighted mean usage is exactly 20%. That is arithmetic,
+not an estimate. The engine only has each player's usage from the previous season (20% for
+newcomers), so the identity enters as a cap: the minutes-weighted usage may not exceed 20%.
+Without it the engine stacks high-usage scorers whose usage cannot add up.
 
 **Shape constraint.** "Sum of the k largest entries ≤ C" looks non-linear. It has an exact
 linear form with one free variable `q` and slacks `s_i`:

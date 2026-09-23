@@ -42,8 +42,10 @@ The program carries four kinds of constraint:
   (ADR 0001).
 - **Roster and position floors.** 12–16 players, and each position within its observed
   share of minutes.
-- **Ball identity.** The roster's minutes-weighted usage must equal 20%: five players on the
-  court and one ball. This is an identity, not an estimate.
+- **Ball identity.** Five players share one ball, so on a real team the minutes-weighted
+  usage is exactly 20%. That is an identity, not an estimate. The engine only knows each
+  player's usage from the previous season, so it gets the identity as a cap: its roster's
+  minutes-weighted usage may not exceed 20%.
 - **Shape of the rotation.** No roster may concentrate minutes more than the most
   concentrated real club did, for every top-k from 1 to 8 (ADR 0005). Without this the
   engine gave its top six players 192 minutes; the most concentrated of the 38 real
